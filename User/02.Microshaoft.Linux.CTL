@@ -34,6 +34,9 @@ sudo nano /etc/ssh/sshd_config
 UsePAM no
 UsePrivilegeSeparation no
 PasswordAuthentication yes
+^#PermitRootLogin prohibit-password
+PermitRootLogin yes
+Port 2222
 
 ^# generate SSH keys for the SSH instance:
 sudo ssh-keygen -A
