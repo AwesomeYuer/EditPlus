@@ -1,0 +1,272 @@
+#TITLE=HTML
+; EditPlus Auto-completion File v1.0 written by ES-Computing.
+; This file is intended to be used by HTML Toolbar of EditPlus.
+; <WARNING>
+; This file is required for EditPlus to run correctly.
+; You can modify only the content of each entry.
+; Do not add/remove any entry.
+; Do not modify title of each entry.
+
+#CASE=y
+
+#T=asp
+<%
+^!%>
+#T=psa
+%>^!<%
+#T=include
+<!--#include file="^!"-->
+#T=rw
+Response.Write ^!
+#T=rf
+Response.Flush
+#T=rwa
+Response.Write "^!"&Char(10)
+#T=r
+Stc.Re("^!","yes")
+#T=rr
+Response.Redirect ("?action=^!")
+#T=re
+Response.End()
+#T=rex
+Response.Expires=0
+#T=rb
+Response.Write ("<br>")&Chr(10)
+^!
+#T=ra
+Rs.Addnew
+^!
+#T=rcl
+Response.Clear()
+#T=alert
+Sys.Alert "错误:\n\n必须要填写^!!","BACK","0"
+#T=ru
+Rs.Update
+#T=rbf
+<%Response.Buffer=False%>
+#T=rbt
+<%Response.Buffer=True%>
+#T=rcc
+Response.clear()
+^!
+#T=rc
+Rs.Close
+^!
+#T=record
+Rs.Recordcount
+#T=sr
+Set Rs=Nothing
+#T=ri
+Response.IsClientConnected
+#T=rs
+Rs("^!")
+#T=is
+Sys.IsNum(^!)=False
+#T=get
+Sys.toGet("^!","yes")
+#T=or
+OR ^!
+#T=else
+Else
+	^!
+#T=isnull
+Isnull(^!)
+#T=if
+IF ^! Then
+#T=end
+End IF
+#T=case
+Case "^!"
+#T=foreach
+For Each ^! In
+Next
+#T=session
+Session("^!")
+#T=on
+On Error resume Next
+#T=call
+Call ^!()
+#T=len
+Len(^!)<1
+#T=exit
+Exit Sub
+^!
+#T=split
+Arr=Split(^!,"|")
+For i=0 To Ubound(Arr)
+	Response.Write Arr(i)
+Next
+#T=setdel
+Conn.ExeCute("delete from ^! where =")
+#T=action
+^! = InSql(toGet("^!","yes"))
+#T=for
+For ^!=^! To ^!
+IF Rs.Eof Or Rs.Bof Then Exit For
+
+Rs.MoveNext
+Next
+#T=application
+Application.Lock
+	Application(^!)=
+Application.UnLock
+#T=select
+Select Case action
+	Case "^!"
+		^!
+	Case Else
+End Select
+#T=setrs
+IntId=Conn.ExeCute("select id from ^!")("id")
+#T=des
+'==========================================================================
+'^!
+'Design by Seven (See7di@Gmail.com)
+#T=while
+While Not Rs.Eof
+	Response.write""&VBNewLine
+	Rs.MoveNext
+Wend
+#T=do
+Do While Not Rs.Bof
+IF Rs.Eof Or Rs.Bof Then Exit Do
+	^!
+Rs.Movenext
+Loop
+#T=const
+'==========================================================================
+'作  者:冯健(QQ:9256114  eMail:See7di@Gmail.com)
+'日  期:2008-11-3
+'版  权:Copyright (C) 2008 www.7di.Net
+'==========================================================================
+Const ^!=
+#T=conn
+Set conn=Server.CreateObject("ADODB.Connection")
+ConnStr="Provider=Microsoft.Jet.OLEDB.4.0;Data Source="&server.mappath("^!.mdb")&""
+'Connstr="DBQ="&server.mappath("^!.mdb")&";DRIVER={Microsoft Access Driver (*.mdb)};"
+On Error Resume Next
+Conn.open ConnStr
+IF Err Then
+	Err.Clear
+	Set Conn = Nothing
+	Response.Write "连接数据库错误……"
+	Response.End
+End IF
+#T=setex
+Set Rs = Conn.ExeCute("Select * From ^! Where =")
+	IF Not(Rs.Eof OR Rs.Bof) Then
+
+	End IF
+Set Rs = Nothing
+#T=set
+Set Rs = Server.CreateObject("Adodb.Recordset")
+Rs.Open "Select * From ^! Where = Order by Desc",Conn,1,1
+IF Not(Rs.Eof OR Rs.Bof) Then
+	RecordCount=Rs.Recordcount
+	Page = Trim(Request("page")):IF Len(Page)<1 Then Page=0:IF IsNum(Page)=False Or Page=0 Then Page = 1
+	Rs.pageSize = Conf(7):PageCount = Rs.pageCount:Rs.absolutepage = Page
+	For i = 1 To Conf(7)
+	IF Rs.Eof Or Rs.Bof Then Exit For
+		Response.Write ""
+	Rs.MoveNext
+	Next
+End IF
+Rs.Close
+Set Rs = Nothing
+Call Divpage(Page,PageCount,RecordCount,"?")
+#T=setts
+Set Ts = Server.CreateObject("Adodb.Recordset")
+Ts.Open "Select * From ^! Where = Order by Desc",Conn,1,1
+IF Not(Ts.Eof OR Ts.Bof) Then
+	RecordCount=Ts.Recordcount
+	Page = Trim(Request("page")):IF Len(Page)<1 Then Page=0:IF IsNum(Page)=False Or Page=0 Then Page = 1
+	Ts.pageSize = Conf(7):PageCount = Ts.pageCount:Ts.absolutepage = Page
+	For i = 1 To Conf(7)
+	IF Ts.Eof Or Ts.Bof Then Exit For
+		Response.Write ""
+	Ts.MoveNext
+	Next
+End IF
+Ts.Close
+Set Ts = Nothing
+Call Divpage(Page,PageCount,RecordCount,"?")
+#T=sub
+'==========================================================================
+'功  能:
+'参  数:无
+'作  者:冯健(QQ:9256114  eMail:See7di@Gmail.com)
+'==========================================================================
+Sub ^!()
+End Sub
+#T=num
+IntNum = Conn.ExeCute("Select count(*) As IntNum From ^! Where ^!="&^!&"")(0)
+#T=function
+'==========================================================================
+'功  能:
+'参  数:
+'返回值:
+'作  者:冯健(QQ:9256114  eMail:See7di@Gmail.com)
+'==========================================================================
+Function ^!()
+End Function
+#T=insql
+Function InSql(str)
+	Dim strResult,i
+	str=Trim(str)
+	IF IsNULL(str) Then
+		InSql = ""
+		Exit Function
+	End IF
+	strResult = ""
+	For i = 1 To Len(str)
+		Select Case Mid(str,i,1)
+			Case "'":		strResult = strResult & ""
+			Case Chr(13):	strResult = strResult & "<br>"
+			Case Chr(9):	strResult = strResult & "	"
+			Case Chr(34):	strResult = strResult & ""
+			Case Chr(37):	strResult = strResult & ""
+			Case Chr(39):	strResult = strResult & ""
+			Case Chr(42):	strResult = strResult & ""
+			'Case "<":		strResult = strResult & "&lt;"
+			'Case ">":		strResult = strResult & "&gt;"
+			'Case Chr(34):	strResult = strResult & "&quot;"
+			'Case Chr(32):	strResult = strResult & "&nbsp;"
+			'Case "&":		strResult = strResult & "&amp;"
+			Case Else:		strResult = strResult & Mid(str,i,1)
+		End Select
+	Next
+
+	For i=0 To 5
+		IF InStr(strResult,"<P>")>0 Then strResult=Replace(strResult,"<P>","")
+		IF InStr(strResult,"</P>")>0 Then strResult=Replace(strResult,"</P>","<BR>")
+		IF InStr(strResult,"<p>")>0 Then strResult=Replace(strResult,"<p>","")
+		IF InStr(strResult,"</p>")>0 Then strResult=Replace(strResult,"</p>","<BR>")
+		strResult=Replace(strResult,"<BR><BR><BR>","<BR>")
+	Next
+	InSql = strResult
+End Function
+#T=subalert
+Sub Alert(Url,Mess)
+	Url=LCase(Url)
+	IF Url<>"" Then
+		IF Url="#close" Then
+			StrDo="window.close();"
+		Else
+			StrDo="window.location='"&Url&"';"
+		End IF
+	Else
+		StrDo="window.location='javascript:history.back(1)';"
+	End IF
+
+	IF Len(Trim(Mess))<=0 Then
+		StrAlert=""
+	Else
+		StrAlert="alert('"&Mess&"');"
+	End IF
+	
+	Response.write "<script>"&StrAlert&StrDo&"</script>"
+	Response.End()
+End Sub
+#T=length
+<fieldset><legend>^!</legend>www.7di.net</fieldset>
+#

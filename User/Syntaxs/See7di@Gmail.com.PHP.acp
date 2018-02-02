@@ -1,0 +1,2237 @@
+#TITLE=Perl
+; EditPlus 自动完成脚本文件 v1.0 由Seven编辑而成.
+; 该文件用来自动完成 Perl 所属的PHP程序开发而用.
+; $a=$_GET[a];//?a = '1abc';
+; $int = (int) $a;
+; $float = (float) $a;
+; $string = (string) $a;
+; $array = settype($int,'array');
+#CASE=y
+
+#T==
+<?PHP Echo $^!;?>
+#T=.
+/**^!
+/**/
+#T=php
+<?PHP
+^!
+#T=$
+$^!=;
+#T=b
+Break;^!
+#T=c
+Continue;^!
+#T=var
+Var $^!;
+#T=mod
+% ^!
+#T=define
+Define('^!','');
+!Defined('SYS_') && Exit('Access Denied!');
+#T=new
+$^!=New ();
+#T=_
+_('^!',$out);
+#T=__
+$sql=Str_Repeat('^!',5);
+#T=t
+True
+#T=f
+False
+#T=n
+NULL^!;
+#T=unset
+Unset($^!);
+#T=unsett
+$^!=NULL;
+#T=or
+Or ^!
+#T=and
+And ^!
+#T=d
+Die(^!);
+#T=e
+Exit(^!);
+#T=r
+Return ^!;
+#T=v
+$v['^!']
+#T=rs
+$Rs['^!']
+#T=re
+$Re['^!']
+#T=rv
+Rv['^!']
+#T=isnull
+Empty($^!)
+#T=getvalue
+GetValue($^!,'name','')
+#T=isnum
+Is_numeric($^!)
+#T=require
+Require('^!');
+#T=include
+Include('^!');
+Include_Once('^!');
+Require_Once('^!');
+set_include_path('^!');
+#T=dll
+//dl()函数是用来加载dll的，但如果在php.ini文件中将所需要的dll前面的“;”已经去掉的话，那么这时就不要使用这个函数
+dl('php_gd_gif.dll');
+#T=isset
+IsSet($^!)
+#T=count
+Count($^!)
+#T=gs
+$GLOBALS['^!']
+#T=global
+Global $^!;
+#T=globall
+$A='This ';
+$GLOBALS['B']='is ';
+Function Sum() {
+    Echo $GLOBALS['A'],$GLOBALS['B'],'<br>';
+	$GLOBALS['C']=$GLOBALS['A'].$GLOBALS['B'].'C!';
+}Sum();
+Echo $C;
+#T=this
+$this->^!=;
+#T=isarray
+Is_array($^!)
+#T=trim
+Trim($^!)
+#T=ltrim
+Ltrim($^!)//Rtrim($)
+#T=basename
+BaseName($^!)
+#T=dirname
+DirName($^!)
+#T=static
+Static $i=0;^!
+#T=fileex
+File_Exists($^!)
+#t=file_
+Pathinfo('a/img.jpg^!',PATHINFO_EXTENSION);
+#T=path
+$Root=$_SERVER['DOCUMENT_ROOT'];//取得虛擬根目錄,結尾沒有/,如D:/WWW/wamp/www
+
+Realpath('./')//得到物理路徑
+GetCwd();//得到当前工作目录
+Realpath('./')//得到當前目錄,結尾沒有\,如D:\WWW\wamp\www\inc
+Define('S_ROOT', dirname(__FILE__).DIRECTORY_SEPARATOR);
+Define('DEDEADMIN',Preg_replace('/\+/','/',dirname(__FILE__)));
+
+BaseName()
+Echo '<br>',Realpath('./').Basename(__FILE__),'<br>';
+$Self='http://'.$_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'].DirName($_SERVER['PHP_SELF']);
+$a='http://feng%20jian@www.7di.net:8080/index.asp?id=99#end';
+Print_r (Parse_Url($a));
+
+GetCwd();//得到当前工作目录
+Realpath('./')
+Define('S_ROOT', dirname(__FILE__).DIRECTORY_SEPARATOR);
+Define('DEDEADMIN',Preg_replace('/\+/','/',dirname(__FILE__)));
+
+Echo '<br>',Realpath('./').Basename(__FILE__),'<br>';
+$Self='http://'.$_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'].DirName($_SERVER['PHP_SELF']);
+$a='http://feng%20jian@www.7di.net:8080/index.asp?id=99#end';
+Print_r (Parse_Url($a));
+//=============================================================
+#T=int
+$^!=(int)$^!;
+Is_Int($^!)
+Intval($^!);//取得变量的整数值
+#T=public
+Public $^!;//Private Protected
+#T=rand
+Md5(time().Mt_rand(1,1000000));
+//產生唯一id的函數Echo uniqid('bar_',true);
+#T=xml
+$xml=Simplexml_load_file('test.xml');
+
+header('Content-Type:text/xml');
+$Xml='<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <items>
+     <item>
+           <title>1</title>
+           <link>2</link>
+     </item>
+  </items>
+</root>';
+Echo $Xml;
+Die();
+//=============================================================
+#T=isdir
+Is_dir($^!)
+ChDir($^!);//改变目录
+#T=md5
+Md5($^!)
+Md5_File($^!)
+#T=instrrev
+Strripos($^!,'')
+#T=instr
+StriStr($^!,'')!==False
+Echo Substr_Count('Hello world. The world is nice','world');//出現了兩次
+#T=echo
+Echo $^!;
+#T=echonum
+Number_Format($^!,2)
+#T=echobr
+Echo '<br>',^!'<br>';
+#T=ec
+Echo "<textarea style='width:97%;height:100px;border:1px solid #ccc'>",Chr(10),$^!,Chr(10),"</textarea>";Die();
+#T=echoo
+$Xml=<<<Html
+Html;
+Echo $Xml;
+
+str_Repeat('-',$^!);
+
+Echo (int)(5/2);//整除
+
+$text = 'The quick brown fox jumped over the lazy dog.';
+Echo wordwrap($text, 20, "<br />\n");
+//输出：
+//The quick brown fox<br />
+//jumped over the lazy<br />
+//dog.
+//=============================================================
+#T=alert
+Alert('^!!','?work=','',500);
+#T=rename
+ReName($^!,'.txt');
+#T=left
+SubStr($^!,1,2);//abcde:bc
+#T=leftt
+Mb_substr (string str,int start[, int length [, string encoding]])//Return ''
+Mb_substr('不会有乱码^!',0,3,'utf-8');
+Echo Substr_Count('Hello world. The world is nice','world');//出現了兩次
+#T=right
+SubStr($^!,-3,2);//abcde:cd
+#T=round
+Round($^!,2);//四舍五入,保留2个小数点
+#T=ceil
+Ceil($^!);//得到最大页数
+#T=floor
+Floor($^!);//去掉小数点保留整数
+#T=GET
+File_Get_Contents('../^!.htm');
+#T=PUT
+File_Put_Contents('../^!.htm',$,LOCK_EX);
+#T=toget
+$^!=Toget('^!');
+#T=togett
+$^!=$_GET['^!'];
+$^!=$_POST['^!'];
+$^!=AddsLashes($_REQUEST['^!']);
+#T=now
+now('Y-m-d H:i:s^!',time())
+#T=noww
+now('Y-m-d H:i:s^!',time());//有前導0  now('Y-n-j G:×:×',$Rs['addtime^!']);//沒前導0
+所有要存入数据库的时间都不可+8,显示的时候会自动使用now()函数+8
+//函数:统一时间函数
+//参数:格式化语句,时间值
+//now(),返回+8的Unix时间戳
+//now('Y-m-d H:i:s'),返回+8且格式化后的现在的时间
+//now('Y-m-d H:i:s',$Rs['addtime']),返回+8且格式化后的指定的时间
+Function now($x='',$y=0) {
+	IF(!Is_numeric($y) Or $y<1){$y=time();}
+	$y=$y+YJ_SysLocal*3600;
+	IF($x!='') {
+		$Tim=Gmdate(''.$x.'',$y);
+	}Else{
+		$Tim=&$y;
+	}
+	Return $Tim;//StrtoTime($Tim);
+}
+
+Set_time_limit(0)//秒,0:不限时间
+配置文件php.ini里的max_execution_time=30;
+
+//兩個日期相差幾天
+$_d=Round(($v['tim']-time())/3600/24);
+Echo '差'.$_d.'天';
+
+//当前时间加指定的天数
+$_tim=date('Y-m-d G:i:s',time()+86400*2);
+Echo $_tim;						//2天后的年月日
+Echo date('w',$_tim+86400*$i);	//2天后星期几
+
+//当前时间加指定的天数
+$y=2012;
+$m=4;
+$d=29;
+Echo $tim=$y.SubStr(('0'.$m),-2,2).SubStr(('0'.$d),-2,2),'<br>';
+Echo $_tim=strtotime($tim),'<br>';
+Echo $_tim=date('Y-m-d G:i:s',$_tim+86400*2);//2天后的年月日
+
+//字符串转日期1
+$a=strtotime('2010-03-10');
+Echo now('Y-m-d H:i:s',$a);
+
+//字符串转日期2
+$Now=StrtoTime('2010-03-10');
+$Now=Gmdate('Y-m-d H:i:s',$Now);
+Echo $Now;
+
+//mkTime的用法
+mkTime(0,0,0,0,0,$y^!);
+echo date('M-d-Y', mktime(0, 0, 0, 12, 32, 1997));
+
+//输出现在的真实时间+8
+$Tim=(time()+8*3600);
+$Now=Gmdate('Y-m-d H:i:s',$Tim);
+
+//返回当月天数
+Echo idate('t');
+
+//得到2011年9月的天数(任何给定月份的最后一天都可以被表示为下个月的第0天，而不是-1天,所以9月最后一天就是10月的第0天)
+$L=mkTime(0,0,0,10,0,2011);$D=StrfTime("%d",$L);
+
+//今天的时间,Unix时间戳
+$y=now('Y',time());		//取得系统年份
+$m=now('m',time());		//取得系统月份
+$d=now('d',time());		//取得系统日期
+$today=mkTime(0,0,1,$m,$d,$y)-YJ_SysLocal*3600;
+
+Echo $today;
+//=============================================================
+#T=replace
+Strtr($^!,Array('^!'=>'',""=>""));
+#T=replacee
+Str_iReplace('查','',$^!);
+#T=len
+StrLen($^!)
+#T=lenn
+Mb_strlen($^!)
+#T=substr
+SubStr_Count($^!,$needle)
+#T=chmod
+Chmod('somefile',0777);
+#T=explode
+Explode(',',$^!)
+#T=implode
+Implode(',',$^!)
+#T=gettype
+GetType($^!)
+#T=settype
+SetType($^!,'integer');
+#T=unless
+//UnLess(^!){}
+#T=until
+Until(^!){
+}
+#T=switch
+Switch($^!) {
+Case '':
+	Break;
+Default:
+	Break;
+}
+#T=case
+Case '^!':
+	Break;
+#T=default
+Default:
+	^!();
+	Break;
+#T=while
+While($i<=10) {
+	$i++;
+	^!
+}
+#T=do
+Do{
+	^!;
+	$i++;
+}While($i<5);
+#T=foreach
+Foreach($^! as $k=>$v) {
+	Echo $k,':',$v,'-',$v['^!'],'<br>';
+}Unset($);
+#T=for
+For($i=0;$i<10;$i++) {^!
+}
+#T=iif
+$^!=() ? '' : '';
+#T=if
+IF(^!) {
+}
+#T=else
+Else{^!
+}
+#T=elseif
+ElseIF(^!) {
+}
+#T=sel
+$arr=Arr(^!);//$arr=DB::View("SELECT id,name FROM `{$Table}` ORDER BY id");
+$L1='<select name="sex">';
+Foreach($arr as $k=>$v) {
+	$sel=($Rs['sex']==$k)?' selected':'';
+	$L1.="<option value='{$k}'{$sel}>{$v}</option>";
+}Unset($sel,$arr);$L1.='</select>';
+#T=bijiao
+serialize($^!);//产生一个可存储的值的表示
+Similar_text('abcd','abdc',$percent);//比较两个字符串相似度有多少part
+Levenshtein();//告诉你两个单词之间的“距离”。它告诉你如果想把一个单词变成另一个单词，需要插入、替换和删除多少字母。
+#T=error
+//使用set_error_handler()后，error_reporting ()将会失效
+//Set_error_handler('_Function:showError');//E_USER_NOTICE   E_USER_WARNING
+
+//程序错误输出方式
+//Error_reporting(E_ALL|E_STRICT);
+//Error_reporting(E_ALL || ~E_NOTICE);//0;E_ALL;E_ALL || ~E_NOTICE
+Error_reporting(E_ALL);
+
+0 关闭错误报告
+E_ALL - 所有的错误和警告
+E_ERROR - 致命性运行时错
+E_WARNING - 运行时警告（非致命性错）
+E_PARSE - 编译时解析错误
+E_NOTICE - 运行时提醒(这些经常是是你的代码的bug引起的
+E_CORE_ERROR - 发生于PHP启动时初始化过程中的致命错误
+E_CORE_WARNING - 发生于PHP启动时初始化过程中的警告(非致命性错)
+E_COMPILE_ERROR - 编译时致命性错
+E_COMPILE_WARNING - 编译时警告(非致命性错)
+E_USER_ERROR - 用户产生的出错消息
+E_USER_WARNING - 用户产生的警告消息
+E_USER_NOTICE - 用户产生的提醒消息
+//=============================================================
+#T=rr
+IF(!headers_sent()) {
+	Header('Location:^!.php');
+	//Header('Content-type:text/xml');
+	Header('Content-type:text/html;charset=utf-8');
+}
+Echo '<script>window.location="',$PHP_SELF,'";</script>';
+Echo '<META HTTP-EQUIV="Refresh" CONTENT="0; URL=index.php">';
+#T=rcl
+OB_start();			// 開始控制緩沖(从他开始的内容遇到header前不会输出)
+OB_clean();
+...
+$mess=Ob_get_contents();	// 取得緩存區內容
+OB_end_clean();			// 清理原有內容OB_clean();
+OB_end_flush();
+//Clearstatcache();		//清理文件緩存
+//每隔5秒輸出一次
+header('Content-Type: text/plain');
+set_time_limit(0);
+
+$infoString="Hello World\n";
+while(isset($infoString)) {
+	Echo $infoString;
+	flush();
+	ob_flush();
+	sleep(5);
+}
+Function Exec($file) {
+	Extract($變量數組);				// 提取變量到當前命名空間
+	OB_start();						// 開始輸出緩沖
+	OB_clean();						// 清理原有內容
+	Include($模板文件);				// 調用模板文件
+	$contents=ob_get_contents();	// 取得緩存區內容
+	ob_end_clean();					// 結束緩沖區
+	Return $contents;				// 返回模板文件執行結果后的內容
+}
+//=============================================================
+#T=query
+Mysql_Query("INSERT INTO `^!` SET own='{$}'");
+DB::Exe("INSERT INTO `` SET own='{$}'");
+$Sql="INSERT INTO `{$Tab}` SET a='{$a}',b='{$b}',c='{$c}'';";
+$Sql="UPDATE `{$Tab}` SET a='{$a}',b='{$b}',c='{$c}' WHERE name='{$c}';";
+Mysql_query($Sql.";");
+#T=encode
+Htmlspecialchars($)//中文不亂碼,轉換HTML实体 HtmlSpecialChars_Decode($)
+Htmlspecialchars($^!,ENT_QUOTES,'UTF-8')
+
+Return Trim(Htmlspecialchars($^!,ENT_QUOTES));//中文用這個不亂碼
+Return Trim(Strip_tags($^!));//过滤标签
+Function htmlEscape($param) {
+	Return Trim(Htmlspecialchars($param, ENT_QUOTES));
+	Return Trim(Strip_tags($param));//过滤标签
+}
+
+//HtmlEnTities($^!)		//(這個儘量不用)轉換HTML实体Html_Entity_decode($),如果包含中文会转换成乱码需要设置character-set为GB2312才行！而htmlspecialchars无需设置直接转换
+AddsLashes($^!)			//使用反斜线引用字符串 //Stripslashes($)
+UTF8_Encode($^!);		//将ISO-8859-1编码的字符串转换为UTF-8编码 //UTF8_Decode($);
+Mb_convert_encoding($html,'UTF8','BIG5'); //將big5轉為utf8
+Base64_Encode($^!)		//使用 MIME base64 对数据进行编码 //Base64_decode($)
+Base_convert($^!,16,2);		//在任意进制之间转换数字,这里将16进制转为2进制
+mysql_real_escape_string();//转义 SQL 语句中使用的字符串中的特殊字符
+
+UrlEnCode($)			//编码 URL 字符串 //UrlDeCode($)
+UrlEncode('Error:^!');//EscapeShellArg
+
+//注意編碼順序
+$encode=mb_detect_encoding($keytitle,array('ASCII','GB2312','GBK','UTF-8'),true);
+IF(StrToLower(Mb_detect_encoding($^!))!='utf-8') {
+	//将任意进制的内容转为UTF-8格式
+	$^!=Mb_convert_encoding($^!,'UTF-8','ASCII,GBK,JIS,EUC-JP,SJIS,UCS-2LE,JIS,eucjp-win,sjis-win');
+}
+
+Json_encode($)			//Json_decode($);
+Echo Json_encode($^!);
+$json_string='{"id":1,"name":"foo","email":"foo@foobar.com","interest":["wordpress","php"]} ';
+$obj=Json_decode($json_string);
+Echo $obj->name; //prints foo
+
+//任意進制之間轉換
+$hexadecimal = 'A37334';
+Echo base_convert($hexadecimal,16,2);
+//=============================================================
+#T=json
+$JsonStr = '[
+	{"id":"1","name":"\u5f20\u96ea\u6885","age":"27","subject":"\u8ba1\u7b97\u673a\u79d1\u5b66\u4e0e\u6280\u672f"},
+	{"id":"2","name":"\u5f20\u6c9b\u9716","age":"21","subject":"\u8f6f\u4ef6\u5de5\u7a0b"}
+]';
+$Json = Json_Decode($JsonStr);
+For($i=0;$i<count($Json);$i++){
+	Echo "姓名：".$Json[$i]->name.'<br>';
+	Echo "年龄：".$Json[$i]->age.'<br>';
+	Echo "专业：".$Json[$i]->subject.'<br>';
+}
+Unset($Json);
+$Json = Json_Decode($JsonStr,True);
+For($i=0;$i<count($Json);$i++){
+	Echo "姓名：".$Json[$i]['name']."年龄：".$Json[$i]['age']."专业：".$Json[$i]['subject']."<br/>";
+}
+//把數組轉成json字符串
+$JsonStr=Json_Encode($Json);
+Echo $JsonStr;
+#T=object
+$user = new stdClass();
+$user->name = 'gouki';
+$user->sex = '男士';
+$user->age = 33;
+
+Print_r ($user);
+Echo '<br>',$user->sex,'<br>';
+Echo '<br>',Count(get_object_vars($user)),'<br>';
+#T=prtt
+Print_r ($^!);
+#T=prt
+Echo '<br><textarea rows="8" style="border:1px gray solid;width:90%;overflow:auto;">';
+Foreach($L as $k=>$v) {
+	Echo $k,':',Chr(10);
+	Print_r ($v);
+	Echo '---------------',Chr(10);
+}	
+Echo '</textarea>';
+Foreach($^! as $k=>$v) {
+	Echo '<textarea rows="5" style="border:1px gray solid;width:90%;overflow:auto;">【',$k,'】',Chr(10);
+	Print_r ($v);
+	Echo '</textarea>';
+}
+Print "$^!";
+Printf ($LangA[^!],$);
+$Str=sPrintf("金額合計:%1\$.2f",$total);
+//=============================================================
+#T=lcase
+StrToLower($^!)
+#T=lcasee
+StrToLower($^!)
+StrToUpper($^!)
+UcFirst($^!)//字串中第一个单词首字母大写
+UcWords($^!)//字串中每一个单词首字母大写
+#T=mail
+//效率較低
+IF(Filter_var($^!,FILTER_VALIDATE_EMAIL)==''){Exit('Error:Email地址是錯誤的!');}
+
+//不夠準確
+IF(Preg_match("/^[[:alnum:]._-]+@[[:alnum:]-]+\.([[:alnum:]-]+\.)*[[:alnum:]]+$/isU",$^!)){Echo 'Email地址合法.';}
+
+//发送Email
+Function Mail2($to,$subject,$msg) {
+	$title="=?UTF-8?B?".base64_encode($subject)."?=";
+	$from="From:".YJ_SysMail."\nContent-Type:text/html;charset=utf-8";
+	mail($to,$title,$msg,$from);
+}
+Mail2('see7di@gmail.com','测试一下','这是邮件内<strong>容</strong>!')
+或
+Require('class_mail.php');
+//Mail('see7di@gmail.com','标题','内容',"From:see7di@gmail.com\r\n");
+
+$subject='您的朋友發送給你一個視頻';
+
+$from_header='MIME-Version: 1.0'."\r\n";
+$from_header.='Content-type: text/html; charset=utf-8'."\r\n";
+$from_header.='From: '.$fr;
+
+$content='<table width="100%">
+	<tr><td>Hi,<br/>Your friend thought you might be interested in this video:</td></tr>
+	<tr><td align="center"><a href="'.$playerPage.'" target="_blank">'.$playerPage.'</a></td></tr>
+	</table>';
+
+$UseMail=False;
+IF($UseMail) {
+	Mail($to,$subject,$content,$from_header);
+}Else{
+	$Smtp=new Smtp('smtp.163.com',25,true,'bhgsfj@163.com','supervisor999');	//这里面的一个true是表示使用身份验证,否则不使用身份验证.
+	$Smtp->debug=False;													//是否显示发送的调试信息
+	$Smtp->sendmail($to,$fr,$subject,$content,'HTML');
+}
+//=============================================================
+#T=str2arr
+Str2Arr($^!,'|',True,True,True);//是否去除空arr項目,是否Trim掉外層,是否去除重複值
+#T=strtr
+$htm=strtr($^!,Array("\n"=>"","\r"=>"","\""=>""));
+Echo Strtr('123456','12','abc');//output:ab3456
+
+$s=array('a'=>'c','b'=>"d");
+Echo strtr('a,b', $s);
+//output:c,d
+#T=reg
+//替换
+$x=preg_replace('/\-(\d)*\./i', '-1.', $FileName);
+
+//eregi("<title>(.*)</title>",$du,$title);
+preg_match("/<title>(.*)<\/title>/",$du,$title);
+
+$out='';
+preg_match("/([a-zA-Z0-9_]+)/i",$html,$out);
+echo $out[1];
+
+//查找,这里的/i表示不区分大小写
+IF(Preg_match("/php/i","I Like PHP")) {
+	Echo 'True.';
+}
+//查找所有
+Preg_match_all("|<[^>]+>(.*)</[^>]+>|U","<b>example: </b><div align=left>this is a test</div>",$out,PREG_SET_ORDER);
+Preg_match_all("/12/x","Call 555-1212 or 1-800-555-1212",$phones);
+//=============================================================
+#T=debug
+var_dump($^!);
+#T=debugg
+//配合xdebug
+Echo '文件:'.xdebug_call_file().'<br>行號:'.xdebug_call_line().'<br>函數名:'.xdebug_call_function();
+var_dump(xdebug_get_headers());//輸出頭
+
+Echo xdebug_time_index(),"\n";//執行時間
+...
+Echo xdebug_time_index(),"\n";
+
+xdebug_start_trace('trace');//代碼跟蹤
+$DB = New DB();
+xdebug_stop_trace();
+
+Echo var_dump($^!),'<BR>';
+//var_export($);
+//$aa=var_export($,True);
+Foreach(Get_defined_vars() as $key=>$val) {
+	Echo '<strong>',$key,':</strong> ';
+	Print_r ($val);
+	Echo '<br>---------------------------------------------<br>';
+}
+Exit();
+#T=inarray
+In_Array('^!',$)
+#T=session
+$_SESSION['^!']
+#T=cook
+$blab_name=Cook('name','','Read');
+Cook('name',$value,'',1);//1天有效
+//函数:Cook设置/读取
+//参数:Cook名称,Cook值,写入/读取,有效天數
+Function Cook($key,$val='',$type='Read',$exptime=365) {
+	IF(Empty($key)) {
+		Return False;
+	}
+	IF(StrToLower($type)=='read') {
+		Return (Isset($_COOKIE[$key]))?$_COOKIE[$key]:'';
+	}Else{
+		SetType($exptime,'integer');
+		IF($exptime<1) {
+			Setcookie($key,$val,0);
+		}Else{
+			Setcookie($key,$val,(time()+($exptime*24*3600)),'/');
+		}
+	}
+}
+$blab_name=Cook('name','','Read');
+Cook('name',$value,'',1);//1天有效
+//=============================================================
+#T=sessionn
+//当前SessionID
+$sessionid=session_id();//session_name();
+
+//获取SessionID
+$sessionid=(Array_key_exists('sessionid',$_REQUEST))?$_REQUEST['sessionid']:'';
+
+//设置并使用SessionID
+Session_id($sessionid);
+
+//重新设施session存放位置
+Session_save_path($savePath);
+
+//该函数必须在 session_start() 函数调用之前调用
+Session_set_cookie_params(24 * 3600);
+
+IF(!Session_id()){Session_start();}
+IF(!IsSet($_SESSION)) {
+	Session_start();
+}
+
+//如果客户端没有禁用 Cookie,可以在启动session后设置时间
+SetCookie(session_name(), session_id(), time() + (24 * 3600), '/');//24小时
+$_SESSION['^!']=;
+IF(!IsSet($_SESSION['UserId'])) {
+	Session_destroy();
+}
+//如果客户端使用 IE 6.0 ， session_set_cookie_params(); 函数设置 Cookie 会有些问题，所以我们还是手动调用 setcookie 函数来创建 cookie
+//=============================================================
+#T=function
+//------------------------------------------------*
+//作者:Seven (QQ:9256114 eMail:See7di@Gmail.com)
+//函数:
+//参数:
+//返回:
+Function ^!() {
+	Global $DB,$Table;
+	$id=Toget('id');
+	IF(!$id Or !Is_numeric($id)) {
+		Alert('Request error!');
+	}
+
+	$Rs=$DB->Get("SELECT * FROM `{$Table}` WHERE id={$id}");
+	IF(Count($Rs)<1) {
+		Alert('No message!');
+		Die();
+	}
+	Unset($Rs);
+
+	Unset($DB,$Table,$id);
+}
+#T=functionn
+//print_r(get_loaded_extensions()); 获取所有可用的模块
+//print_r(get_extension_funcs('gd')); 获取指定模块的可用函数,传入的参数（模块名称）必须是小写
+//print_r(get_defined_functions());获取所有已经定义的函数
+//IF(!Function_Exists('^!')){Die('该函数不存在!');}
+//print_r(get_defined_functions());//得到所有自定義的function
+//Function foo() {
+//	$args=func_get_args();
+//	Foreach($args as $k=>$v) {
+//		Echo ($k+1),':',$v,'<br>';
+//	}Unset($args);
+//}
+#T=arr
+$^!=Array(''=>'',);
+#T=array
+Array('a^!'=>1,'b'=>'b','c'=>Array(1,2));
+#T=arrayy
+//count($);个数
+//sort($);排序
+//rsort($);排序
+//max($);最大值
+//min($);最小值
+//natsort();自然排序
+//Array_Merge($arr1,$arr2);键名重复时2会覆盖1
+Foreach($LableArray as $Arr2) {
+	$Arr1[]=$Arr2[0];
+}Unset($LableArray);
+Array_multisort($Arr1, $LableArray);//对数组$LableArray这个多维数组根据[0]进行排序
+//判断键名是否存在
+IF(array_key_exists('a',$a)) {
+	Echo 'Key exists!';
+}
+
+//拆分字符串
+$str='abcdefgh';
+$str=implode(',',str_split($str));
+Echo $str;
+
+//隨即打亂字符串
+Echo str_shuffle($str);
+
+$a=array('a'=>'Dog','b'=>'Cat');
+IF(array_key_exists('a',$a)) {
+	Echo 'Key exists!';
+}
+
+//指针操作
+$a=array(3=>'a',5=>'b',6=>'c');
+Echo Current($a);	//a
+Echo Key($a);		//3
+Echo Next($a);		//b
+Echo Key($a);		//5
+Echo Reset($a);		//a
+//将指针指向指定键名的项目上
+Reset($a);While(key($a)!=$键名){Next($a);}
+
+//按键名排序,并保持索引键名
+$a=Array('a'=>'Dog','b'=>'Cat','c'=>'Horse');
+Krsort($a);//ksort
+Print_r($a);//Array([c]=>Horse[b]=>Cat[a]=>Dog)
+
+//随机排序
+Shuffle($array);
+
+//建立有序数组
+$a=range('a','d');
+Print_r($a);	//Array([0]=>a[1]=>b[2]=>c[3]=>d)
+$a=range(0,50,10);
+Print_r($a);	//Array([0]=>0[1]=>10[2]=>20[3]=>30[4]=>40[5]=>50)
+//=============================================================
+#T=sqlite
+$PDO=New PDO("sqlite:{$_SERVER['DOCUMENT_ROOT']}/@db.db") Or Die('Can not open the database!');
+
+//修改数据
+IF($PDO->Exec("UPDATE `mess` SET memo='八大角色',net='光纤50M',tim='10点开放' WHERE id='1'")) {
+	Echo '修改成功!<br>';
+}
+
+//添加数据
+IF($PDO->Exec("INSERT INTO `mess` (dengji,paixu,xiaxian,name,memo,net,tim,qq,web) values ('3','0','123456','破天一剑','八大角色','光纤50M','10点开放','9256114','http://7di.net')")) {
+	Echo $PDO->lastInsertId();
+}
+
+//刪除
+//IF($Rs=$PDO->Exec("DELETE FROM `mess` WHERE id='1'")) {
+//	Echo '共刪除了',$Rs,'條數據.';
+//}
+
+//显示列表
+$Rs=$PDO->Query("SELECT * FROM mess");
+$Rs=$Rs->fetchall();
+Echo '共有'.Count($Rs).'条数据!<br>';
+Foreach($Rs as $k=>$v) {
+	Echo '<textarea rows="5" style="border:1px gray solid;width:90%;overflow:auto;">【',$k,'】',Chr(10);
+	Print_r ($v);
+	Echo '</textarea>';
+}
+Unset($Rs,$PDO);
+//=============================================================
+#T=pdo
+$PDO=New PDO('mysql:host=localhost;dbname=test','root','') Or Die('Can not open the database!');
+
+//添加
+//IF($PDO->Exec("INSERT INTO (name,content) values ('".$."','".$."')")) {
+IF($PDO->Exec("INSERT INTO `{$Table}` SET ^!='{$^!}',='".mysql_real_escape_string($)."',addtime='".time()."'")) {
+	Echo $PDO->lastInsertId();
+}
+
+//刪除
+$Rs=$PDO->Exec("DELETE FROM `{$Table}^!` WHERE id='{$id}'");
+IF($Rs) {
+	Echo '共刪除了',$Rs,'條數據.';
+}
+
+//檢查
+$Rs=$PDO->Query("SELECT * FROM WHERE id=");
+$Rs=$Rs->fetchall();
+IF(Count($Rs)<1) {
+	UnSet($Rs);
+	Die('沒有數據');
+}UnSet($Rs);
+
+$Rs=$PDO->Query("SELECT * FROM `{$Table}` ORDER BY id DESC");
+Foreach($Rs as $k=>$v) {
+	Echo '<textarea rows="5" style="border:1px gray solid;width:90%;overflow:auto;">【',$k,'】',Chr(10);
+	Print_r ($v);
+	Echo '</textarea>';
+}
+Unset($Rs,$PDO);
+//=============================================================
+#T=insert
+Mysql_Query("INSERT INTO `^!` SET own='{$}'");
+$id=$DB->Exe("INSERT INTO `{$Table}` SET ^!='{$^!}',='".mysql_real_escape_string($)."',addtime=".time()."",True,True,True);
+//$Rs=$DB->Exe("INSERT INTO `{$Table}` (`name`,content) values ('".$^!."','".$."')");
+$Rs=$DB->Exe("INSERT INTO `{$Table}` SET ^!='{$^!}',='".mysql_real_escape_string($)."',addtime=".time()."");
+IF($Rs) {
+	Alert('信息已经添加成功!');
+}Else{
+	Alert($Rs);
+}
+#T=update
+Mysql_Query("UPDATE `^!` SET own='{$}' WHERE id='{$^!}'");
+$Rs=$DB->Exe("UPDATE `{$Table}` SET ='{$^!}',='".mysql_real_escape_string($)."' WHERE id='{$^!}'");
+IF($Rs) {
+	Alert('信息已经修改成功!');
+}Else{
+	Alert($Rs);
+}
+#T=delete
+Mysql_Query("DELETE FROM `` WHERE id='{$}'");
+$Rs=$DB->Exe("DELETE FROM `` WHERE id='{$}'");
+IF($Rs) {
+	Alert('信息已经刪除成功!');
+}Else{
+	Alert($Rs);
+}
+#T=get
+$Rs=$DB->Get("SELECT * FROM `^!` WHERE id='{$^!}'");
+IF(Count($Rs)<=0) {
+	Alert('没有发现记录!');
+}Unset($Rs);
+#T=view
+$Rv=DB::View("SELECT * FROM `^!` WHERE id='{$^!}' ORDER BY id DESC LIMIT ,");
+Foreach($Rv as $k=>$v) {
+	Echo $k.':'.$v.'<br>';
+}Unset($Rv);
+#T=total
+$total=Mysql_num_rows(Mysql_query("SELECT id FROM ^! WHERE id='{$^!}'"));
+或
+$Re=DB::Get("SELECT Count(id) FROM `user` WHERE Locate(',{$Rs['id']},',sendsids)>0");
+$total=(Is_numeric($Re[0]))?$Re[0]:0;
+Unset($Re);
+Echo $total;
+
+$Rs=$DB->Get("SELECT SUM(num) FROM `add_roomnum` WHERE rid='509' And y='2013' And m='5' And d='6'");
+$t=(Is_numeric($Rs[0]))?$Rs[0]:0;
+Unset($Rs);
+Echo $t;
+//=============================================================
+#T=del
+//------------------------------------------------*
+Function _DelUser() {
+	Global $DB;
+	$id=Toget('id');
+	IF(!$id) {
+		Alert('参数获取失败!');
+	}
+
+	//单个删除
+	IF(Is_numeric($id)) {
+		IF($id<1 Or StrLen($id)<1){Alert('参数获取失败!');}
+
+		//不可删除管理员
+		$Rs=$DB->Get("SELECT typ FROM `user` WHERE id='".$id."' And typ='1'");
+		IF(Count($Rs)>0) {
+			Alert('管理员账号不可被删除!');
+		}Unset($Rs);
+
+		//删除用户自身
+		$DB->Exe("DELETE FROM `user` WHERE id='".$id."'");
+
+		//删除该用户的试卷
+		$DB->Exe("DELETE FROM `test` WHERE uid='".$id."'");
+
+	//批量删除
+	}Else{
+		Foreach($id as $k=>$v) {
+			IF(!Is_numeric($v) Or $v<1){Continue;}
+
+			//不可删除管理员
+			$Rs=$DB->Get("SELECT typ FROM `user` WHERE id='".$v."' And typ='1'");
+			IF(Count($Rs)>0) {
+				Continue;
+			}Unset($Rs);
+
+			//删除用户自身
+			$DB->Exe("DELETE FROM `user` WHERE id='".$v."'");
+
+			//删除该用户的试卷
+			$DB->Exe("DELETE FROM `test` WHERE uid='".$v."'");
+		}Unset($id);
+	}
+
+	Unset($DB,$Rs,$id);
+	Alert('','?work=userlist');
+}
+//=============================================================
+#T=add
+//------------------------------------------------*
+Function _Adduser() {
+	Global $DB;
+
+	$Rs=$DB->Get("SELECT id,name FROM user WHERE name=''");
+	IF(Count($Rs)>0) {
+		Alert('',"?work=mdy&id={$Rs['id']}");
+	}Unset($Rs);
+
+	$id=$DB->Exe("INSERT INTO user SET name='',isglobal='0',addtime='".time()."'",True,True,True);
+
+	Unset($DB,$Rs);
+	Alert('',"?work=mdy&id={$id}");
+}
+#T=list
+//------------------------------------------------*
+Function _UserList() {
+	Global $DB;
+
+	Echo "<style>/*The Global Table Style*/
+	.Tab{border-collapse:collapse;width:100%;border-spacing:0;background-color:#FFF;}
+	.Tab td{line-height:25px;font-size:12px;}
+	.Head td{font-size:14px;letter-spacing:2px;padding-bottom:8px;}
+	.Tab .tit{background-color:#F1F8FF;}
+	.Tab .tit td{line-height:30px;border-color:#E4EFF5 #FFF;border-style:solid;border-width:1px 0;}
+	.Tab .main td{border-bottom:1px dotted #C1C1C1;line-height:35px;color: #34668B;}
+	.Tab .pag{padding:0px;letter-spacing:0.1em;}
+	.bnone{border-bottom:none;}</style>";
+	Echo "<form action='' id='f1' method='post'>";
+	Echo "<table width='100%' align='center' border='0' cellspacing='0' cellpadding='1' class='Tab'>".Chr(10);
+	Echo "<tr class='Head'><td colspan='10'><strong>考生列表</strong> | <a href='?work=adduser'>新增考生</a> | <a href='?work=adduser'>批量导入</a></td></tr>".Chr(10);
+	Echo "<tr class='tit'><td width='18'><input type='checkbox' id='id'></td><td>姓名</td><td>类型</td><td>身份证号</td><td width='90'>管理项目</td></tr>".Chr(10);
+
+	$Result=$DB->View("SELECT * FROM `user` ORDER BY id DESC LIMIT [1],[2]",0);
+	Foreach($Result as $Rs) {
+		IF(!Is_array($Rs) Or Count($Rs)<2){Continue;}
+		$Rs['sex']=($Rs['sex']==1)?'男':'女';
+		Echo "<tr class='main'><td><input type='checkbox' value='{$Rs['id']}' name='id[]'></td><td>{$Rs['xingming']}</td><td>{$Rs['typ']}</td><td>{$Rs['card']}</td><td><a href='?work=mdyuser&id={$Rs['id']}'>修改</a>{$Rs['id']}</td></tr>".Chr(10);
+	}Unset($Result);
+	Echo "<tr class='pag'><td colspan='3' align='right'><a href='?work=deluser' submit='true' fid='f1' js=\"$('#f1').attr('action',this.href);\">删除所选</a></td><td colspan='7'>".$DB->PagBar(1)."</td></tr>".Chr(10);
+	Echo "</table></form>".Chr(10);
+	Unset($DB,$PageNum,$dis);
+}
+#T=mdy
+//------------------------------------------------*
+Function _MdyUser() {
+	Global $DB;
+	$id=Toget('id');
+	IF(!Is_numeric($id) Or $id<1 Or !$id) {
+		Alert('参数获取失败!');
+	}
+
+	//非管理员只能修改自己的信息
+	IF($_U['typ']!=1 And $_U['id']!=$id) {
+		Alert('请不要试图做违法的事!');
+	}
+
+	$Rs=$DB->Get("SELECT * FROM `user` WHERE id='".$id."'");
+	IF(Count($Rs)<=0) {
+		Alert('没有发现记录!');
+	}
+
+	//性别
+	$sex='<select name="sex">';
+	$arrSex=Arr(0);
+	Foreach($arrSex as $k=>$v) {
+		$sel='';
+		IF($Rs['sex']==$k){$sel=' selected';}
+		$sex.="<option value='{$k}'{$sel}>{$v}</option>";
+	}Unset($arrSex,$sel);$sex.='</select>';
+
+	//找回密码的问题
+	$ask='<select name="ask">';
+	$arrAsk=Arr(1);
+	Foreach($arrAsk as $k=>$v) {
+		$sel='';
+		IF($Rs['ask']==$k){$sel=' selected';}
+		$ask.="<option value='{$k}'{$sel}>{$v}</option>";
+	}Unset($arrAsk,$sel);$ask.='</select>';
+
+	Echo "<div class='tBox'><form action='?work=smdyuser&id={$id}' id='f1' method='post'>";
+	Echo "<table width='100%' align='center' border='0' cellspacing='0' cellpadding='1' class='Tab'>".Chr(10);
+	Echo "<tr class='Head'><td colspan='10'><strong>修改信息</strong></td></tr>".Chr(10);
+	Echo "<tr class='tit'><td colspan='10' class='info h'>红字项目为必填项</td></tr>".Chr(10);
+
+	Echo "<tr class='main'><td><b>姓名</b></td><td><input type='text' value='{$Rs['xingming']}' name='xingming'></td></tr>";
+	Echo "<tr class='main'><td><b>登录名称</b></td><td><input type='text' value='{$Rs['name']}' name='name'></td></tr>";
+	Echo "<tr class='main'><td><b>身份证号</b></td><td><input type='text' value='{$Rs['card']}' name='card'></td></tr>";
+	IF($_U['typ']==1) {
+		Echo "<tr class='main'><td><b>准考证号</b></td><td><input type='text' value='{$Rs['cod']}' name='cod'></td></tr>";
+	}
+	Echo "<tr class='main'><td><b>找回密码的问题</b></td><td>{$ask}</td></tr>";
+	Echo "<tr class='main'><td><b>找回密码的答案</b></td><td><input type='text' value='{$Rs['ans']}' name='ans'></td></tr>";
+	Echo "<tr class='main'><td>登录密码</td><td><input type='password' value='' name='pass'> <em>不想修改则请勿填写</em></td></tr>";
+	Echo "<tr class='main'><td>确认密码</td><td><input type='password' value='' name='pass1'> <em>不想修改则请勿填写</em></td></tr>";
+	Echo "<tr class='main'><td>性别</td><td>{$sex}</td></tr>";
+	Echo "<tr class='main'><td>单位</td><td><input type='text' value='{$Rs['company']}' name='company'></td></tr>";
+	Echo "<tr class='main'><td>邮箱</td><td><input type='text' value='{$Rs['email']}' name='email'></td></tr>";
+	Echo "<tr class='main'><td>电话</td><td><input type='text' value='{$Rs['tel']}' name='tel'></td></tr>";
+	IF($_U['typ']==1) {
+		Echo "<tr class='main'><td>考场</td><td><input type='text' value='{$Rs['cod1']}' name='cod1'></td></tr>";
+		Echo "<tr class='main'><td>座号</td><td><input type='text' value='{$Rs['cod2']}' name='cod2'></td></tr>";
+	}
+
+	Echo "<tr class='pag'><td colspan='10' style='padding:12px 0;'><input type='button' value='保存资料' class='btn' submit='true' fid='f1'></td></tr>".Chr(10);
+
+	Echo "</table></form></div>".Chr(10);
+
+	Unset($DB,$Rs,$id,$sex,$ask);
+}
+//------------------------------------------------*
+Function _Smdyuser() {
+	Global $DB;
+	$id=Toget('id');
+	IF(!Is_numeric($id) Or $id<1 Or !$id) {
+		Alert('参数获取失败!');
+	}
+	$xingming=Toget('xingming');
+	$name=Toget('name');
+	$card=Toget('card');
+	$cod=Toget('cod');
+	$ask=Toget('ask');
+	$ans=Toget('ans');
+	$pass=Toget('pass');
+	$pass1=Toget('pass1');
+	$sex=Toget('sex');
+	$company=Toget('company');
+	$email=Toget('email');
+	$tel=Toget('tel');
+	$cod1=Toget('cod1');
+	$cod2=Toget('cod2');
+
+	IF(!$xingming){Alert('请填写用户姓名!');}
+	IF(!$name){Alert('请填写登录名称!');}
+	IF(!$card){Alert('请填写身份证号!');}
+	IF(!$ask){Alert('请选择密码找回问题!');}
+	IF(!$ans){Alert('请填写密码找回的答案!');}
+
+	//登录名唯一
+	$Rs=$DB->Get("SELECT name FROM `user` WHERE name='{$name}' And id<>'{$id}'");
+	IF(Count($Rs)>0) {
+		Alert('登录名称已经有人使用了!');
+	}Unset($Rs);
+
+	//身份证号唯一
+	$Rs=$DB->Get("SELECT card FROM `user` WHERE card='{$card}' And id<>{$id}");
+	IF(Count($Rs)>0) {
+		Alert('身份证号已经有人使用了!');
+	}Unset($Rs);
+
+	$sql='';
+
+	//是否修改密码
+	IF($pass And $pass1) {
+		IF($pass!=$pass1){Alert('两次输入的密码必须相同!');}
+		IF(!_Reg($pass,'/^[a-z0-9]{6,16}$/i','chk')){Alert('密码只能由英文或数字组成且长度在6-16位之间!');}
+		$sql.=",pass='".Md5($pass)."'";
+	}Else{
+		//如果密码未设置则必须设置密码
+		$Rs=$DB->Get("SELECT pass FROM `user` WHERE id='".$id."' And (pass='' Or pass is null)");
+		IF(Count($Rs)>0) {
+			Alert('系统发现该用户的密码尚未设置,所以必须要填写密码!');
+		}Unset($Rs);
+	}
+
+	$DB->Exe("UPDATE user SET zzz='{$zzz}',zzz='{$zzz}',zzz='{$zzz}',zzz='{$zzz}',zzz='{$zzz}',zzz='{$zzz}',zzz='{$zzz}'{$sql} WHERE id='".$id."'");
+	Unset($DB,$Rs,$id,$name,$ask,$xingming,$card,$cod,$ask,$ans,$pass,$pass1,$company,$email,$tel,$cod1,$cod2,$sql,$sex);
+	Alert('','?work=userlist');
+}
+#T=mysql
+"INSERT INTO `{$Table}` SET ^!='{$}',=''"
+"INSERT INTO `{$Table}` (name,content) values ('{$}','{$}')"
+"UPDATE `{$Table}` SET ^!='{$}',='".mysql_real_escape_string($)."' WHERE id='{$}'"
+"SELECT * FROM `{$Table}` WHERE id='{$}' ORDER BY id DESC LIMIT 0,10"
+"SELECT DISTINCT name FROM `{$Table}` WHERE id='{$}' ORDER BY id DESC LIMIT 0,10"
+"SELECT DISTINCT bid id,uid FROM `{$Table}` WHERE id='{$^!}' ORDER BY uid ASC,id DESC LIMIT 0,10"
+"DELETE FROM `{$Table}` WHERE id='{$}'"
+"SELECT * FROM table WHERE id BETWEEN 1000000 AND 1000010;"
+
+$Result=Mysql_Query("^!");
+$memo=GetValue($num,'name','user','num');
+
+//得到num的和
+$Rs=$DB->Get("SELECT SUM(num) FROM `add_roomnum` WHERE rid='509' And y='2013' And m='5' And d='6'");
+$t=(Is_numeric($Rs[0]))?$Rs[0]:0;
+Unset($Rs);
+Echo $t;
+
+//复制$Table表里id=1的值为新记录(选择性的复制)
+┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+$DB->Exe("INSERT INTO `{$Table}` (email^!,pass,name,birthday) SELECT email,pass,name,birthday FROM `user` WHERE id='1'");
+Alert('信息已经复制成功!');
+
+//从memo字段把内容aa删掉，然后用原文章长度减去删掉之后文章长度 除以4
+┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+"SELECT id,name,(length(memo)-length(replace(memo,'aa',''))) / length('aa') FROM pkucun WHERE pid='12'"
+
+//从cid字段内把,10,替换掉之后变成空的那个项目
+┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+"SELECT id FROM pkucun WHERE replace(cid,',10,','')=''"
+
+//最精确的模糊查找方式
+┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+SELECT * FROM `{$Table}` WHERE Locate(',5,',cid)>0 And Locate(',10,',cid)>0 And Length(cid)=Length(',5,10,')
+SELECT * FROM `{$Table}` WHERE cid like '%,15,%' And cid like '%,9,%' And Length(cid)=Length(',15,9,');
+
+正则表达式,转译使用双\,即\\
+┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+SELECT * FROM `hotel` WHERE address REGEXP '^連江縣';//地址是以連江縣开头的
+SELECT * FROM `hotel` WHERE address REGEXP '^連江縣|桃園市';//地址是以連江縣开头的,或包含桃園市的
+SELECT * FROM `hotel` WHERE tel REGEXP '\\|99|\\|2311';//电话是以|99开始或以|2231开始的
+SELECT * FROM `hotel` WHERE gps REGEXP '\\|2\\||\\|1';//gps是|2|或以|1开始的
+
+$DB->Exe("INSERT INTO `{$Table}` SET name='{$^!}',ord='{$}'");
+$DB->Exe("DELETE FROM `{$Table}` WHERE id='{$id^!}'");
+
+$Rs=$DB->Get("SELECT *^! FROM `{$Table}` ORDER BY id DESC");
+IF(Count($Rs)<=0) {
+	Alert('没有发现记录!');
+}Unset($Rs);
+
+$_sel='<option>選擇項目</option>';
+$Rs=DB::View("SELECT name FROM `{$Table}` WHERE class='{$scls^!}' ORDER BY id");
+Foreach($Rs as $_s) {
+	$_sel.='<option>'.$_s[0].'</option>';
+}Unset($Rs);
+
+$Rv=DB::View("SELECT * FROM `town` ORDER BY ord ");
+Foreach($Rv as $k=>$v) {
+	Mysql_query("INSERT INTO `t` SET name='{$v['name']}'");
+}Unset($Rv);
+
+$Rs=Mysql_query("SELECT 学号, 科目1, 科目2, 科目3 FROM 学生成绩表");
+Echo '<tr><th>'.join('</th><th>',array_keys(mysql_fetch_array($Rs))).'</th></tr>';
+do{
+  Echo '<tr><td>'.join('</td><td>',$Rw).'</td></tr>';
+}while($Rw=mysql_fetch_array($Rs));Unset($Rs);
+//=============================================================
+#T=GZIP
+//强行编码
+mb_internal_encoding('UTF-8');
+mb_http_output('UTF-8');
+mb_detect_order('UTF-8,EUC-JP,GB2312,BIG5,SJIS,ASCII');
+
+//输出头部
+Header('Content-type:text/html; charset=utf-8');
+
+//这是ob_gzip压缩机
+function ob_gzip($content) {
+	IF(!headers_sent() && extension_loaded('zlib') && strstr($_SERVER['HTTP_ACCEPT_ENCODING'],'gzip')) {
+		$content = gzencode($content." \n//此页已压缩",8);
+
+		header('Content-Encoding: gzip');
+		header('Vary: Accept-Encoding');
+		header('Content-Length: '.strlen($content));
+	}
+	Return $content;
+}
+
+//启用一个带有ob_gzip压缩机的工作台
+ob_start('ob_gzip');
+
+//准备一些待压缩的内容
+$a='';
+for($i=0;$i<10;$i++) {
+	$a.=$i.':这里是压缩饼干的原料<br>';
+}
+Echo $a;
+File_Put_Contents('./A.htm',$a,LOCK_EX);
+
+//输出压缩成果
+ob_end_flush();
+//=============================================================
+#T=PAGE
+Require('@manage/inc/config.php');
+Require('@manage/inc/class_db.php');
+$DB = New DB();
+
+Class Paging{
+	Private Static $_Instance;
+	Private Function __clone(){}
+	Public Static Function getInstance() {
+		IF(empty(self::$_Instance)){self::$_Instance = new self();}
+		Return self::$_Instance;
+	}
+
+	Protected $count = 0;
+	Protected $size = 0;
+	Protected $page = 0;
+	Function view($sql,$pagesize=10) {
+		$page = isset($_GET['page']) ? $_GET['page'] : 1;
+		$pageon = ($page - 1) * $pagesize;
+		$sql = preg_replace('/select\s/i','$0SQL_CALC_FOUND_ROWS ',$sql)." LIMIT {$pageon},{$pagesize}";
+		$rs = mysql_query($sql);
+		list($this->count) = mysql_fetch_row(mysql_query('SELECT FOUND_ROWS()'));
+		$this->size = $pagesize;
+		$this->page = $page;
+		Return $rs;
+	}
+	Function bar($tpl='') {
+		IF(!$tpl){$tpl='共{count}页 第{page}页 <a href=?{first}>首页</a> <a href=?{prve}>上一页</a> <a href=?{next}>下一页</a> <a href=?{end}>尾页</a>';}
+		$count = ceil($this->count / $this->size);
+		$page = $this->page;
+		$d = array(
+			'{first}' => 1,
+			'{prve}' => $page > 1 ? $page - 1 : 1,
+			'{next}' => $page < $count ? $page + 1 : $count,
+			'{end}' => $count,
+			'{count}' => $count,
+			'{page}' => $page,
+		);
+		Foreach($d as $k=>&$v) {
+			IF(in_array($k,array('{first}','{prve}','{next}','{end}'))) {
+				$_GET['page'] = $v;
+				$v = http_build_query($_GET);
+			}
+		}
+		Return strtr($tpl,$d);
+	}
+}
+Function PagView($sql,$num=10) {
+	Return Paging::getInstance()->view($sql,$num);
+}
+Function PagBar($tpl='') {
+	Return Paging::getInstance()->bar($tpl);
+}
+
+$Result=PagView('SELECT id,name FROM room WHERE id<1200 ORDER BY id DESC ');
+Echo "<table border='1'>";
+Echo "<tr><td colspan='2'>".PagBar()."</td></tr>";
+Echo "<tr><th>id</th><th>name</th></tr>";
+While($Rs=mysql_fetch_array($Result,MYSQL_ASSOC)) {
+	Echo "<tr>";
+	Echo "<td>{$Rs['id']}</td>";
+	Echo "<td>{$Rs['name']}</td>";
+	Echo "</tr>";
+}
+Echo "<tr><td colspan='2'>".PagBar()."</td></tr>";
+Echo "</table>";
+//=============================================================
+#T=DOWNLOAD
+OB_start();
+DownLoad('readme.txt');
+Function DownLoad($File) {
+	Ob_end_clean();
+
+	Header('Content-Transfer-Encoding: binary');
+	Header('Content-Type: application/force-download; name="'.$File.'"');
+	Header('Content-Disposition: attachment; filename='.$File.'');
+	Header('Cache-control: private');
+	Header('Pragma: no-cache');
+	Header('Expires: 0');
+	Echo File_Get_Contents($File);
+}
+#T=COOKIE
+//函数:Cook设置/读取
+//参数:Cook名称,Cook值,写入/读取,有效天數
+//$_n=Cook('UserLoginName');
+//Cook('UserLoginName',$username,'Set',365);
+Function Cook($key,$val='',$type='Read',$exptime=YJ_SysCookietime) {
+	IF(Empty($key)) {
+		Return False;
+	}Else{
+		$key.=YJ_SysIsone;
+	}
+	IF(StrToLower($type)=='read') {
+		Return (Isset($_COOKIE[$key]))?$_COOKIE[$key]:'';
+	}Else{
+		SetType($exptime,'integer');
+		IF($exptime<1) {
+			Setcookie($key,$val,0);
+		}Else{
+			Setcookie($key,$val,time()+($exptime*24*3600));
+		}
+	}
+}
+#T=MYSQL
+$Conn=Mysql_Connect('localhost','root','') Or Die('连接失败:'.mysql_error());
+Mysql_Query('Set Names UTF8'); //解决中文乱码问题
+Mysql_Select_DB('^!') Or Die('无法连接数据库,因为:'.mysql_error());
+//Mysql_Close($Conn);
+
+$Result=Mysql_Query("^!");
+$Num=Mysql_num_rows($Result);//得到Recordcount值
+Mysql_Free_result($^!);//释放内存
+$total=Mysql_num_rows(Mysql_query("SELECT * FROM ^!"));//得到记录总数
+
+/*--------search--------------------------------------------------------*/
+$DB=New DB_Class();
+$sKey=$_GET['sKey'];
+$sWhere=" ^! >= '".$sKey."' And  < '".$sKey."'";
+
+$Result=$DB->View("SELECT * FROM ^! WHERE".$sWhere." ORDER BY id DESC LIMIT [1],[2]",0);
+Echo '<fieldset><legend>系统通过关键词共搜索到 ',$total,' 条记录</legend>';
+Foreach($Result as $key=>$Rs) {
+	Echo '<div>ID:',$Rs[0],'&nbsp;&nbsp;&nbsp;';
+	Echo '姓名:',$Rs['name'],'&nbsp;&nbsp;&nbsp;';
+	Echo '密码:',$Rs['pass'],'&nbsp;&nbsp;&nbsp;';
+	Echo '内容:',$Rs['content'],'&nbsp;&nbsp;&nbsp;';
+	Echo '</div>',Chr(10);
+}Unset($Result);
+Echo $DB->PagBar(1),'</fieldset>';
+/*-----Insert-----------------------------------------------------------*/
+"INSERT INTO ^! (name,content) VALUES ('".$."','".$."')";
+
+$DB->Exe("INSERT INTO ^! (name,content) VALUES ('".$."','".$."')");
+//$Result=Mysql_Query("INSERT INTO ^! (name,content) VALUES ('".$."','".$."')") Or Die('添加失败:'.Mysql_error());
+//Echo '刚添加的数据编号是:',Mysql_Insert_Id();
+Global $DB;
+$Result=$DB->Exe("INSERT INTO ^! (,,,) VALUES ('".$."','".$."','".$."',".time().")");
+IF($Result==1) {
+	Alert('信息已经添加成功!');
+}Else{
+	Echo Out($Result);
+}
+/*-----Update-----------------------------------------------------------*/
+$DB->Exe("UPDATE ^! SET ='".$."',=".$." WHERE id=".$."");
+Global $DB;
+$Result=$DB->Exe("UPDATE ^! SET Title='".$Title."',Name='".$Name."',Rule=".$Rule.",FileSysRoot='".$FileSysRoot."' WHERE id=".$id."");
+IF($Result==1) {
+	Alert('用户信息已经修改成功!','?work=');
+}Else{
+	Echo Out($Result);
+}
+/*-----Delete-----------------------------------------------------------*/
+"DELETE FROM ^! WHERE id=".$."";
+$DB->Exe("DELETE FROM ^! WHERE id=".$."");
+/*-----Select-----------------------------------------------------------*/
+$Result=Mysql_Query("SELECT * FROM ^! WHERE = ORDER BY id DESC") Or Die(Mysql_error());
+$Num=Mysql_num_rows($Result);//得到记录总数
+While($rs=Mysql_Fetch_Array($Result)) {
+	Echo '姓名:',$rs['name'],'<br>';
+	Echo '姓名:',$rs[1],'<br>';
+}Mysql_Free_result($Result);//释放内存
+
+//$Rs=Mysql_Fetch_Array($Result);
+//Echo $Rs['name'];
+
+Global $DB,$Manage;
+$Result=$DB->Get("SELECT * FROM ^! ORDER BY id DESC");
+IF(Count($Result)<=0) {
+	Alert("没有发现记录!");
+}
+/*-----------page-----------------------------------------------------*/
+Global $DB,$Manage;
+
+$Result=$DB->View("SELECT * FROM ^! ORDER BY id DESC LIMIT [1],[2]",0);
+Foreach($Result as $key=>$Rs) {
+	Echo '<tr>';
+	Echo '<td>',$Rs['Title'],'</td>';
+	Echo '<td>',$Rs['NickName'],'</td>';
+	Echo '<td>',GetValue($Rs['Role'],"Title","adminrule"),'</td>';
+	Echo '<td>',date('Y-m-d h:i:s', $Rs['AddTime']),'</td>';
+	Echo '<td>',$Rs['FileSysRoot'],'</td>';
+	Echo '</tr>';
+	$i++;
+}Unset($Result);
+Echo '<tr class=',$trclass,'><td colspan="7">',$DB->PagBar(1),'</td></tr>';
+//=============================================================
+#T=FILE
+Mime_Content_type('^!');//得到mime类型
+
+$FileEx=Explode('.',$File);
+$FileEx=End($FileEx);
+
+$Dir='d:\\iso';
+IF(!Is_dir($Dir)) {
+	Echo '目录错误!';
+	Exit;
+}
+Echo getcwd();	//输出当前目录
+IF($DH=OpenDir($Dir)) {
+	$i=0;
+	While($File=ReadDir($DH)) {
+		Echo $i,':',$File,'<br>',Chr(10);
+		$i++;
+	}
+}
+CloseDir($DH);
+//文件夹删除操作
+@RmDir('../^!/');
+//建立文件夹
+@MkDir('/path/to/my/dir', 0777);
+//让文件夹具备最大操作权限
+@Chmod('/somedir/somefile', 0777);
+
+//==============文件操作
+$files=Glob('*.{php,txt}', GLOB_BRACE);//查找文件
+Print_r($files);
+
+$files=Glob('../images/a*.jpg');
+$files=array_map('realpath',$files);
+print_r($files);
+
+Is_dir($File_name);
+Is_file($File_name);
+Is_link($File_name);
+Is_readable($File_name);
+Is_writable($File_name);
+ReadFile($File_name);			//读取全部内容(其无须用Fopen打开即可读取)
+$Arr=File($File_name);			//将文本文件每一行作为数组的一列赋值给数组
+Rewind($File);				//指针返回第一行
+Fread($File,Filesize($File_name));	//二进制读取整个文件
+Fread($File,100);			//读取100个字节
+Fpassthru($File);			//从第100个字节处读取到文件末
+Fclose($File);
+//文件复制操作
+$File_name='.\\^!.txt';
+Copy($File_name,"$File_name.bak");
+//文件重命名操作
+$File_name='.\\^!.txt';
+Rename($File_name,'.\\a.txt');
+//文件删除操作
+@UnLink('../^!');
+//=============================================================
+#T=CLASS
+//$arr=get_declared_classes();
+//print_r($arr);//得到所有已定义的php类。
+Class ClassName{
+	Public static $^!='';
+	Private $=;
+
+	//方法,获取属性
+	Function __get($property_name) {
+		IF(isset($this->$property_name)) {
+			Return ($this->$property_name);
+		}Else{
+			Return (NULL);
+		}
+	}
+
+	//方法,设置属性
+	Function __set($property_name,$value) {
+		$this->property_name=$value;
+	}
+
+	//构造函数
+	Function __construct() {
+		$this->=;
+	}
+
+	//析构函数
+	Function __destruct() {
+	}
+}
+$C=&New ClassName();
+
+Class SYS_Config{
+	public static $DBHOST='localhost';
+	public static $DBUSER='root';
+	public static $DBPASS='';
+	public static $DBNAME='guest';
+	public static $DBNAME='guest';
+}
+
+//数据库操作类
+!Defined('SYS_SYS') && Exit('Access Denied!');
+
+//数据库操作类
+Class DB{
+	//属性
+	private $host;
+	private $user;
+	private $pass;
+	private $DBname;
+	private $Conn;
+	private $pconnect;
+	Public $p;		//現在是第幾頁
+	Public $count;	//一共有多少頁
+	Public $total;	//一共有多少條
+
+	//方法
+	//__get():获取属性
+	Function __get($property_name){
+		IF(isset($this->$property_name)){
+			Return ($this->$property_name);
+		}Else{
+			Return (NULL);
+		}
+	}
+
+	//方法
+	//__set():设置属性
+	Function __set($property_name,$value){
+		$this->property_name=$value;
+	}
+
+	//构造函数
+	//建立与数据库服务器的链接
+	Function __construct(){
+		$this->host=$GLOBALS['SYS_DB']['HOST'];
+		$this->DBname=$GLOBALS['SYS_DB']['NAME'];
+		$this->user=$GLOBALS['SYS_DB']['USER'];
+		$this->pass=$GLOBALS['SYS_DB']['PASS'];
+		$this->pconnect=False;
+
+		//$this->Conn=@Mysql_connect($this->host,$this->user,$this->pass) Or Die ("Database server connection failed, check the Config configuration is correct!");
+
+		IF($this->pconnect){
+			$this->Conn=@mysql_pconnect($this->host,$this->user,$this->pass) Or Die('Database server connection failed, check the Config configuration is correct!');
+		}Else{
+			$this->Conn=@mysql_connect($this->host,$this->user,$this->pass,1) Or Die('Database server connection failed, check the Config configuration is correct!');
+		}
+
+		Mysql_query("SET NAMES 'UTF8'");
+		Mysql_Select_DB($this->DBname,$this->Conn) Or Die ('Open the database error, please check the database exists!');
+	}
+
+	//析构函数
+	//断开连接
+	Function __destruct(){
+		IF(IsSet($Arr)){
+			$Arr=NULL;
+		}
+		IF(IsSet($Query)){
+			$Query=NULL;
+		}
+		IF(IsSet($Rs)){
+			$Rs=NULL;
+		}
+	}
+
+	//增加,删除,修改
+	//參數:待執行Sql,是否返回,返回時是否過濾,獲取新增記錄的id
+	Function Exe($Sql,$Ret=False,$Rep=True,$Getid=False){
+		//IF(!DB::External()) {
+		//	Exit('數據來路不明,操作被終止!');
+		//}
+		$Query=Mysql_Query($Sql) Or Die (Mysql_error());
+		IF($Ret==False){
+			Return $Query;
+		}Else{
+			IF($Getid){	//取得新增記錄的id
+				Return mysql_insert_id();
+			}Else{
+				$Rs=Mysql_Fetch_Array($Query);
+				IF(Is_Array($Rs) And $Rep==True){
+					$Rs=Array_Filter($Rs,'_nul');
+				}
+				Mysql_Free_result($Query);
+				Return $Rs;
+			}
+		}
+	}
+
+	//返回一行符合條件的記錄
+	Function Get($Sql){
+		$Arr=array();
+		$Rs=Mysql_query($Sql) Or Die (Mysql_error());
+
+		IF(Mysql_num_rows($Rs)<1){
+			Mysql_Free_result($Rs);
+			Return $Arr;
+			Exit();
+		}
+
+		$Arr=Mysql_fetch_Array($Rs);
+		Mysql_Free_result($Rs);
+		Return $Arr;
+	}
+
+	/**
+	函數:返回多行符合條件的記錄
+	參數:Sql語句,每頁顯示多少條(據此判斷是否需要分頁:False不分頁;0每頁個數用config的預設值;大於0為目前定義的值)
+	正常用法(不需要分頁的內容塊):
+		$Rv=DB::View("SELECT id From `sale` WHERE id>'0' LIMIT 0,10");
+		$Rv=$DB->View("SELECT id From `sale` WHERE id>'0'");
+		Echo '<br>'.Strtr(Json_Encode($Rv),Array('},'=>'},<br>','['=>'[<br>',']'=>'<br>]')).'<br>';
+	分頁用法(此方法不可用DB::View的方式):
+		$Rv=$DB->View("SELECT id From `sale` WHERE id>'0' order by id desc LIMIT [1],[2]",0);
+		Echo $DB->PagBar();
+		Echo '<br>'.Strtr(Json_Encode($Rv),Array('},'=>'},<br>','['=>'[<br>',']'=>'<br>]')).'<br>';
+		Echo $DB->PagBar(2);
+	/**/
+	Function View($Sql,$size=False){
+		IF($Sql=='') {Return Array();}
+
+		//如果需要分頁
+		IF(Is_numeric($size) And $size>=0) {
+			//現在是第幾頁
+			$this->p=Toget("p");
+			IF(!Is_numeric($this->p) Or $this->p<1){$this->p=1;}
+
+			//共有多少條
+			$Sql1=preg_replace('/ limit.*/i','',$Sql);
+			$this->total=Mysql_num_rows(Mysql_query($Sql1));Unset($Sql1);
+
+			//每頁多少條
+			$size=($size==0) ? $GLOBALS['SYS_PagNum'] : $size;
+
+			//共有多少頁
+			$this->count=Ceil($this->total/$size);
+
+			//==============计算提取位置
+			$this->p=Min($this->count,$this->p);			//找出最小值
+			IF(($this->p-1)*$size>0){
+				$Start=($this->p-1)*$size;				//计算提取的开始位置
+			}Else{
+				$Start=0;								//计算提取的开始位置
+			}
+
+			//替換$Sql語句內的值
+			$Sql=Strtr($Sql,Array('[1]'=>$Start,'[2]'=>$size));
+		}
+
+		$Arr=array();
+		$i=0;
+		//Echo "<textarea style='width:97%;height:100px;border:1px solid #ccc'>",Chr(10),$Sql,Chr(10),"</textarea>";//Die();
+		$Rs=Mysql_query($Sql) Or Die (Mysql_error());
+		IF(Mysql_num_rows($Rs)<1){
+			Mysql_Free_result($Rs);
+			Return $Arr;
+		}
+
+		While($Re=Mysql_fetch_Array($Rs)){
+			$Arr[$i++]=$Re;
+		}
+		Mysql_Free_result($Rs);
+		Unset($Sql,$size,$p,$num,$Start,$i,$Rs,$Re);
+		Return $Arr;
+	}
+
+	/**
+	函数:通用分页
+	参数:分頁类型,Url(如果不傳值則自動取值),共有多少頁,當前是第幾頁
+	用法:
+		$Rv=$DB->View("SELECT id From `sale` WHERE id>'0' order by id desc LIMIT [l1],[l2]",0);
+		Echo $DB->PagBar();
+		Echo '<br>'.Strtr(Json_Encode($Rv),Array('},'=>'},<br>','['=>'[<br>',']'=>'<br>]')).'<br>';
+		Echo $DB->PagBar(2);
+	/**/
+	Function PagBar($Typ=0,$url='',$count=0,$p=0){
+		$p=(Is_numeric($p) And $p>0 ) ? $p : $this->p;
+		$count=(Is_numeric($count) And $count>0) ? $count : $this->count;
+		/**
+			//@.php?p=2&a=pabcp
+			array(
+			  'path' => string '/@.php' (length=6)
+			  'query' => string 'p=2&a=pabcp' (length=11)
+			)
+		/**/
+		$url=(Trim($url)=='') ? $_SERVER["REQUEST_URI"] : $url;	//如果$Url未传值,则自動取值
+		$url=Parse_url($url);									//URL拆分成數組
+
+		//重整網址,去掉URL中頁碼傳遞的部份
+		IF(IsSet($url['query'])) {	//=========有參數傳遞
+			$url['query']=Strtr('?'.$url['query'],Array('?p='.$p=>'?','&p='.$p=>''));
+			$url['query']=Str_iReplace('?&','?',$url['query']);
+			$url['query']=(StrLen(Trim($url['query']))>1) ? $url['query'].'&' : $url['query'];
+		}Else{						//=========無參數傳遞
+			$url['query']='?';
+		}
+		$url=Implode('',$url);
+		//var_dump($url);
+
+		IF($p<=3){
+			$s=1;
+			$e=($count>5)?5:$count;
+		}Else{
+			$e=($p+2);
+			IF($e>$count){
+				$s=(($count-5)>0)?($count-5):1;
+				$e=$count;
+			}Else{
+				$s=($p-2);
+				$e=($p+2);
+			}
+		}
+		$Bar="\n<!--Created by ".$GLOBALS['SYS_Name']." (QQ:9256114 Mail:See7di@Gmail.com)-->\n";
+
+		Switch ($Typ){
+		Case 2:		//傳統用法
+			$Bar.="<a href='".$url."p=1'>First</a>";
+			IF(($p-1)>0){
+				$Bar.="<a href='".$url."p=".($p-1)."'>Prev</a>";
+			}Else{
+				$Bar.="<span>Prev</span>";
+			}
+			For($i=$s;$i<=$e;$i++){
+				IF($i==$p){
+					$Bar.="<a href='javascript:void(null)' class='cur'>{$i}</a>";
+				}Else{
+					$Bar.="<a href='".$url."p={$i}' class='num'>{$i}</a>";
+				}
+			}
+			IF($p<$count){
+				$Bar.="<a href='".$url."p=".($p+1)."'>Next</a>";
+			}Else{
+				$Bar.="<span>Next</span>";
+			}
+			$Bar.="<a href='".$url."p={$count}'>Last</a>";
+			Break;
+		Case 1:		//后臺調用
+			$Bar.="<style type='text/css'>
+				#Pag-bar{clear:both;}
+				#Pag-bar *{Font-size:12px;Font-family:verdana;}
+				#Pag-bar a{Border:1px solid #DDD;color:#555;margin:0 3px 0 0;padding:3px 6px;text-decoration:none;}
+				#Pag-bar .cur,#Pag-bar a:hover{background-color:#FF9000;border:1px solid #666;color:#FFF;}
+				#Pag-bar .cur{font-weight:bold;}
+			</style>";
+			$Bar.='<div id="Pag-bar">';
+			$Bar.="<a href='javascript:void(0)' onclick=Sx('p','1')>首頁</a>";
+			IF(($p-1)>0){
+				$Bar.="<a href='javascript:void(0)' onclick=Sx('p','".($p-1)."')>上頁</a>";
+			}
+			For($i=$s;$i<=$e;$i++){
+				IF($i==$p){
+					$Bar.="<a href='javascript:void(null)' class='cur'>{$i}</a>";
+				}Else{
+					$Bar.="<a href='javascript:void(0)' onclick=Sx('p','".$i."')>{$i}</a>";
+				}
+			}
+			IF($p<$count){
+				$Bar.="<a href='javascript:void(0)' onclick=Sx('p','".($p+1)."')>下頁</a>";
+			}
+			$Bar.="<a href='javascript:void(0)' onclick=Sx('p','".$count."')>尾頁</a>";
+			$Bar.='</div>';
+			Break;
+		Default:	//前臺調用
+			$Bar.="<a href='".Str_iReplace('.','1.',$url)."' onclick=\"Sx('p','1');return false;\">首頁</a>";
+			IF(($p-1)>0){
+				$Bar.="<a href='".Str_iReplace('.',($p-1).'.',$url)."' onclick=\"Sx('p','".($p-1)."');return false;\">上頁</a>";
+			}
+			For($i=$s;$i<=$e;$i++){
+				IF($i==$p){
+					$Bar.="<a href='javascript:void(null)' class='cur'>{$i}</a>";
+				}Else{
+					$Bar.="<a href='".Str_iReplace('.',$i.'.',$url)."' onclick=\"Sx('p','".$i."');return false;\">{$i}</a>";
+				}
+			}
+			IF($p<$count){
+				$Bar.="<a href='".Str_iReplace('.',($p+1).'.',$url)."' onclick=\"Sx('p','".($p+1)."');return false;\">下頁</a>";
+			}
+			$Bar.="<a href='".Str_iReplace('.',($count).'.',$url)."' onclick=\"Sx('p','".$count."');return false;\">尾頁</a>";
+			Break;
+		}
+		Unset($Typ,$e,$s,$p,$count,$url);
+		Return $Bar;
+	}
+
+	//验证站外提交
+	Function External(){
+		$HOST = IsSet($_SERVER['HTTP_X_FORWARDED_HOST']) ? $_SERVER['HTTP_X_FORWARDED_HOST'] : (IsSet($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '');
+		$Host1 = StrToLower($HOST);
+		//var_dump($_SERVER);
+		$Host2 = (IsSet($_SERVER['HTTP_REFERER'])) ? StrToLower($_SERVER['HTTP_REFERER']) : '';
+		IF(Trim($Host2)!='') {
+			$Host2 = Parse_Url($Host2);
+			$Host2 = $Host2['host'];
+		}
+		IF($Host1==$Host2){
+			Return True;
+		}Else{
+			Return False;
+		}
+	}
+
+	//函数:获取来访者真实IP
+	Function user_Ip(){
+		IF(Getenv('HTTP_CLIENT_IP')){
+			$ip = Getenv('HTTP_CLIENT_IP');
+		}Elseif(Getenv('HTTP_X_FORWARDED_FOR')){
+			$ip = Getenv('HTTP_X_FORWARDED_FOR');
+		}Elseif(Getenv('REMOTE_ADDR')){
+			$ip = Getenv('REMOTE_ADDR');
+		}Else{
+			$ip = $HTTP_SERVER_VARS['REMOTE_ADDR'];
+		}
+		Return $ip;
+	}
+
+	//取得版本
+	Function Version(){
+		$Rs = Mysql_query("SELECT VERSION();");
+		$row = mysql_fetch_array($Rs);
+		$mysql_version = $row[0];
+		$mysql_versions = explode(".",trim($mysql_version));
+		$mysql_version = number_format($mysql_versions[0].".".$mysql_versions[1],2);
+		Mysql_Free_result($Rs);
+		Return $mysql_version;
+	}
+}
+//=============================================================
+#T=IMAGE
+$src=ImageCreateFromJPEG('pic.jpg');
+
+$width=ImageSx($src);
+$height=ImageSy($src);
+$x=$width/2; $y=$height/2;
+$dst=ImageCreateTrueColor($x,$y);
+ImageCopyResampled($dst,$src,0,0,0,0,$x,$y,$width,$height);
+
+//header('Content-Type: image/jpeg');
+//ImageJPEG($dst,'',100); // Output to Browser
+
+ImageJpeg ($dst,'pic1.jpg');
+imagedestroy($dst);
+//=============================================================
+#T=XML
+$dom=New DomDocument();
+IF(!File_Exists('xml.xml')) {
+	$xmlstr="<?xml version='1.0' encoding='GB2312'?><冯健></冯健>";
+
+	$dom->loadXML($xmlstr);
+	$dom->save("xml.xml");
+}Else{
+	$dom->loadXML("xml.xml");
+}
+Print $dom->saveXML();
+#T=SOCKET
+$FP=FSockOpen('www.php.net',80,$errno,$errstr,30);
+IF(!$FP) {
+	Echo 'Find Error:',$errstr($errno),'<br>\n';
+}Else{
+	fputs($FP,"GET / HTTP/1.0\r\nHost:www.example.com\r\n\r\n");
+	Echo 'Output:<br>',Chr(10);
+	While(!feof($FP)) {
+		Echo fgets($FP,128),'<br>--------<br>';
+	}
+	Fclose($FP);
+}
+//=============================================================
+#T=head
+OB_start('_gzip');
+
+//设置超时时间
+Set_time_limit(0);
+
+//程序错误输出方式
+Error_reporting(E_ALL|E_STRICT);
+//Error_reporting(E_ALL || ~E_NOTICE);//0;E_ALL;E_ALL || ~E_NOTICE
+//Error_reporting(E_ALL);
+
+//开启Session
+$sessionid=(Array_key_exists('sessionid',$_REQUEST))?$_REQUEST['sessionid']:'';
+IF(StrLen($sessionid)>0){Session_Id($sessionid);}
+Session_start();
+
+
+IF(!headers_sent()) {
+	header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+	header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+	header('Cache-Control: no-store, no-cache, must-revalidate');
+	header('Content-type: text/html; charset=UTF-8');
+
+	//為后退操作服務
+	Header('Cache-control: private,must-revalidate');
+
+	//输出头部
+	Header('Content-type:text/html; charset=utf-8');
+
+	//输出404错误
+	Header('HTTP/1.0 404 Not Found');Die();
+
+	Header('Cache-control: private, must-revalidate');  //支持页面回跳
+	Header('Location:^!.php');
+	//Header('Content-type:text/xml');
+	Header('Content-type:text/html; charset=utf-8');
+}
+
+IF(!isset($_SERVER['PHP_AUTH_USER']) Or $_SERVER['PHP_AUTH_USER']!='seven') {
+	Header('WWW-Authenticate: Basic realm="请登录系统"');
+	Echo '{您无权使用系统!}<br>',Chr(10);
+}Else{
+	Echo $_SERVER['PHP_AUTH_USER'],'你好<br>',Chr(10);
+	Echo '你输入的密码为',$_SERVER['PHP_AUTH_PW'],'<br>',Chr(10);
+}
+
+Unset($GLOBALS, $_ENV, $HTTP_GET_VARS, $HTTP_POST_VARS, $HTTP_COOKIE_VARS, $HTTP_SERVER_VARS, $HTTP_ENV_VARS);
+
+//取得初始參數
+$Config=Setting();
+Function Setting() {
+	$Arr=Array();
+	$Rs=$DB->Get("SELECT * FROM config WHERE id=1");
+	IF(Count($Rs)>0) {
+		$Arr[]=$Rs[0];
+	}
+	Return $Arr;
+}
+//=============================================================
+#T=memadd
+$mem->add('^!','123',MEMCACHE_COMPRESSED,0);
+#T=memset
+$mem->set('^!',$,MEMCACHE_COMPRESSED,0);
+#T=memget
+$mem->get('^!');
+#T=memdel
+$mem->delete('^!');
+#T=memclear
+$mem->flush();^!
+#T=memclose
+$mem->close();^!
+#T=MEMCACHE
+$mem = new Memcache;
+$mem->connect('127.0.0.1', 11211) Or die('Memcache連接失敗!');
+$mem->add('test','成功了!', MEMCACHE_COMPRESSED, 0);
+Echo $mem->get('test');
+$mem->set('test','测试成功了!', MEMCACHE_COMPRESSED, 0);
+Echo $mem->get('test');
+$mem->delete('test');
+$mem->close();
+
+$mem->connect();	//建立mem對象
+$mem->pconnect();	//創建一個mem的持久性鏈接對象
+$mem->add();		//添加一個值,如果已經存在則返回false
+$mem->set();		//添加一個值,如果存在則覆蓋
+$mem->get();		//獲取一個key的值
+$mem->delete();		//刪掉一個key值
+$mem->flush();		//清理所有緩存的數據
+$mem->decrement();	//對保存的某個key中的值進行減法操作
+$mem->increment();	//對保存的某個key中的值進行加法操作
+$mem->close();		//關閉mem對象
+$mem->debug();		//控制調試功能
+
+$mem->addServer();				//添加一個可以使用的服務器地址
+$mem->getExtendedStats();		//獲取進程池中所有進程的運行系統統計
+$mem->getStats();				//返回服務器的一些運行統計信息
+$mem->setServerParams();		//在運行時修改服務器的參數
+$mem->getServerStatus();		//獲取運行服務器的參數
+$mem->setCompressThreshold();	//對大於某一大小的數據進行壓縮
+$mem->getVersion();				//返回運行的mem的版本
+
+$mem = new Memcache;
+$mem->connect('127.0.0.1', 12000);
+//Memcache::set方法有四个参数，第一个参数是key，第二个参数是value，第三个参数可选，表示是否压缩保存 ，第四个参数可选，用来设置一个过期自动销毁的时间
+$mem->set('test','123',0,60);
+//Memcache::add方法的作用和Memcache::set方法类似，区别是如果 Memcache::add方法的返回值为false，表示这个key已经存在，而Memcache::set方法则会直接覆写
+$mem->add('test','123',0,60);
+//Memcache::get方法的作用是获取一个key值，Memcache::get方法有一个参数，表示key
+$mem->get('test');//输出为'123'
+//Memcache::replace 方法的作用是对一个已有的key进行覆写操作，Memcache::replace方法有四个参数，作用和Memcache::set方法的相同
+$mem->replace('test','456',0,60);
+//Memcache::delete方法的作用是删除一个key值，Memcache::delete方法有两个参数，第一个参数表示key，第二个参数可选，表示删除延迟的时间
+$mem->delete('test',60);
+
+$out = $mem->get('c');
+IF($out=='') {//memcache內缓存不存在
+	$out = 'memcache里值是空的';
+	$mem->set('c','來自memcache的值:c', MEMCACHE_COMPRESSED, 0);
+}
+//=============================================================
+#T=MONGO
+//连接 localhost:27017
+$conn = new Mongo();
+//连接远程主机默认端口
+$conn = new Mongo('test.com');
+//连接远程主机22011端口
+$conn = new Mongo('test.com:22011');
+//MongoDB有用户名密码
+$conn = new Mongo("mongodb://username:username@localhost")
+//MongoDB有用户名密码并指定数据库名
+$conn = new Mongo("mongodb://username:username@localhost/blog");
+//多个服务器
+$conn = new Mongo("mongodb://localhost:27017,localhost:27018");
+
+
+//2、指定数据库和数据集名（表名）
+//选择数据库blog
+$db = $conn->blog;
+
+//制定结果集（表名：users）
+$collection = $db->users;
+
+//3、CRUD
+//新增
+$user = Array('name' => 'caleng', 'email' =>'admin@admin.com');
+$collection->insert($user);
+//修改
+$newdata = Array('$set' => Array("email" => "test@test.com"));
+$collection->update(Array("name" => "caleng"), $newdata);
+//删除
+$collection->remove(Array('name'=>'caleng'), Array("justOne" => true));
+//查找
+$cursor = $collection->find();
+var_dump($cursor);
+//查找一条
+$user = $collection->findOne(Array('name' => 'caleng'), Array('email'));
+var_dump($user);
+
+//4、关闭连接
+$conn->close();
+//=============================================================
+#T=UPLOAD
+Echo '<form method="post" action="?action=doup" enctype="multipart/form-data">
+	<input type="hidden" name="MAX_FILE_SIZE" value="30000">
+	姓名:<input type="text" name="username" value="wef"><br>
+	文件:<input type="file" name="userfile"><br>
+	<input type="submit" value="开始上传"><br>
+</form>';
+
+$action=$_GET['action'];
+Switch($action) {
+Case 'doup':
+	$StrFileName=$_FILES['userfile']['name'];
+	$StrTempName=$_FILES['userfile']['tmp_name'];
+	Echo $_POST['username'],'<br>';
+	Echo $StrFileName,'<br>';
+	Echo $_FILES['userfile']['type'],'<br>';
+	Echo $_FILES['userfile']['size'],'<br>';
+	Echo $StrTempName,'<br>';
+	Echo $_FILES['userfile']['error'],'<br>';//0成功;1太大超过php.ini;2超过MAX_FILE_SIZE;3部分上传;4失败
+
+	$StrUPDir=getcwd().'\\';
+	Echo $StrUPDir.$_POST['username'].$StrFileName;
+	IF(!move_uploaded_file($StrTempName,$StrUPDir.$_POST['username'].$StrFileName)) {
+		Echo '失败,错误为:',$_FILES['userfile']['error'],'<br>',Chr(10);
+	}Else{
+		Echo '{成功}<br>',Chr(10);
+	}
+//	Header('Location: ?action=');
+//	Break;
+}
+//=============================================================
+#T=CURL
+// 模拟请求数据
+Function Curl($url,$postfields,$referer='',$cookie_jar='./cookie.txt'){
+	$Cur = curl_init();
+	$Opt = Array(
+		CURLOPT_URL => $url,
+		CURLOPT_HEADER => 1,
+		CURLOPT_NOBODY => 1,
+		CURLOPT_PORT => 80,	//端口
+		CURLOPT_POST => 1,	//发送一个常规的POST请求，类型为：application/x-www-form-urlencoded，就像表单提交的一样。
+		CURLOPT_POSTFIELDS => $postfields,//要传送的所有数据，如果要传送一个文件，需要一个@开头的文件名
+		CURLOPT_RETURNTRANSFER => 1,// 获取的信息以文件流的形式返回，而不是直接输出。
+
+		CURLOPT_SSL_VERIFYHOST => 1,// 从证书中检查SSL加密算法是否存在
+		CURLOPT_SSL_VERIFYPEER => 0,// 对认证证书来源的检查，0表示阻止对证书的合法性的检查。
+		//CURLOPT_COOKIE => GetCook($url),
+
+		//CURLOPT_USERAGENT => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)",//模拟用户使用的浏览器，在HTTP请求中包含一个"user-agent"头的字符串。
+		CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:9.0.1) Gecko/20100101 Firefox/9.0.1',
+		CURLOPT_FOLLOWLOCATION => 1,
+		CURLOPT_COOKIEJAR => Dirname(__FILE__).$cookie_jar,
+		CURLOPT_COOKIEFILE => Dirname(__FILE__).$cookie_jar,
+		CURLOPT_REFERER => $referer,
+	);
+	curl_setopt_array($Cur,$Opt);
+	$code = curl_exec($Cur);
+	curl_close($Cur);
+	Unset($Cur);
+	Return $code;
+}
+
+Function GetCook($url) {
+	$Curl=curl_init($url);
+	curl_setopt($Curl,CURLOPT_HEADER,1);
+	curl_setopt($Curl,CURLOPT_RETURNTRANSFER,1);
+	$Cook=curl_exec($Curl);
+	curl_close($Curl);
+	$Out='';
+	preg_match("/ssid\=(.[^;]*)/i",$Cook,$Out);
+	Return $Out[1];
+}
+
+$url = "http://pcik.7di.net/pcik_in";
+$postfields='g=yes&username=see7di&password=www.7di.net999&id=&code=';
+$a=Curl($url,$postfields);
+unset($postfields,$url);
+
+Echo "<textarea style='width:100%;height:200px'>",Chr(10),$a,Chr(10),"</textarea>";Die();
+//=============================================================
+#T=CAIJI
+set_time_limit(0);
+
+//cookie保存目录
+$cookie_jar = '/tmp/cookie.tmp';
+
+/*函数 ------------------------------------------------------------------------------------------------------------*/
+
+// 模拟请求数据
+Function request($url,$postfields,$cookie_jar,$referer){
+	$ch = curl_init();
+	$options = array(
+		CURLOPT_URL => $url,
+		CURLOPT_HEADER => 0,
+		CURLOPT_NOBODY => 0,
+		CURLOPT_PORT => 80,
+		CURLOPT_POST => 1,
+		CURLOPT_POSTFIELDS => $postfields,
+		CURLOPT_RETURNTRANSFER => 1,
+		CURLOPT_FOLLOWLOCATION => 1,
+		CURLOPT_COOKIEJAR => $cookie_jar,
+		CURLOPT_COOKIEFILE => $cookie_jar,
+		CURLOPT_REFERER => $referer
+	);
+	curl_setopt_array($ch, $options);
+	$code = curl_exec($ch);
+	curl_close($ch);
+	Return $code;
+}
+
+//获取帖子列表
+Function getThreadsList($code){
+	preg_match_all('/<!--[.|\r|\n]*?<a href=\"viewthread.php\?tid=(\d+)/',$code,$threads);
+	Return $threads[1];
+}
+
+//判断该帖子是否存在
+Function isExits($code){
+	preg_match('/<p>指定的主题不存在或已被删除或正在被审核，请返回。<\/p> /',$code,$error);
+	Return isset($error[0])?false:true;
+}
+
+// 获取帖子标题
+Function getTitle($code){
+	preg_match('/<h1>[^<\/h1>]*/',$code,$title_tmp);
+	$title = $title_tmp[0];
+	Return $title;
+}
+
+//获取帖子作者:
+Function getAuthor($code){
+	preg_match('/<a href=\"space.php\?uid=\d+\" target=\"_blank\" id=\"userinfo\d+\" onmouseover=\"showMenu\(this\.id\)\">.+/',$code,$author_tmp);
+	$author = strip_tags($author_tmp[0]);
+	Return $author;
+}
+
+// 获取楼主发表的内容
+Function getContents($code){
+	preg_match('/<div id=\"postmessage_\d+\" class=\"t_msgfont\">(.|\r|\n)*?<\/div>/',$code,$contents_tmp);
+	$contents = preg_replace('/images\//','http://bbs.war3.cn/images/',$contents_tmp[0]);
+	Return $contents;
+}
+
+//打印帖子标题
+Function printTitle($title){
+	Echo "<strong><h2>帖子标题:</h2>< /strong>",strip_tags($title),"<br/><br/>";
+}
+
+// 输出帖子作者
+Function printAuthor($author){
+	Echo "<strong><h2>帖子作者:</h2>< /strong>",strip_tags($author),"<br/><br/>";
+}
+
+// 打印帖子内容
+Function printContents($contents){
+	Echo "<strong><h2>作者发表的内容:</h2>",$contents,"< /strong><br/>";
+}
+
+//错误
+Function printError(){
+	Echo "<i>该帖子不存在!</i>";
+}
+
+/*函数列表 end---------------------------------------------------------------------------------------------------*/
+
+/* 登录论坛 begin*/
+$url = 'http://bbs.war3.cn/logging.php?action=login';
+$postfields='loginfield=username& amp;username=1nject10n&password=xxxxxx&questionid=0& cookietime=315360000&referer=http://bbs.war3.cn/&loginsubmit=提交 ';
+request($url,$postfields,$cookie_jar,'');
+unset($postfields,$url);
+/* 登录论坛 end*/
+
+
+/*获取帖子列表(位于第一页的帖子) begin*/
+$url = 'http://bbs.war3.cn/forumdisplay.php?fid=57';
+$code = request($url,'',$cookie_jar,'');
+$threadsList = getThreadsList($code);
+/*获取帖子列表 end*/
+
+//帖子序列
+$rows = 0;
+
+/* 循环抓取所有帖子源代码 begin*/
+Foreach($threadsList as $list){
+	$url = "http://bbs.war3.cn/viewthread.php?tid=$list";
+
+	IF(isExits($code)){
+		$code = request($url,'',$cookie_jar,'');
+		$color = $rows%2==0?'#00CCFF':'#FFFF33';
+		echo "<div style='background-color:$color'>";
+		echo "<h1>第",($rows+1),"贴:</h1><br/>";
+		$author = getAuthor($code);
+		printAuthor($author);
+
+		$title = getTitle($code);
+		printTitle($title);
+
+		$contents = getContents($code);
+		printContents($contents);
+		echo "</div>";
+		$rows++;
+	}Else{
+		printError();
+	}
+}
+//=============================================================
+#T=table
+<table width='100%' cellspacing='1' cellpadding='5' border='0' id='^!'>
+<thead id='title'>
+<tr><td></td></tr>
+</thead>
+<tbody id='list'>
+<tr>
+<th></th>
+<td></td>
+<td></td>
+<th></th>
+</tr>
+</tbody>
+</table>
+#

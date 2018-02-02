@@ -1,0 +1,5 @@
+@echo off
+echo netcf
+set NETCF_PATH=C:\Program Files (x86)\Microsoft.NET\SDK\CompactFramework\v3.5\WindowsCE
+set REF="%NETCF_PATH%\Microsoft.ServiceModel.Channels.Mail.dll","%NETCF_PATH%\Microsoft.ServiceModel.Channels.Mail.WindowsMobile.dll","%NETCF_PATH%\Microsoft.VisualBasic.dll","%NETCF_PATH%\Microsoft.Windowsce.Forms.dll","%NETCF_PATH%\Microsoft.WindowsMobile.DirectX.dll","%NETCF_PATH%\mscorlib.dll","%NETCF_PATH%\System.Core.dll","%NETCF_PATH%\System.Data.DataSetExtensions.dll","%NETCF_PATH%\System.Data.dll","%NETCF_PATH%\System.dll","%NETCF_PATH%\System.Drawing.dll","%NETCF_PATH%\System.Messaging.dll","%NETCF_PATH%\System.Net.Irda.dll","%NETCF_PATH%\System.Runtime.Serialization.dll","%NETCF_PATH%\System.ServiceModel.dll","%NETCF_PATH%\System.Web.Services.dll","%NETCF_PATH%\System.Windows.Forms.dll","%NETCF_PATH%\System.Xml.dll","%NETCF_PATH%\System.Xml.Linq.dll"
+echo c:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe -nostdlib -noconfig /r:%REF% %*

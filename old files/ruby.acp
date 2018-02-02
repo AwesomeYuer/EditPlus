@@ -1,0 +1,76 @@
+#TITLE=Ruby
+; EditPlus Auto-completion file written by ES-Computing.
+; This file is provided as a default auto-completion file for Ruby.
+
+#CASE=y
+#BOL=y
+
+#T=def
+def ^!
+	
+end
+#T=class
+class ^!
+	
+end
+#T=^if
+if ^!
+	
+end
+#T=^unless
+unless ^!
+	
+end
+#T=elsif
+elsif ^!
+	
+#T=else
+else
+	^!
+#T=case
+case ^!
+	when 
+		
+end
+#T=while
+while ^!
+	
+end
+#T=until
+until ^!
+	
+end
+#T=loop
+loop do
+	^!
+end
+#T=for
+for ^! in 
+	
+end
+#T=begin
+begin
+	^!
+rescue 
+	
+end
+#T=ensure
+ensure
+	^!
+#T=do
+do ^!
+	
+end
+#T=catch
+catch ^! do
+	
+end
+#T=module
+module ^!
+	
+end
+#T={
+{
+	^!
+}
+#

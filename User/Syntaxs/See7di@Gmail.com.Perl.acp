@@ -1,0 +1,706 @@
+#TITLE=Perl
+; EditPlus 自动完成脚本文件 v1.0 由Seven编辑而成.
+; 该文件用来自动完成 Perl 所属的PHP程序开发而用.
+; $a=$_GET[a];//?a = "1abc";
+; $int = (int) $a;
+; $float = (float) $a;
+; $string = (string) $a;
+; $array = settype($int,'array');
+#CASE=y
+
+#T=php
+<?php
+^!
+?>
+#T=pub
+Public $^!;
+#T=pri
+Private $^!;
+#T=pro
+Protected $^!;
+#T=var
+Var $^!;
+#T=define
+Define("^!","");
+#T=new
+New ^!();
+#T=getcwd
+GetCwd();//得到当前工作目录
+#T=isdir
+Is_dir($^!)
+#T=chdir
+ChDir($^!);//改变目录
+#T=base
+Base64_Encode($^!)
+#T=md5
+Md5($^!)
+#T=$
+$^!=;
+#T=instrrev
+Strripos($^!,"")
+#T=instr
+StriStr($^!,"")!==False
+#T=t
+True
+#T=f
+False
+#T=echo
+Echo $^!;
+#T=echobr
+Echo "<br>{^!}<br>";
+#T=ec
+Echo "<textarea rows='13' style='width:100%;font-size:12px;'>".$^!."</textarea>";
+#T=isnull
+Empty($^!)
+#T=isnum
+Is_numeric($^!)
+#T=require
+Require("^!");
+#T=requireonce
+Require_Once("^!");
+#T=include
+Include("^!");
+#T=includeonce
+Include_Once("^!");
+#T=alert
+Alert("^!!","?work=","",500);
+#T=unset
+UnSet($^!);
+#T=or
+Or ^!
+#T=and
+And ^!
+#T=die
+Die(^!);
+#T=r
+Return ^!;
+#T=b
+Break;
+#T=c
+Continue;
+#T=rr
+Header("Location:^!.php");
+//Header("Content-type:text/xml");
+Header("Content-type:text/html; charset=utf-8");
+#T=charset
+header("content-Type:text/html; charset=utf-8");
+#T=left
+SubStr($^!,0,)
+#T=right
+SubStr($^!,-1,);
+#T=round
+Round($^!,2);//四舍五入,保留2个小数点
+#T=ceil
+Ceil($^!);//得到最大页数
+#T=floor
+Floor($^!);//去掉小数点保留整数
+#T=mb
+IF(StrToLower(Mb_detect_encoding($^!))!="utf-8"){
+	$^!=Mb_convert_encoding($^!,"UTF-8","GBK");
+}
+#T=htmlencode
+HtmlEnTities($^!)
+#T=htmldecode
+Html_Entity_decode($^!)
+#T=utf
+Mb_convert_encoding("妳係我的友仔", "UTF-8", "GBK")
+#T=encode
+AddsLashes($^!)
+#T=decode
+StripsLashes($^!)
+#T=DECODE
+HtmlSpecialChars_Decode($^!)
+#T=ENCODE
+HtmlSpecialChars($^!,ENT_QUOTES,"UTF-8")
+#T=url
+$a="http://feng%20jian@www.7di.net:8080/index.asp?id=99#end";
+Print_r (Parse_Url($a));
+#T=utf8
+UTF8_Encode($^!);//UTF8_Decode($);
+#T=urlencode
+UrlEnCode($^!)
+#T=urldecode
+UrlDeCode($^!)
+#T=escape
+EscapeShellArg("Error:^!")
+#T=GET
+File_Get_Contents("../^!.htm");
+#T=PUT
+File_Put_Contents("../^!.htm",$,LOCK_EX);
+#T=get
+$^!=Toget("^!");
+#T=post
+$^!=$_POST["^!"];
+#T=request
+$^!=AddsLashes($_REQUEST["^!"]);
+#T=p
+Printf ($LangA[^!],$);
+#T=pr
+Print "$^!";
+#T=prt
+Foreach($^! as $key=>$value){
+	Echo "<textarea rows='5' style='border:1px gray solid;width:90%;overflow:auto;'>【".$key."】".Chr(10);
+	Print_r ($value);
+	Echo "</textarea>";
+}
+//$Str=sPrintf("金額合計:%1\$.2f",$total);
+Exit();
+#T=global
+Global $^!;
+#T=exit
+Exit(^!);
+#T=this
+$this->^!=;
+#T=rcl
+OB_start();
+OB_clean();
+#T=isarray
+Is_array(^!)
+#T=trim
+Trim($^!)
+#T=is_int
+Is_Int($^!)
+#T=ltrim
+Ltrim($^!)
+#T=rtrim
+Rtrim($^!)//等同于chop();
+#T=session
+Session_start();
+$_SESSION['^!'] = ;
+IF(!Session_is_registered("Session名字"))
+Session_destroy();
+#T=basename
+BaseName($^!)
+#T=dirname
+DirName($^!)
+#T=mappath
+Realpath(".")
+#T=static
+Static $i=0;
+#T=mime
+Mime_Content_type('^!');
+#T=fileex
+File_Exists($^!)
+#T=functionex
+Function_Exists($^!)
+#T=mappath
+Realpath("./").$^!
+#T=now
+$IntTime=(time()+8*3600);
+$Now=Gmdate("Y-m-d H:i:s",$IntTime);
+#T=isfunction
+IF(!Function_Exists('^!')){Die('该函数不存在!');}
+#T=inarray
+In_Array("^!",$);
+#T=count
+Count($^!)
+#T=max
+Max($^!)//返回数组的最大值；min最小值
+#T=sort
+Sort($^!)//升序排列；rsort降序
+#T=replace
+Str_iReplace(查,"",$^!)
+#T=ucase
+StrToUpper($^!)
+#T=lcase
+StrToLower($^!)
+#T=ucfirst
+UcFirst($^!)//字串中第一个单词首字母大写
+#T=ucwords
+UcWords($^!)//字串中每一个单词首字母大写
+#T=len
+StrLen($^!)
+#T=substr
+SubStr_Count($^!,$needle)
+#T=isset
+IsSet($^!)
+#T=debug
+Echo var_dump($^!)."<BR>";
+Foreach(Get_defined_vars() as $key=>$val){
+	Echo "<strong>".$key.":</strong> ";
+	Print_r ($val);
+	Echo "<br>---------------------------------------------<br>";
+}
+Exit();
+#T=gettype
+GetType($^!)
+#T=settype
+SetType($^!,"integer");
+#T=unless
+UnLess(^!){
+}
+#T=until
+Until(^!){
+}
+#T=mail
+Mail("see7di@gmail.com","标题","内容","From:see7di@gmail.com\r\n");
+#T=conn
+$Conn=Mysql_Connect('localhost','root','') or Die('连接失败:'.mysql_error());
+Mysql_Query("Set Names UTF-8"); //解决中文乱码问题
+Mysql_Select_DB('^!') or Die('无法连接数据库,因为:'.mysql_error());
+
+//Mysql_Close($Conn);
+#T=mysql
+$Num=Mysql_num_rows($Result);//得到Recordcount值
+Mysql_Free_result($^!);//释放内存
+$total=Mysql_num_rows(Mysql_query("Select * From ^!"));//得到记录总数
+
+/*--------search--------------------------------------------------------*/
+$Mysql=New DB_Class();
+$sKey=$_GET["sKey"];
+$sWhere=" ^! >= '".$sKey."' And  < '".$sKey."'";
+
+//得到记录总数
+$total=Mysql_num_rows(Mysql_query("Select Id From ^! Where".$sWhere.""));
+Page($total,BLK_SysPagesize);
+
+$Result=$Mysql->View("Select * From ^! Where".$sWhere." Order by id desc limit $start, BLK_SysPagesize");
+Echo "<fieldset><legend>系统通过关键词共搜索到 $total 条记录</legend>";
+Foreach($Result as $Rs){
+	Echo "<div>ID:".$Rs[0]."&nbsp;&nbsp;&nbsp;";
+	Echo "姓名:".$Rs['name']."&nbsp;&nbsp;&nbsp;";
+	Echo "密码:".$Rs['pass']."&nbsp;&nbsp;&nbsp;";
+	Echo "内容:".$Rs['content']."&nbsp;&nbsp;&nbsp;";
+	Echo "</div>".Chr(10);
+}
+Echo $pagebar."</fieldset>";
+#T=insert
+/*-----Insert-----------------------------------------------------------*/
+"Insert into ^! (name,content) values ('".$."','".$."')";
+
+$Mysql->Exe("Insert into ^! (name,content) values ('".$."','".$."')");
+//$Result=Mysql_Query("Insert into ^! (name,content) values ('".$."','".$."')") Or Die('添加失败:'.Mysql_error());
+//Echo "刚添加的数据编号是:".Mysql_Insert_Id();
+Global $Mysql;
+$Result=$Mysql->Exe("Insert into ^! (,,,) values ('".$."','".$."','".$."',".time().")");
+IF($Result==1){
+	Alert("信息已经添加成功!");
+}Else{
+	Echo Out($Result);
+}
+#T=update
+/*-----Update-----------------------------------------------------------*/
+$Mysql->Exe("Update ^! Set ='".$."',=".$." Where Id=".$."");
+Global $Mysql;
+$Result=$Mysql->Exe("Update ^! Set Title='".$Title."',Name='".$Name."',Rule=".$Rule.",FileSysRoot='".$FileSysRoot."' Where Id=".$Id."");
+IF($Result==1){
+	Alert("用户信息已经修改成功!","?work=");
+}Else{
+	Echo Out($Result);
+}
+#T=delete
+/*-----Delete-----------------------------------------------------------*/
+"Delete From ^! Where Id=".$."";
+$Mysql->Exe("Delete From ^! Where Id=".$."");
+#T=select
+/*-----Select-----------------------------------------------------------*/
+$Result=Mysql_Query("Select * From ^! Where = Order by id desc") Or Die(Mysql_error());
+$Num=Mysql_num_rows($Result);//得到记录总数
+While($rs=Mysql_Fetch_Array($Result)){
+	Echo "姓名:".$rs['name']."<br>";
+	Echo "姓名:".$rs[1]."<br>";
+}Mysql_Free_result($Result);//释放内存
+
+//$Rs=Mysql_Fetch_Array($Result);
+//Echo $Rs['name'];
+
+Global $Mysql,$Manage;
+$Result=$Mysql->Get("Select * From ^! Order by id desc");
+IF(Count($Result)<=0){
+	Alert("没有发现记录!");
+}
+Echo $Rs['Id'];
+/*-----------page-----------------------------------------------------*/
+Global $Mysql,$Manage;
+//得到记录总数
+$total=Mysql_num_rows(Mysql_query("Select id From ^!"));
+$PageNum=BLK_SysPagesize;
+$Mysql->Page($total,$PageNum);
+
+$Result=$Mysql->View("Select * From ^! Order by id desc limit $Mysql->StartID, ".$PageNum."");
+Foreach($Result as $Rs){
+	Static $i=0;
+	$trclass = ($i%2)?'tabrow1':'tabrow2';
+	Echo "<tr class='".$trclass."'>";
+	Echo "<td align='center' height='11'><input type='checkbox' name='IdList' value='".$Rs['id']."' class='noinp'></td>";
+	Echo "<td>".$Rs['Title']."</td>";
+	Echo "<td align='center'>".$Rs['NickName']."</td>";
+	Echo "<td align='center'>".GetValue($Rs['Role'],"Title","adminrule")."</td>";
+	Echo "<td align='center'>".date('Y-m-d h:i:s', $Rs['AddTime'])."</td>";
+	Echo "<td align='center'>".$Rs['FileSysRoot']."</td>";
+	Echo "<td align='center'><a href='javascript:MdyReco('".$Rs['Id']."');void(0);'>编辑</a> | ";
+	IF($Rs['Lock']==0){
+		Echo "<a href=\"?work=mdy&".$Rs['Id']."\">锁定</a>".Chr(10);
+	}Else{
+		Echo "<a href=\"javascript:LockReco('".$Rs['Id']."','0')\">解锁</a>".Chr(10);
+	}
+	Echo "</td></tr>";
+	$i++;
+}
+Echo "<tr class='".$trclass."'><td colspan='7'>".$Mysql->pagebar."</td></tr>";
+#T=dir
+$Dir="d:\\iso";
+IF(!Is_dir($Dir)){
+	Echo "目录错误!";
+	Exit;
+}
+Echo getcwd();	//输出当前目录
+IF($DH=OpenDir($Dir)){
+	$i=0;
+	While($File=ReadDir($DH)){
+		Echo "{$i}:$File<br>".Chr(10);
+		$i++;
+	}
+}
+CloseDir($DH);
+/*
+文件夹删除操作
+*/
+@RmDir("../^!/");
+/*
+建立文件夹
+*/
+@MkDir("/path/to/my/dir", 0777);
+/*
+让文件夹具备最大操作权限
+*/
+@Chmod("/somedir/somefile", 777);
+#T=file
+/*
+文件读取操作
+*/
+$Content = File_Get_Contents($Path_Name);
+Echo $Content;
+//$File_name=".\\^!.txt";
+//IF(!File_exists($File_name)){
+//	Echo "文件不存在!";
+//	Exit;
+//}
+//Echo Is_dir($File_name);		//是否为文件夹
+//Echo Is_file($File_name);		//是否为文件
+//Echo Is_link($File_name);		//是否为快捷方式
+//Echo Is_readable($File_name);	//是否可读
+//Echo Is_writable($File_name);	//是否可写
+//ReadFile($File_name);			//读取全部内容(其无须用Fopen打开即可读取)
+//$Arr=File($File_name);			//将文本文件每一行作为数组的一列赋值给数组
+//$File=Fopen($File_name,"r+");	//打开文件
+//While(!Feof($File)){			//逐行显示
+//	Echo Fgets($File,4096);
+//}
+//Rewind($File);					//指针返回第一行
+////Echo Fread($File,Filesize($File_name));//二进制读取整个文件
+//Echo Fread($File,100);			//读取100个字节
+//Fpassthru($File);				//从第100个字节处读取到文件末
+//Fclose($File);
+/*
+文件写操作
+*/
+$Result = File_Put_Contents($Path_Name,$Content,LOCK_EX);
+Echo $Result;
+//$File_name=".\\^!.txt";
+//IF(!File_exists($File_name)){
+//	Echo "文件不存在!";
+//	Exit;
+//}
+//$Info="需要写入的内容.";
+//IF(!$Hand=Fopen($File_name,'a')){
+//	Echo "文件打开失败!";
+//	Exit;
+//}
+//IF(!Fwrite($Hand,$Info)){
+//	Echo "文件写入失败!";
+//	Exit;
+//}
+//Fclose($Hand);
+/*
+文件复制操作
+*/
+$File_name=".\\^!.txt";
+IF(!Copy($File_name,"$File_name.bak")){
+	Echo "复制文件失败!";
+	Exit;
+}
+/*
+文件重命名操作
+*/
+$File_name=".\\^!.txt";
+IF(!Rename($File_name,".\\a.txt")){
+	Echo "重命名文件失败!";
+	Exit;
+}
+/*
+文件删除操作
+*/
+@UnLink("../^!");
+/////////////////////////////////////////////////////
+#T=class
+Class ClassName{
+	Public static $^!="";
+	Private $=;
+
+	//方法,获取属性
+	Function __get($property_name){
+		IF(isset($this->$property_name)){
+			Return ($this->$property_name);
+		}Else{
+			Return (NULL);
+		}
+	}
+
+	//方法,设置属性
+	Function __set($property_name,$value){
+		$this->property_name=$value;
+	}
+
+	//构造函数
+	Function __construct(){
+		$this->=;
+	}
+
+	//析构函数
+	Function __destruct(){
+	}
+}
+$C=New ClassName();
+$C->;
+#T=function
+//------------------------------------------------*
+//函数:
+//作者:Seven (QQ:9256114 eMail:See7di@Gmail.com)
+//参数:
+//返回:
+Function ^!(){
+	Global $Mysql,$Table;
+	$Id=Toget("Id");
+	IF(!$Id){
+		Alert("Request error!");
+	}
+
+	$Rs=$Mysql->Get("Select * From {$Table} Where Id={$Id}");
+	IF(Count($Rs)<1){
+		Alert("No message!");
+		Die();
+	}
+}
+#T=switch
+Switch ($^!){
+Case "":
+	Break;
+Case "":
+	Break;
+Default:
+	Break;
+}
+#T=case
+Case "^!":
+	Break;
+#T=default
+Default:
+	^!();
+	Break;
+#T=while
+While($i<=10){
+	$i++;
+	^!
+}
+#T=for
+For($i=0;$i<10;$i++){
+	IF($i==5){^!
+		continue;//跳过本次循环
+	}
+}
+#T=do
+Do{
+	^!;
+	$i++;
+}While($i<5);
+#T=foreach
+Foreach($^! as $key=>$val){
+	Echo $key.":".$val."<br>";
+}
+#T=if
+IF(^!){
+}Else{
+}
+#T=else
+Else{^!
+}
+#T=elseif
+ElseIF(^!){
+}
+#T=array
+$^!=Array("a"=>1,"b"=>"b","c"=>array(1,2));
+//Count($);个数
+//Sort($);排序
+//rSort($);排序
+//Max($);最大值
+//Min($);最小值
+//In_array("a",$);数组里边是否存在a这个字符,返回boolean
+//Foreach($LableArray as $Arr2){$Arr1[] = $Arr2[0];}Array_multisort($Arr1, $LableArray);
+//对数组$LableArray这个多维数组根据[0]进行排序
+#T=explode
+Explode(",", $^!);
+#T=implode
+Implode(",",$array);
+#T=split
+$Str^! = "aaa,bbb,ccc,ddd";
+$Arr = Explode(",", $Str);	//字符串拆分
+$Arr[1]="test";				//重新复制
+Print_r($Arr);				//输出整个数组
+Echo "<br>{$Arr[2]}<br>";	//输出某个索引
+Foreach($Arr as $i=>$value){//数组遍历
+	Echo "{$i}-{$value}<br>".Chr(10);
+}
+Print_r($Arr);
+//$xmlstr="<?xml version='1.0' encoding='GB2312'?><冯健></冯健>";
+//Print_r (split('[< ]',$xmlstr));
+===========================================================>>>>>>以下为常用类\函数\及代码片段
+#T=DBCLASS
+Define("BLK_SysPagesize",10);//每页的记录个数
+Class SYS_Config{
+	public static $DBHOST="localhost";
+	public static $DBUSER="root";
+	public static $DBPASS="";
+	public static $DBNAME="guest";
+	public static $DBNAME="guest";
+}
+
+//数据库操作类
+Class DB_Class{
+	//属性
+	private $host;
+	private $user;
+	private $pass;
+	private $DBname;
+	private $Conn;
+
+	//方法,获取属性
+	Function __get($property_name){
+		IF(isset($this->$property_name)){
+			Return ($this->$property_name);
+		}Else{
+			Return (NULL);
+		}
+	}
+
+	//方法,设置属性
+	Function __set($property_name,$value){
+		$this->property_name=$value;
+	}
+
+	//构造函数,建立与数据库服务器的链接
+	Function __construct(){
+		$this->host=SYS_Config::$DBHOST;
+		$this->user=SYS_Config::$DBUSER;
+		$this->pass=SYS_Config::$DBPASS;
+		$this->DBname=SYS_Config::$DBNAME;
+
+		$this->Conn=Mysql_connect($this->host,$this->user,$this->pass);
+		Mysql_Query("Set Names UTF-8");
+		Mysql_Select_DB($this->DBname,$this->Conn);
+	}
+
+	//析构函数,断开连接
+	Function __destruct(){
+		Mysql_Close($this->Conn);
+	}
+
+	//增加,删除,修改
+	Function Exe($Sql){
+		Mysql_query($Sql);
+		IF(SubStr(StrToLower($Sql),0,6)=='insert'){
+			Return Mysql_insert_id();
+		}
+	}
+
+	//查询,将结果写入数组
+	Static Function View($Sql){
+		$Rearr=array();
+		$i=0;
+		$Query=Mysql_query($Sql);
+		While($Rs=Mysql_fetch_Array($Query)){
+			$Rearr[$i++]=$Rs;
+		}
+		Mysql_Free_result($Query);//释放内存
+		Return $Rearr;
+	}
+}
+#T=image
+$src = ImageCreateFromJPEG('pic.jpg');
+
+$width = ImageSx($src);
+$height = ImageSy($src);
+$x = $width/2; $y = $height/2;
+$dst = ImageCreateTrueColor($x,$y);
+ImageCopyResampled($dst,$src,0,0,0,0,$x,$y,$width,$height);
+
+//header('Content-Type: image/jpeg');
+//ImageJPEG($dst,'',100); // Output to Browser
+
+ImageJpeg ($dst,"pic1.jpg");
+imagedestroy($dst);
+
+Echo "<img src='pic.jpg'/>";
+Echo "<img src='pic1.jpg'/>";
+#T=dom
+$dom=New DomDocument();
+IF(!File_Exists("xml.xml")){
+	$xmlstr="<?xml version='1.0' encoding='GB2312'?><冯健></冯健>";
+
+	$dom->loadXML($xmlstr);
+	$dom->save("xml.xml");
+}Else{
+	$dom->loadXML("xml.xml");
+}
+Print $dom->saveXML();
+#T=socket
+$FP=FSockOpen("www.php.net",80,$errno,$errstr,30);
+IF(!$FP){
+	Echo "Find Error:$errstr($errno)<br>\n";
+}Else{
+	fputs($FP,"GET / HTTP/1.0\r\nHost:www.example.com\r\n\r\n");
+	Echo "Output:<br>".Chr(10);
+	While(!feof($FP)){
+		Echo fgets($FP,128)."<br>--------<br>";
+	}
+	Fclose($FP);
+}
+#T=head
+IF(!isset($_SERVER['PHP_AUTH_USER']) OR $_SERVER['PHP_AUTH_USER']!='seven'){
+	Header('WWW-Authenticate: Basic realm="请登录系统"');
+	Echo "{您无权使用系统!}<br>".Chr(10);
+}Else{
+	Echo "{$_SERVER['PHP_AUTH_USER']}你好<br>".Chr(10);
+	Echo "你输入的密码为{$_SERVER['PHP_AUTH_PW']}<br>".Chr(10);
+}
+#T=up
+Echo '<form method="post" action="?action=doup" enctype="multipart/form-data">
+	<input type="hidden" name="MAX_FILE_SIZE" value="30000">
+	姓名:<input type="text" name="username" value="wef"><br>
+	文件:<input type="file" name="userfile"><br>
+	<input type="submit" value="开始上传"><br>
+</form>';
+
+$action=$_GET["action"];
+Switch ($action){
+Case "doup":
+	$StrFileName=$_FILES["userfile"]['name'];
+	$StrTempName=$_FILES["userfile"]['tmp_name'];
+	Echo $_POST["username"]."<br>";
+	Echo $StrFileName."<br>";
+	Echo $_FILES["userfile"]['type']."<br>";
+	Echo $_FILES["userfile"]['size']."<br>";
+	Echo $StrTempName."<br>";
+	Echo $_FILES["userfile"]['error']."<br>";//0成功;1太大超过php.ini;2超过MAX_FILE_SIZE;3部分上传;4失败
+
+	$StrUPDir=getcwd()."\\";
+	Echo $StrUPDir.$_POST["username"].$StrFileName;
+	IF(!move_uploaded_file($StrTempName,$StrUPDir.$_POST["username"].$StrFileName)){
+		Echo "失败,错误为:{$_FILES["userfile"]['error']}<br>".Chr(10);
+	}Else{
+		Echo "{成功}<br>".Chr(10);
+	}
+//	Header("Location: ?action=");
+//	Break;
+}
+#

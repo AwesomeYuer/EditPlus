@@ -1,0 +1,524 @@
+CSS2 Reference
+--------------
+
+Ordered by function
+
+From w3schools.com (http://www.w3schools.com/css/css_reference.asp)
+
+BACKGROUND
+
+background  A shorthand property for setting all background properties in one declaration
+    background-color
+    background-image
+    background-repeat background-attachment background-position
+    background-attachment  Sets whether a background image is fixed or scrolls with the rest of the page  scroll
+    fixed
+background-color  Sets the background color of an element
+    color-rgb
+    color-hex
+    color-name
+    transparent
+background-image  Sets an image as the background
+    url(URL)
+    none
+    background-position  Sets the starting position of a background image
+    top left
+    top center
+    top right
+    center left
+    center center
+    center right
+    bottom left
+    bottom center
+    bottom right
+    x% y%
+    xpos ypos
+background-repeat  Sets if/how a background image will be repeated
+    repeat
+    repeat-x
+    repeat-y
+    no-repeat
+
+BORDER
+
+border  A shorthand property for setting all of the properties for the four borders in one declaration
+    border-width
+    border-style
+    border-color
+    border-bottom  A shorthand property for setting all of the properties for the bottom border in one declaration  border-bottom-width
+    border-style
+    border-color
+border-bottom-color  Sets the color of the bottom border
+    border-color
+border-bottom-style  Sets the style of the bottom border
+    border-style
+border-bottom-width  Sets the width of the bottom border
+    thin
+    medium
+    thick
+length
+border-color  Sets the color of the four borders, can have from one to four colors
+    color
+border-left  A shorthand property for setting all of the properties for the left border in one declaration
+    border-left-width
+    border-style
+    border-color
+    border-left-color  Sets the color of the left border  border-color
+    border-left-style  Sets the style of the left border  border-style
+    border-left-width  Sets the width of the left border  thin
+    medium
+    thick
+    length
+border-right  A shorthand property for setting all of the properties for the right border in one declaration
+    border-right-width
+    border-style
+    border-color
+    border-right-color  Sets the color of the right border  border-color
+    border-right-style  Sets the style of the right border  border-style
+    border-right-width  Sets the width of the right border  thin
+    medium
+    thick
+    length
+border-style  Sets the style of the four borders, can have from one to four styles
+    none
+    hidden
+    dotted
+    dashed
+    solid
+    double
+    groove
+    ridge
+    inset
+    outset
+border-top  A shorthand property for setting all of the properties for the top border in one declaration
+    border-top-width
+    border-style
+    border-color
+    border-top-color  Sets the color of the top border  border-color
+    border-top-style  Sets the style of the top border  border-style
+    border-top-width  Sets the width of the top border  thin
+    medium
+    thick
+    length
+border-width  A shorthand property for setting the width of the four borders in one declaration, can have from one to four values
+    thin
+    medium
+    thick
+    length
+
+CLASSIFICATION
+
+clear  Sets the sides of an element where other floating elements are not allowed
+    left
+    right
+    both
+    none
+cursor  Specifies the type of cursor to be displayed
+    url
+    auto
+    crosshair
+    default
+    pointer
+    move
+    e-resize
+    ne-resize
+    nw-resize
+    n-resize
+    se-resize
+    sw-resize
+    s-resize
+    w-resize
+    text
+    wait
+    help
+display  Sets how/if an element is displayed
+    none
+    inline
+    block
+    list-item
+    run-in
+    compact
+    marker
+    table
+    inline-table
+    table-row-group
+    table-header-group
+    table-footer-group
+    table-row
+    table-column-group
+    table-column
+    table-cell
+    table-caption
+float  Sets where an image or a text will appear in another element
+    left
+    right
+    none
+position  Places an element in a static, relative, absolute or fixed position
+    static
+    relative
+    absolute
+    fixed
+visibility  Sets if an element should be visible or invisible
+    visible
+    hidden
+    collapse
+
+DIMENSION
+
+height  Sets the height of an element
+    auto
+    length
+    %
+line-height  Sets the distance between lines
+    normal
+    number
+    length
+    %
+max-height  Sets the maximum height of an element
+    none
+    length
+    %
+max-width  Sets the maximum width of an element
+    none
+    length
+    %
+min-height  Sets the minimum height of an element
+    length
+    %
+min-width  Sets the minimum width of an element
+    length
+    %
+width  Sets the width of an element
+    auto
+    length
+    %
+
+FONT
+
+font  A shorthand property for setting all of the properties for a font in one declaration
+    font-style
+    font-variant
+    font-weight
+    font-size/line-height
+    font-family
+    caption
+    icon
+    menu
+    message-box
+    small-caption
+    status-bar
+font-family  A prioritized list of font family names and/or generic family names for an element
+    family-name
+    generic-family
+font-size  Sets the size of a font
+    xx-small
+    x-small
+    small
+    medium
+    large
+    x-large
+    xx-large
+    smaller
+    larger
+    length
+    %
+font-size-adjust  Specifies an aspect value for an element that will preserve the x-height of the first-choice font
+    none
+    number
+font-stretch  Condenses or expands the current font-family
+    normal
+    wider
+    narrower
+    ultra-condensed
+    extra-condensed
+    condensed
+    semi-condensed
+    semi-expanded
+    expanded
+    extra-expanded
+    ultra-expanded
+font-style  Sets the style of the font
+    normal
+    italic
+    oblique
+font-variant  Displays text in a small-caps font or a normal font
+    normal
+    small-caps
+font-weight  Sets the weight of a font
+    normal
+    bold
+    bolder
+    lighter
+    100
+    200
+    300
+    400
+  00
+    600
+    700
+    800
+    900
+
+GENERATED CONTENT
+
+content  Generates content in a document. Used with the :before and :after pseudo-elements
+    string
+    url
+    counter(name)
+    counter(name, list-style-type)
+    counters(name, string)
+    counters(name, string, list-style-type)
+    attr(X)
+    open-quote
+    close-quote
+    no-open-quote
+    no-close-quote
+counter-increment  Sets how much the counter increments on each occurrence of a selector
+    none
+    identifier number
+counter-reset  Sets the value the counter is set to on each occurrence of a selector
+    none
+    identifier number
+quotes  Sets the type of quotation marks
+    none
+    string string
+
+LIST AND MARKER
+
+list-style  A shorthand property for setting all of the properties for a list in one declaration
+    list-style-type
+    list-style-position
+    list-style-image
+list-style-image  Sets an image as the list-item marker
+    none
+    url
+list-style-position  Sets where the list-item marker is placed in the list
+    inside
+    outside
+list-style-type  Sets the type of the list-item marker
+    none
+    disc
+    circle
+    square
+    decimal
+    decimal-leading-zero
+    lower-roman
+    upper-roman
+    lower-alpha
+    upper-alpha
+    lower-greek
+    lower-latin
+    upper-latin
+    hebrew
+    armenian
+    georgian
+    cjk-ideographic
+    hiragana
+    katakana
+    hiragana-iroha
+    katakana-iroha
+marker-offset  Specifies the distance between the nearest border edges of a marker box and its associated principal box
+    auto
+    length
+
+MARGIN
+
+margin  A shorthand property for setting the margin properties in one declaration
+    margin-top
+    margin-right
+    margin-bottom
+    margin-left
+margin-bottom  Sets the bottom margin of an element
+    auto
+    length
+    %
+margin-left  Sets the left margin of an element
+    auto
+    length
+    %
+margin-right  Sets the right margin of an element
+    auto
+    length
+    %
+margin-top  Sets the top margin of an element
+    auto
+    length
+    %
+
+OUTLINES
+
+outline  A shorthand property for setting all the outline properties in one declaration
+    outline-color
+    outline-style
+    outline-width
+outline-color  Sets the color of the outline around an element
+    color
+    invert
+outline-style  Sets the style of the outline around an element
+    none
+    dotted
+    dashed
+    solid
+    double
+    groove
+    ridge
+    inset
+    outset
+outline-width  Sets the width of the outline around an element
+    thin
+    medium
+    thick
+    length
+
+PADDING
+
+padding  A shorthand property for setting all of  the padding properties in one declaration
+    padding-top
+    padding-right
+    padding-bottom
+    padding-left
+padding-bottom  Sets the bottom padding of an element
+    length
+    %
+
+padding-left  Sets the left padding of an element
+    length
+    %
+padding-right  Sets the right padding of an element
+    length
+    %
+padding-top  Sets the top padding of an element
+    length
+    %
+
+POSITIONING
+
+bottom  Sets how far the bottom edge of an element is above/below the bottom edge of the parent element
+    length
+    auto
+    %
+clip  Sets the shape of an element. The element is clipped into this shape, and displayed
+    shape
+    auto
+left  Sets how far the left edge of an element is to the right/left of the left edge of the parent element
+    length
+    auto
+    %
+overflow  Sets what happens if the content of an element overflow its area
+    hidden
+    scroll
+    visible
+    auto
+position  Places an element in a static, relative, absolute or fixed position
+static
+relative
+absolute
+fixed
+right  Sets how far the right edge of an element is to the left/right of the right edge of the parent element
+    length
+    auto
+    %
+top  Sets how far the top edge of an element is above/below the top edge of the parent element
+    length
+    auto
+    %
+vertical-align  Sets the vertical alignment of an element
+    baseline
+    bottom
+    length
+    middle
+    sub
+    super
+    text-bottom
+    text-top
+    top
+    %
+z-index  Sets the stack order of an element
+    number
+    auto
+
+TABLE
+
+border-collapse  Sets whether the table borders are collapsed into a single border or detached as in standard HTML
+    collapse
+    separate
+border-spacing  Sets the distance that separates cell borders (only for the "separated borders" model)
+    length length
+caption-side  Sets the position of the table caption
+    top
+    bottom
+    left
+    right
+empty-cells  Sets whether or not to show empty cells in a table (only for the "separated borders" model)
+    show
+    hide
+table-layout  Sets the algorithm used to display the table cells, rows, and columns
+    fixed
+    auto
+
+TEXT
+
+color  Sets the color of a text
+    color
+direction  Sets the text direction
+    ltr
+    rtl
+line-height  Sets the distance between lines
+    normal
+    number
+    length
+    %
+letter-spacing  Increase or decrease the space between characters
+    normal
+    length
+text-align  Aligns the text in an element
+    left
+    right
+    center
+    justify
+text-decoration  Adds decoration to text
+    none
+    underline
+    overline
+    line-through
+    blink
+text-indent  Indents the first line of text in an element
+    length
+    %
+text-shadow
+    color
+    length
+    none
+text-transform  Controls the letters in an element
+    capitalize
+    uppercase
+    lowercase
+    none
+unicode-bidi
+    normal
+    embed
+bidi-override
+white-space  Sets how white space inside an element is handled
+    normal
+    nowrap
+    pre
+word-spacing  Increase or decrease the space between words
+    length
+    normal
+
+PSEUDO-CLASSES
+
+:active  Adds special style to an activated element
+:focus  Adds special style to an element while the element has focus
+:hover  Adds special style to an element when you mouse over  it
+:link  Adds special style to an unvisited link
+:visited  Adds special style to a visited link
+:first-child  Adds special style to an element that is the first child of some other element
+:lang  Allows the author to specify a language to use in a specified element
+
+PSEUDO-ELEMENTS
+
+:first-letter  Adds special style to the first letter of a text
+:first-line  Adds special style to the first line of a text
+:before  Inserts some content before an element
+:after  Inserts some content after an element

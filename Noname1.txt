@@ -1,0 +1,64 @@
+@echo off
+setlocal
+set _DateOffsetStart_=%1
+set _DateOffsetDays_=%2
+set _StepDays_=-1
+set _today_=%date%
+set _yyyy_=%_today_:~0,4%
+set _MM_=%_today_:~5,2%
+set _dd_=%_today_:~8,2%
+
+call :DateToDays %_yyyy_% %_MM_% %_dd_% _days_
+rem echo %_days_%
+
+set /a _DateOffsetEnd_=%_DateOffsetStart_%-%_DateOffsetDays_%+1
+for /F %%i in (RootsDirectorysListForRemove.txt) do (
+	setlocal
+	For /L %%j in (%_DateOffsetStart_%, %_StepDays_%, %_DateOffsetEnd_%) do (
+		setlocal ENABLEDELAYEDEXPANSION
+		set /a _days_+=%%j
+		rem echo !_days_!
+		call :DaysToDate !_days_! _yyyy_ _MM_ _dd_
+		set _DirectoryFullPathName_=%%i\!_yyyy_!-!_MM_!-!_dd_!\
+		rem echo !_DirectoryFullPathName_!
+		call :RemoveOneDirectory !_DirectoryFullPathName_!
+		endlocal
+	)
+	endlocal
+)
+endlocal
+goto :EOF
+
+:RemoveOneDirectory %_DirectoryFullPathName_%
+setlocal ENABLEEXTENSIONS
+set _directory_=%_DirectoryFullPathName_%
+if exist %_directory_% (
+	echo RemoveOneDirectory: %_directory_%
+	echo rmdir %_directory_% /s/q
+) else (
+	echo RemoveOneDirectory: Not Exist %_directory_% 
+)
+goto :EOF
+
+:DateToDays %yyyy% %MM% %dd% days
+setlocal
+set yyyy=%1&set MM=%2&set dd=%3
+if 1%yyyy% LSS 200 (
+	if 1%yyyy% LSS 170 (
+		set yyyy=20%yyyy%
+	) else (
+		set yyyy=19%yyyy%
+	)
+)
+set /a dd=100%dd%%%100,MM=100%MM%%%100
+set /a z=14-MM,z/=12,y=yyyy+4800-z,m=MM+12*z-3,j=153*m+2
+set /a j=j/5+dd+y*365+y/4-y/100+y/400-2472633
+endlocal&set %4=%j%&goto :EOF
+
+:DaysToDate %days% yyyy MM dd
+setlocal ENABLEEXTENSIONS
+set /a a=%1+2472632,b=4*a+3,b/=146097,c=-b*146097,c/=4,c+=a
+set /a d=4*c+3,d/=1461,e=-1461*d,e/=4,e+=c,m=5*e+2,m/=153,dd=153*m+2,dd/=5
+set /a dd=-dd+e+1,MM=-m/10,MM*=12,MM+=m+3,yyyy=b*100+d-4800+m/10
+(if %MM% LSS 10 set MM=0%MM%)&(if %dd% LSS 10 set dd=0%dd%)
+endlocal&set %2=%yyyy%&set %3=%MM%&set %4=%dd%&goto :EOF

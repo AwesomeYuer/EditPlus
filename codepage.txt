@@ -1,0 +1,154 @@
+37	IBM EBCDIC (US-Canada)
+437	United States (DOS)
+500	IBM EBCDIC (International)
+708	Arabic (ASMO 708)
+709	Arabic (ASMO 449+, BCON V4)
+710	Arabic (Transparent Arabic)
+720	Arabic (DOS)
+737	Greek (DOS)
+775	Baltic (DOS)
+850	Western European (DOS)
+852	Central European (DOS)
+855	Cyrillic (DOS)
+857	Turkish (DOS)
+858	Multilingual Latin I (DOS)
+860	Portuguese (DOS)
+861	Icelandic (DOS)
+862	Hebrew (DOS)
+863	French Canadian (DOS)
+864	Arabic (864)
+865	Nordic (DOS)
+866	Cyrillic (DOS)
+869	Greek, Modern (DOS)
+870	IBM EBCDIC (Multilingual Latin-2)
+874	Thai (Windows)
+875	IBM EBCDIC (Greek Modern)
+932	Japanese (Shift-JIS)
+936	Chinese Simplified (GB2312)
+949	Korean
+950	Chinese Traditional (Big5)
+1026	IBM EBCDIC (Turkish Latin-5)
+1047	IBM Latin-1
+1140	IBM EBCDIC (US-Canada-Euro)
+1141	IBM EBCDIC (Germany-Euro)
+1142	IBM EBCDIC (Denmark-Norway-Euro)
+1143	IBM EBCDIC (Finland-Sweden-Euro)
+1144	IBM EBCDIC (Italy-Euro)
+1145	IBM EBCDIC (Spain-Euro)
+1146	IBM EBCDIC (UK-Euro)
+1147	IBM EBCDIC (France-Euro)
+1148	IBM EBCDIC (International-Euro)
+1149	IBM EBCDIC (Icelandic-Euro)
+1200	Unicode
+1201	Unicode (Big-Endian)
+1250	Central European (Windows)
+1251	Cyrillic (Windows)
+1252	Western European (Windows)
+1253	Greek (Windows)
+1254	Turkish (Windows)
+1255	Hebrew (Windows)
+1256	Arabic (Windows)
+1257	Baltic (Windows)
+1258	Vietnamese (Windows)
+1361	Korean (Johab)
+10000	Western European (Mac)
+10001	Japanese (Mac)
+10002	Chinese Traditional (Mac)
+10003	Korean (Mac)
+10004	Arabic (Mac)
+10005	Hebrew (Mac)
+10006	Greek (Mac)
+10007	Cyrillic (Mac)
+10008	Chinese Simplified (Mac)
+10010	Romanian (Mac)
+10017	Ukrainian (Mac)
+10021	Thai (Mac)
+10029	Central European (Mac)
+10079	Icelandic (Mac)
+10081	Turkish (Mac)
+10082	Croatian (Mac)
+12000	Unicode UCS-4 Little-Endian
+12001	Unicode UCS-4 Big-Endian
+20000	Chinese Traditional (CNS)
+20001	TCA Taiwan
+20002	Chinese Traditional (Eten)
+20003	IBM5550 Taiwan
+20004	TeleText Taiwan
+20005	Wang Taiwan
+20105	Western European (IA5)
+20106	German (IA5)
+20107	Swedish (IA5)
+20108	Norwegian (IA5)
+20127	US-ASCII
+20261	T.61
+20269	ISO-6937
+20273	IBM EBCDIC (Germany)
+20277	IBM EBCDIC (Denmark-Norway)
+20278	IBM EBCDIC (Finland-Sweden)
+20280	IBM EBCDIC (Italy)
+20284	IBM EBCDIC (Spain)
+20285	IBM EBCDIC (UK)
+20290	IBM EBCDIC (Japanese katakana)
+20297	IBM EBCDIC (France)
+20420	IBM EBCDIC (Arabic)
+20423	IBM EBCDIC (Greek)
+20424	IBM EBCDIC (Hebrew)
+20833	IBM EBCDIC (Korean Extended)
+20838	IBM EBCDIC (Thai)
+20866	Cyrillic (KOI8-R)
+20871	IBM EBCDIC (Icelandic)
+20880	IBM EBCDIC (Cyrillic Russian)
+20905	IBM EBCDIC (Turkish)
+20924	IBM Latin-1
+20932	Japanese (EUC-JP, JIS 0208-1990 and 0212-1990)
+20936	Chinese Simplified (GB2312-80)
+20949	Korean Wansung
+21025	IBM EBCDIC (Cyrillic Serbian-Bulgarian)
+21027	(deprecated)
+21866	Cyrillic (KOI8-U)
+28591	Western European (iso-8859-1)
+28592	Central European (iso-8859-2)
+28593	Latin 3 (iso-8859-3)
+28594	Baltic (iso-8859-4)
+28595	Cyrillic (iso-8859-5)
+28596	Arabic (iso-8859-6)
+28597	Greek (iso-8859-7)
+28598	Hebrew (iso-8859-8)
+28599	Turkish (iso-8859-9)
+28603	Estonian (iso-8859-13)
+28605	Latin 9 (iso-8859-15)
+29001	Europa
+38598	Hebrew (iso-8859-8-i)
+50220	Japanese (JIS)
+50221	Japanese (JIS-Allow 1 byte Kana)
+50222	Japanese (JIS-Allow 1 byte Kana - SO/SI)
+50225	Korean (iso-2022-kr)
+50227	Chinese Simplified (ISO-2022)
+50229	Traditional Chinese (ISO 2022)
+50930	Japanese (Katakana) Extended
+50931	US/Canada and Japanese
+50933	Korean Extended and Korean
+50935	Simplified Chinese Extended and Simplified Chinese
+50936	Simplified Chinese
+50937	US/Canada and Traditional Chinese
+50939	Japanese (Latin) Extended and Japanese
+51932	Japanese (EUC)
+51936	Chinese Simplified (EUC)
+51949	Korean (EUC)
+51950	Traditional Chinese (EUC)
+52936	Chinese Simplified (HZ)
+54936	Chinese Simplified (GB18030)
+57002	ISCII Devanagari
+57003	ISCII Bengali
+57004	ISCII Tamil
+57005	ISCII Telugu
+57006	ISCII Assamese
+57007	ISCII Oriya
+57008	ISCII Kannada
+57009	ISCII Malayalam
+57010	ISCII Gujarati
+57011	ISCII Punjabi
+65000	Unicode (UTF-7)
+65001	Unicode (UTF-8)
+65005	Unicode (UTF-32)
+65006	Unicode (UTF-32 Big-Endian)

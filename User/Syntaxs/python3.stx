@@ -1,0 +1,641 @@
+#TITLE=Python3
+; This syntax file has been developed for programming in Python
+; version 3 and above.  The Python 3.0.1 documentation set was
+; used as the reference for this syntax file.  Not all Exceptions,
+; Functions and Modules have been included.
+; Author:     Peter Anderson peterjohnanderson@gmail.com)
+; Licence:    Creative Commons Attribution Unported current version)
+;             http://creativecommons.org.au/licences
+; Date:       Thursday, 9 April 2009
+;
+; Sections:
+; * Reserved words
+; * Exceptions
+; * Operators, Types and Special Attributes
+; * Built-in Functions
+; * Module Names
+;
+
+#DELIMITER=,(){}[]-+*/=~!&|\<> :;.`%^
+#QUOTATION1='
+#QUOTATION2="
+#CONTINUE_QUOTE=n
+#LINECOMMENT=#
+#LINECOMMENT2=
+#COMMENTON="""
+#COMMENTOFF="""
+#COMMENTON2='''
+#COMMENTOFF2='''
+#ESCAPE=\
+#CASE=y
+#PREFIX1=
+#PREFIX2=
+#PREFIX3=
+#PREFIX4=
+#PREFIX5=
+#SUFFIX1=
+#SUFFIX2=
+#SUFFIX3=
+#SUFFIX4=
+#SUFFIX5=
+
+#KEYWORD=Reserved words
+; Keywords
+False
+None
+True
+and
+as
+assert
+break
+class
+continue
+def
+del
+elif
+else
+except
+finally
+for
+from
+global
+if
+import
+in
+is
+lambda
+nonlocal
+not
+or
+pass
+raise
+return
+try
+while
+with
+yield
+; Reserved classes of identifiers
+_*
+__*__
+__*
+
+#KEYWORD=Exceptions
+; Built-in exceptions
+BaseException
+SystemExit
+KeyboardInterrupt
+GeneratorExit
+Exception
+StopIteration
+ArithmeticError
+FloatingPointError
+OverflowError
+ZeroDivisionError
+AssertionError
+AttributeError
+BufferError
+EnvironmentError
+IOError
+OSError
+WindowsError
+EOFError
+ImportError
+LookupError
+IndexError
+KeyError
+MemoryError
+NameError
+UnboundLocalError
+ReferenceError
+RuntimeError
+NotImplementedError
+SyntaxError
+IndentationError
+TabError
+SystemError
+TypeError
+ValueError
+UnicodeError
+UnicodeDecodeError
+UnicodeEncodeError
+UnicodeTranslateError
+Warning
+DeprecationWarning
+PendingDeprecationWarning
+RuntimeWarning
+SyntaxWarning
+UserWarning
+FutureWarning
+ImportWarning
+UnicodeWarning
+BytesWarning
+; Errors and exceptions
+except
+exceptions
+
+#KEYWORD=Operators, Types and Special Attributes
+; Numeric types
++
+-
+*
+**
+/
+//
+%
+abs
+int
+float
+complex
+c.conjugate
+divmod
+pow
+math.trunc
+round
+math.floor
+math.ceil
+
+; Bit-string operations on integer types
+<<
+>>
+&
+|
+^
+~
+bit_length
+; Float methods
+as_integer_ratio
+hex
+fromhex
+; Boolean operations
+and
+or
+not
+; Comparison operators
+<
+<=
+>
+>=
+==
+!=
+is
+is not
+; Iterator types
+container
+iterator
+__iter__
+__next__
+; Sequence types
+in
+not in
+len
+min
+max
+; String methods
+str
+capitalize
+center
+count
+encode
+endswith
+expandtabs
+find
+format
+index
+isalnum
+isalpha
+isdecimal
+isdigit
+isidentifier
+islower
+isnumeric
+isprintable
+isspace
+istitle
+isupper
+join
+ljust
+lower
+lstrip
+maketrans
+partition
+replace
+rfind
+rindex
+rjust
+rpartition
+rsplit
+rstrip
+split
+splitlines
+startswith
+strip
+swapcase
+title
+translate
+upper
+zfill
+; Mutable sequence types
+append
+count
+del
+extend
+index
+insert
+pop
+remove
+reverse
+sort
+; Bytes and byte array methods
+bytes
+bytearray
+fromhex
+translate
+; Set types
+set
+frozenset
+len
+in
+not
+isdisjoint
+issubset
+issuperset
+union
+intersection
+difference
+symmetric_difference
+copy
+update
+intersection_update
+difference_update
+symmetric_difference_update
+add
+remove
+discard
+pop
+clear
+; Mapping types
+dict
+clear
+copy
+dictview
+fromkeys
+get
+items
+iter
+key
+keys
+len
+len
+pop
+popitem
+setdefault
+update
+values
+; File objects
+file
+close
+__next__
+closed
+encoding
+errors
+fileno
+flush
+isatty
+mode
+name
+newlines
+read
+readline
+readlines
+seek
+tell
+truncate
+write
+writelines
+; memoryview types
+memoryview
+tobytes
+tolist
+format
+itemsize
+shape
+ndim
+strides
+; Context manager types
+__enter__
+__exit__
+; Special attributes
+__dict__
+__class__
+__bases__
+__name__
+
+#KEYWORD=Built-in Functions
+abs
+all
+any
+ascii
+bin
+bool
+bytearray
+bytes
+chr
+compile
+complex
+delattr
+dict
+dir
+divmod
+exec
+filter
+float
+format
+frozenset
+getattr
+globals
+hasattr
+hash
+help
+hex
+id
+input
+int
+isinstance
+issubclass
+iter
+len
+list
+locals
+map
+max
+memoryview
+min
+next
+object
+oct
+open
+ord
+pow
+print
+property
+range
+repr
+reversed
+round
+set
+setattr
+slice
+sorted
+staticmethod
+str
+sum
+super
+tuple
+type
+zip
+__import__
+
+#KEYWORD=Module Names
+; String Services
+string
+re
+struct
+difflib
+textwrap
+codecs
+unicodedata
+stringprep
+; Data Types
+datetime
+calendar
+collections
+heapq
+bisect
+array
+sched
+queue
+weakref
+types
+copy
+pprint
+reprlib
+; Numeric and Mathematical Modules
+numbers
+math
+; Constants
+cmath
+decimal
+fractions
+random
+itertools
+functools
+operator
+; File and Directory Access
+os.path
+fileinput
+stat
+filecmp
+tempfile
+glob
+fnmatch
+linecache
+shutil
+macpath
+; Data Persistence
+pickle
+copyreg
+shelve
+marshal
+dbm
+sqlite3
+; Data Compression and Archiving
+zlib
+gzip
+bz2
+zipfile
+tarfile
+; File Formats
+csv
+configparser
+netrc
+xdrlib
+plistlib
+; Cryptographic Services
+hashlib
+hmac
+; Generic Operating System Services
+os
+io
+time
+optparse
+getopt
+logging
+getpass
+curses
+curses.textpad
+curses.wrapper
+curses.ascii
+curses.panel
+platform
+errno
+ctypes
+; Optional Operating System Services
+select
+threading
+dummy_threading
+_thread
+_dummy_thread
+multiprocessing
+mmap
+readline
+rlcompleter
+; Interprocess Communication and Networking
+subprocess
+socket
+ssl
+signal
+asyncore
+asynchat
+; Internet Data Handling
+email
+json
+mailcap
+mailbox
+mimetypes
+base64
+binhex
+binascii
+quopri
+uu
+; Structured Markup Processing Tools
+html.parser
+html.entities
+xml.parsers.expat
+xml.dom
+xml.dom.minidom
+xml.dom.pulldom
+xml.sax
+xml.sax.handler
+xml.sax.saxutils
+xml.sax.xmlreader
+xml.etree.ElementTree
+; Internet Protocols and Support
+webbrowser
+cgi
+cgitb
+wsgiref
+urllib.request
+urllib.response
+urllib.parse
+urllib.error
+urllib.robotparser
+http.client
+ftplib
+poplib
+imaplib
+nntplib
+smtplib
+smtpd
+telnetlib
+uuid
+socketserver
+http.server
+http.cookies
+http.cookiejar
+xmlrpc.client
+xmlrpc.server
+; Multimedia Services
+audioop
+aifc
+sunau
+wave
+chunk
+colorsys
+imghdr
+sndhdr
+ossaudiodev
+; Internationalization
+gettext
+locale
+; Program Frameworks
+cmd
+shlex
+; Graphical User Interfaces with Tk
+tkinter
+tkinter.tix
+tkinter.scrolledtext
+turtle
+; Development Tools
+pydoc
+doctest
+unittest
+2to3
+test
+test.support
+; Debugging and Profiling
+bdb
+pdb
+; Debugger Commands
+timeit
+trace
+; Python Runtime Services
+sys
+builtins
+__main__
+warnings
+contextlib
+abc
+atexit
+traceback
+__future__
+gc
+inspect
+site
+fpectl
+; Custom Python Interpreters
+code
+codeop
+; Importing Modules
+imp
+zipimport
+pkgutil
+modulefinder
+runpy
+; Python Language Services
+parser
+; Abstract Syntax Trees
+symtable
+symbol
+token
+keyword
+tokenize
+tabnanny
+pyclbr
+py_compile
+compileall
+dis
+pickletools
+distutils
+; Miscellaneous Services
+formatter
+; MS Windows Specific Services
+msilib
+msvcrt
+winreg
+winsound
+; Unix Specific Services
+posix
+pwd
+spwd
+grp
+crypt
+termios
+tty
+pty
+fcntl
+pipes
+resource
+nis
+syslog
+; Others
+__init__

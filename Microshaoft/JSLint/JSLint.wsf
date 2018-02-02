@@ -1,0 +1,150 @@
+<job id="JSLint">
+<script src="JSLint.js" language="JScript"></script>
+<script language="JScript">
+var args = WScript.Arguments;
+var filepath = args(0);
+
+/*-- JSLint plug --*/
+function is_own(object, name) {return Object.prototype.hasOwnProperty.call(object, name);}
+function to_array(o) {var a = [], k;for (k in o) {if (is_own(o, k)) {a.push(k);}}return a;}
+JSLINT.reportTXT = function (option) {
+	var data = this.data();
+	var a = [], c, e, err, f, i, k, l, m = '', n, o = [], s;
+	function detail(h, array) {
+		var b, i, singularity;
+		if (array) {
+		    o.push('<div><i>' + h + '</i> ');
+		    array = array.sort();
+		    for (i = 0; i < array.length; i += 1) {
+			  if (array[i] !== singularity) {
+				singularity = array[i];
+				o.push((b ? ', ' : '') + singularity);
+				b = true;
+			  }
+		    }
+		    o.push('</div>');
+		}
+	}
+
+	if (data.errors || data.implieds || data.unused) {
+		err = true;
+		if (data.errors) {
+			o.push('\nErrors:\n')
+		    for (i = 0; i < data.errors.length; i += 1) {
+			  c = data.errors[i];
+			  if (c) {
+				e = c.evidence || '';
+				//reason
+				o.push('   '+(i+1)+'. '+c.reason + (isFinite(c.line) ?'  >>>in ['+ filepath +'] [line: ' + c.line + ',character: ' + c.character+']\n' : ''));
+			  }
+		    }
+		}
+
+		if (data.implieds) {
+		    s = [];
+		    for (i = 0; i < data.implieds.length; i += 1) {
+			  s[i] = '   '+(i+1)+'.'+data.implieds[i].name+': '+data.implieds[i].line;
+		    }
+		    o.push('\nImplied global:\n'+s.join('\n')+'\n')
+		}
+
+		if (data.unused) {
+		    s = [];
+		    for (i = 0; i < data.unused.length; i += 1) {
+			  s[i] = '   '+(i+1)+'. ' + data.unused[i].name + ': ' + data.unused[i]['function'] + '  >>>in ['+ filepath +'] [line: ' + data.unused[i].line + ',character: 0]';
+		    }
+		    o.push('\nUnused variable:\n' + s.join('\n') + '\n');
+		}
+		if (data.json) {
+		    o.push('\nJSON: bad.\n');
+		}
+	}
+
+	if (!option) {
+		if (data.urls) {
+		    detail("URLs\n", data.urls, '\n');
+		}
+		if (this.xmode === 'style') {
+		    o.push('\nCSS.\n');
+		} else if (data.json && !err) {
+		    o.push('\nJSON: good.\n');
+		} else if (data.globals) {
+		    o.push('\nGlobal:\n' +
+				'   '+data.globals.sort().join(', ') + '\n');
+		} else {
+		    o.push('\nNo new global variables introduced.\n');
+		}
+		/*--
+		for (i = 0; i < data.functions.length; i += 1) {
+		    f = data.functions[i];
+
+		    o.push('\n' + f.line + '-' +
+				f.last + ' ' + (f.name || '') + '(' +
+				(f.param ? f.param.join(', ') : '') + ')\n');
+		    detail('\nUnused\n', f.unused);
+		    detail('Closure', f.closure);
+		    detail('Variable', f['var']);
+		    detail('Exception', f.exception);
+		    detail('Outer', f.outer);
+		    detail('Global', f.global);
+		    detail('Label', f.label);
+		}
+		 --*/
+
+		/*--
+		if (data.member) {
+		    a = to_array(data.member);
+		    if (a.length) {
+			  a = a.sort();
+			  m = '\nmembers: \n  ';
+			  l = 10;
+			  for (i = 0; i < a.length; i += 1) {
+				k = a[i];
+				n = k.name();
+				if (l + n.length > 72) {
+				    o.push(m + '\n');
+				    m = '    ';
+				    l = 1;
+				}
+				l += n.length + 2;
+				if (data.member[k] === 1) {
+				    n = '' + n + '';
+				}
+				if (i < a.length - 1) {
+				    n += ', ';
+				}
+				m += n;
+			  }
+			  o.push(m + '\n');
+		    }
+		}
+		 --*/
+	}
+	return o.join('');
+};
+
+if(args.length>0) {
+/**
+	var fso = new ActiveXObject("Scripting.FileSystemObject"),
+		file = fso.OpenTextFile(filepath),
+		cot = file.ReadAll();
+/**/
+	var stream = new ActiveXObject("ADODB.Stream"),
+	cot = '';
+
+	stream.Mode = 3;  // 常用值 1:读，2:写，3:读写
+	stream.Type = 2;  // 1:二进制，2:文本(默认)
+	stream.Charset = 'UTF-8';  // 指定编码
+	stream.Open();
+	stream.LoadFromFile(filepath);
+	cot = stream.ReadText(-1);  // 读取全部内容
+	stream.Close();
+
+	JSLINT(cot);
+
+	var report = JSLINT.reportTXT();
+	WScript.StdOut.Write(report);
+}
+WScript.Quit();
+</script>
+</job>
