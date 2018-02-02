@@ -4,7 +4,7 @@ New Cliptext library
 #SORT=y
 
 #T=.NET Core
-^# 重新安装一下Ubuntu子系统 windows cmd
+^# 重新安装一下Ubuntu子系统
 lxrun /uninstall /full
 lxrun /install
 
@@ -34,9 +34,6 @@ sudo nano /etc/ssh/sshd_config
 UsePAM no
 UsePrivilegeSeparation no
 PasswordAuthentication yes
-^#PermitRootLogin prohibit-password
-PermitRootLogin yes
-Port 2222
 
 ^# generate SSH keys for the SSH instance:
 sudo ssh-keygen -A
