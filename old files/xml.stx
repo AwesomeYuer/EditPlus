@@ -72,6 +72,7 @@ SelectionChanged
 Text
 TextChanged
 VerticalAlignment
+xmlns:x
 x:Class
 x:Name
 ;.Net config keywords

@@ -131,40 +131,21 @@ word-spacing
 z-index
 ; CSS3 Animation Properties
 animation
--moz-animation
--webkit-animation
-animation-name
--moz-animation-name
--webkit-animation-name
-animation-duration
--moz-animation-duration
--webkit-animation-duration
-animation-timing-function
--moz-animation-timing-function
--webkit-animation-timing-function
 animation-delay
--moz-animation-delay
--webkit-animation-delay
-animation-iteration-count
--moz-animation-iteration-count
--webkit-animation-iteration-count
 animation-direction
--moz-animation-direction
--webkit-animation-direction
+animation-duration
+animation-fill-mode
+animation-iteration-count
+animation-name
 animation-play-state
--moz-animation-play-state
--webkit-animation-play-state
+animation-timing-function
 ; CSS3 Background Properties
 background-clip
--webkit-background-clip
 background-origin
 background-size
 ; CSS3 Border and Outline Properties
 border-bottom-left-radius
 border-bottom-right-radius
--moz-border-image
--webkit-border-image
--o-border-image
 border-image
 border-image-outset
 border-image-repeat
@@ -185,25 +166,13 @@ rotation-point
 opacity
 ; CSS3 Flexible Box Properties
 box-align
--moz-box-align
--webkit-box-align
 box-direction
--moz-box-direction
--webkit-box-direction
 box-flex
--moz-box-flex
--webkit-box-flex
 box-flex-group
 box-lines
 box-ordinal-group
--moz-box-ordinal-group
--webkit-box-ordinal-group
 box-orient
--moz-box-orient
--webkit-box-orient
 box-pack
--moz-box-pack
--webkit-box-pack
 ; CSS3 Font Properties
 src
 font-size-adjust
@@ -218,32 +187,15 @@ target-new
 target-position
 ; CSS3 Multi-column Properties
 column-count
--moz-column-count
--webkit-column-count
 column-fill
 column-gap
--moz-column-gap
--webkit-column-gap
 column-rule
--moz-column-rule
--webkit-column-rule
 column-rule-color
--moz-column-rule-color
--webkit-column-rule-color
 column-rule-style
--moz-column-rule-style
--webkit-column-rule-style
 column-rule-width
--moz-column-rule-width
--webkit-column-rule-width
 column-span
--webkit-column-span
 column-width
--moz-column-width
--webkit-column-width
 columns
--webkit-columns
--moz-columns
 ; CSS3 Text Properties
 hanging-punctuation
 punctuation-trim
@@ -256,51 +208,20 @@ word-break
 word-wrap
 ; CSS3 2D/3D Transform Properties
 transform
--ms-transform
--moz-transform
--webkit-transform
--o-transform
 transform-origin
--ms-transform-origin
--webkit-transform-origin
--moz-transform-origin
--o-transform-origin
 transform-style
--webkit-transform-style
 perspective
--webkit-perspective
 perspective-origin
--webkit-perspective-origin
 backface-visibility
--webkit-backface-visibility
 ; CSS3 Transition Properties
 transition
--moz-transition
--webkit-transition
--o-transition
 transition-property
--moz-transition-property
--webkit-transition-property
--o-transition-property
 transition-duration
--moz-transition-duration
--webkit-transition-duration
--o-transition-duration
 transition-timing-function
--moz-transition-timing-function
--webkit-transition-timing-function
--o-transition-timing-function
 transition-delay
--moz-transition-delay
--webkit-transition-delay
--o-transition-delay
 ; CSS3 User-interface Properties
 appearance
--moz-appearance
--webkit-appearance
 box-sizing
--moz-box-sizing
--webkit-box-sizing
 icon
 nav-down
 nav-index
@@ -324,6 +245,7 @@ background-color
 background-image
 background-position
 background-repeat
+backwards
 baseline
 behind
 below
@@ -374,6 +296,7 @@ font-size
 font-style
 font-variant
 font-weight
+forwards
 fuchsia
 georgian
 gray
@@ -386,6 +309,7 @@ high
 higher
 icon
 inherit
+initial
 inline
 inline-block
 inline-table
@@ -562,8 +486,6 @@ marquee
 start
 end
 reverse
--moz-box
--webkit-box
 box
 single
 multiple
@@ -777,8 +699,6 @@ wbr
 .
 ; CSS3 Rule
 @keyframes
-@-moz-keyframes
-@-webkit-keyframes
 from
 to
 @font-face

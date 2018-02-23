@@ -9778,242 +9778,8 @@ emmet.exec(function(require, _) {
 		
 		return false;
 	});
-});/**
- * Encodes/decodes image under cursor to/from base64
- * @param {IEmmetEditor} editor
- * @since 0.65
- * 
- * @memberOf __base64ActionDefine
- * @constructor
- * @param {Function} require
- * @param {Underscore} _
- */
-emmet.exec(function(require, _) {
-	require('actions').add('encode_decode_data_url', function(editor) {
-		var data = String(editor.getSelection());
-		var caretPos = editor.getCaretPos();
-			
-		if (!data) {
-			// no selection, try to find image bounds from current caret position
-			var text = String(editor.getContent()),  m;
-			while (caretPos-- >= 0) {
-				if (startsWith('src=', text, caretPos)) { // found <img src="">
-					if (m = text.substr(caretPos).match(/^(src=(["'])?)([^'"<>\s]+)\1?/)) {
-						data = m[3];
-						caretPos += m[1].length;
-					}
-					break;
-				} else if (startsWith('url(', text, caretPos)) { // found CSS url() pattern
-					if (m = text.substr(caretPos).match(/^(url\((['"])?)([^'"\)\s]+)\1?/)) {
-						data = m[3];
-						caretPos += m[1].length;
-					}
-					break;
-				}
-			}
-		}
-		
-		if (data) {
-			if (startsWith('data:', data))
-				return decodeFromBase64(editor, data, caretPos);
-			else
-				return encodeToBase64(editor, data, caretPos);
-		}
-		
-		return false;
-	}, {label: 'Encode\\Decode data:URL image'});
-	
-	/**
-	 * Test if <code>text</code> starts with <code>token</code> at <code>pos</code>
-	 * position. If <code>pos</code> is omitted, search from beginning of text 
-	 * @param {String} token Token to test
-	 * @param {String} text Where to search
-	 * @param {Number} pos Position where to start search
-	 * @return {Boolean}
-	 * @since 0.65
-	 */
-	function startsWith(token, text, pos) {
-		pos = pos || 0;
-		return text.charAt(pos) == token.charAt(0) && text.substr(pos, token.length) == token;
-	}
-	
-	/**
-	 * Encodes image to base64
-	 * 
-	 * @param {IEmmetEditor} editor
-	 * @param {String} imgPath Path to image
-	 * @param {Number} pos Caret position where image is located in the editor
-	 * @return {Boolean}
-	 */
-	function encodeToBase64(editor, imgPath, pos) {
-		var file = require('file');
-		var actionUtils = require('actionUtils');
-		
-		var editorFile = editor.getFilePath();
-		var defaultMimeType = 'application/octet-stream';
-			
-		if (editorFile === null) {
-			throw "You should save your file before using this action";
-		}
-		
-		// locate real image path
-		var realImgPath = file.locateFile(editorFile, imgPath);
-		if (realImgPath === null) {
-			throw "Can't find " + imgPath + ' file';
-		}
-		
-		file.read(realImgPath, function(err, content) {
-			if (err) {
-				throw 'Unable to read ' + realImgPath + ': ' + err;
-			}
-			
-			var b64 = require('base64').encode(String(content));
-			if (!b64) {
-				throw "Can't encode file content to base64";
-			}
-			
-			b64 = 'data:' + (actionUtils.mimeTypes[String(file.getExt(realImgPath))] || defaultMimeType) +
-				';base64,' + b64;
-				
-			editor.replaceContent('$0' + b64, pos, pos + imgPath.length);
-		});
-		
-		
-		return true;
-	}
-
-	/**
-	 * Decodes base64 string back to file.
-	 * @param {IEmmetEditor} editor
-	 * @param {String} data Base64-encoded file content
-	 * @param {Number} pos Caret position where image is located in the editor
-	 */
-	function decodeFromBase64(editor, data, pos) {
-		// ask user to enter path to file
-		var filePath = String(editor.prompt('Enter path to file (absolute or relative)'));
-		if (!filePath)
-			return false;
-			
-		var file = require('file');
-		var absPath = file.createPath(editor.getFilePath(), filePath);
-		if (!absPath) {
-			throw "Can't save file";
-		}
-		
-		file.save(absPath, require('base64').decode( data.replace(/^data\:.+?;.+?,/, '') ));
-		editor.replaceContent('$0' + filePath, pos, pos + data.length);
-		return true;
-	}
 });
 /**
- * Automatically updates image size attributes in HTML's &lt;img&gt; element or
- * CSS rule
- * @param {Function} require
- * @param {Underscore} _
- * @constructor
- * @memberOf __updateImageSizeAction
- */
-emmet.exec(function(require, _) {
-	/**
-	 * Updates image size of &lt;img src=""&gt; tag
-	 * @param {IEmmetEditor} editor
-	 */
-	function updateImageSizeHTML(editor) {
-		var offset = editor.getCaretPos();
-		
-		// find tag from current caret position
-		var info = require('editorUtils').outputInfo(editor);
-		var xmlElem = require('xmlEditTree').parseFromPosition(info.content, offset, true);
-		if (xmlElem && (xmlElem.name() || '').toLowerCase() == 'img') {
-			getImageSizeForSource(editor, xmlElem.value('src'), function(size) {
-				if (size) {
-					var compoundData = xmlElem.range(true);
-					xmlElem.value('width', size.width);
-					xmlElem.value('height', size.height, xmlElem.indexOf('width') + 1);
-					
-					require('actionUtils').compoundUpdate(editor, _.extend(compoundData, {
-						data: xmlElem.toString(),
-						caret: offset
-					}));
-				}
-			});
-		}
-	}
-	
-	/**
-	 * Updates image size of CSS property
-	 * @param {IEmmetEditor} editor
-	 */
-	function updateImageSizeCSS(editor) {
-		var offset = editor.getCaretPos();
-		
-		// find tag from current caret position
-		var info = require('editorUtils').outputInfo(editor);
-		var cssRule = require('cssEditTree').parseFromPosition(info.content, offset, true);
-		if (cssRule) {
-			// check if there is property with image under caret
-			var prop = cssRule.itemFromPosition(offset, true), m;
-			if (prop && (m = /url\((["']?)(.+?)\1\)/i.exec(prop.value() || ''))) {
-				getImageSizeForSource(editor, m[2], function(size) {
-					if (size) {
-						var compoundData = cssRule.range(true);
-						cssRule.value('width', size.width + 'px');
-						cssRule.value('height', size.height + 'px', cssRule.indexOf('width') + 1);
-						
-						require('actionUtils').compoundUpdate(editor, _.extend(compoundData, {
-							data: cssRule.toString(),
-							caret: offset
-						}));
-					}
-				});
-			}
-		}
-	}
-	
-	/**
-	 * Returns image dimensions for source
-	 * @param {IEmmetEditor} editor
-	 * @param {String} src Image source (path or data:url)
-	 */
-	function getImageSizeForSource(editor, src, callback) {
-		var fileContent;
-		var au = require('actionUtils');
-		if (src) {
-			// check if it is data:url
-			if (/^data:/.test(src)) {
-				fileContent = require('base64').decode( src.replace(/^data\:.+?;.+?,/, '') );
-				return callback(au.getImageSize(fileContent));
-			}
-			
-			var file = require('file');
-			var absPath = file.locateFile(editor.getFilePath(), src);
-			if (absPath === null) {
-				throw "Can't find " + src + ' file';
-			}
-			
-			file.read(absPath, function(err, content) {
-				if (err) {
-					throw 'Unable to read ' + absPath + ': ' + err;
-				}
-				
-				content = String(content);
-				callback(au.getImageSize(content));
-			});
-		}
-	}
-	
-	require('actions').add('update_image_size', function(editor) {
-		// this action will definitely won’t work in SASS dialect,
-		// but may work in SCSS or LESS
-		if (_.include(['css', 'less', 'scss'], String(editor.getSyntax()))) {
-			updateImageSizeCSS(editor);
-		} else {
-			updateImageSizeHTML(editor);
-		}
-		
-		return true;
-	});
-});/**
  * Resolver for fast CSS typing. Handles abbreviations with the following 
  * notation:<br>
  * 
@@ -12090,7 +11856,8 @@ emmet.exec(function(require, _) {
  * Filter for escaping unsafe XML characters: <, >, &
  * @author Sergey Chikuyonok (serge.che@gmail.com)
  * @link http://chikuyonok.ru
- */emmet.exec(function(require, _) {
+ */
+emmet.exec(function(require, _) {
 	var charMap = {
 		'<': '&lt;',
 		'>': '&gt;',
@@ -12576,7 +12343,8 @@ emmet.exec(function(require, _) {
 		
 		return tree;
 	});
-});/**
+});
+/**
  * Trim filter: removes characters at the beginning of the text
  * content that indicates lists: numbers, #, *, -, etc.
  * 
@@ -12612,7 +12380,8 @@ emmet.exec(function(require, _) {
 		var re = new RegExp(require('preferences').get('filter.trimRegexp'));
 		return process(tree, re);
 	});
-});/**
+});
+/**
  * Filter for trimming "select" attributes from some tags that contains
  * child elements
  * @author Sergey Chikuyonok (serge.che@gmail.com)
@@ -12622,7 +12391,8 @@ emmet.exec(function(require, _) {
  * @memberOf __xslFilterDefine
  * @param {Function} require
  * @param {Underscore} _
- */emmet.exec(function(require, _) {
+ */
+emmet.exec(function(require, _) {
 	var tags = {
 		'xsl:variable': 1,
 		'xsl:with-param': 1
@@ -12935,75 +12705,6 @@ emmet.define('bootstrap', function(require, _) {
 	
 	return {
 		/**
-		 * Loads Emmet extensions. Extensions are simple .js files that
-		 * uses Emmet modules and resources to create new actions, modify
-		 * existing ones etc.
-		 * @param {Array} fileList List of absolute paths to files in extensions 
-		 * folder. Back-end app should not filter this list (e.g. by extension) 
-		 * but return it "as-is" so bootstrap can decide how to load contents 
-		 * of each file.
-		 * This method requires a <code>file</code> module of <code>IEmmetFile</code> 
-		 * interface to be implemented.
-		 * @memberOf bootstrap
-		 */
-		loadExtensions: function(fileList) {
-			var file = require('file');
-			var payload = {};
-			var utils = require('utils');
-			var userSnippets = null;
-			var that = this;
-			
-			var reader = _.bind(file.readText || file.read, file);
-			
-			var next = function() {
-				if (fileList.length) {
-					var f = fileList.shift();
-					reader(f, function(err, content) {
-						if (err) {
-							emmet.log('Unable to read "' + f + '" file: '+ err);
-							return next();
-						}
-												
-						switch (file.getExt(f)) {
-							case 'js':
-								try {
-									eval(content);
-								} catch (e) {
-									emmet.log('Unable to eval "' + f + '" file: '+ e);
-								}
-								break;
-							case 'json':
-								var fileName = getFileName(f).toLowerCase().replace(/\.json$/, '');
-								if (/^snippets/.test(fileName)) {
-									if (fileName === 'snippets') {
-										// data in snippets.json is more important to user
-										userSnippets = that.parseJSON(content);
-									} else {
-										payload.snippets = utils.deepMerge(payload.snippets || {}, that.parseJSON(content));
-									}
-								} else {
-									payload[fileName] = content;
-								}
-								
-								break;
-						}
-						
-						next();
-					});
-				} else {
-					// complete
-					if (userSnippets) {
-						payload.snippets = utils.deepMerge(payload.snippets || {}, userSnippets);
-					}
-					
-					that.loadUserData(payload);
-				}
-			};
-			
-			next();
-		},
-		
-		/**
 		 * Loads preferences from JSON object (or string representation of JSON)
 		 * @param {Object} data
 		 * @returns
@@ -13124,229 +12825,6 @@ emmet.define('bootstrap', function(require, _) {
 		}
 	};
 });/**
- * Implementation of @{link IEmmetFile} interface
- * See `javascript/interfaces/IEmmetFile.js`
- * @param {Function} require
- * @param {Underscore} _
- * @constructor
- */
-emmet.define('file', function(require, _) {
-	var backward = {
-		'C7': '80',
-		'FC': '81',
-		'E9': '82',
-		'E2': '83',
-		'E4': '84',
-		'E0': '85',
-		'E5': '86',
-		'E7': '87',
-		'EA': '88',
-		'EB': '89',
-		'E8': '8A',
-		'EF': '8B',
-		'EE': '8C',
-		'EC': '8D',
-		'C4': '8E',
-		'C5': '8F',
-		'C9': '90',
-		'E6': '91',
-		'C6': '92',
-		'F4': '93',
-		'F6': '94',
-		'F2': '95',
-		'FB': '96',
-		'F9': '97',
-		'FF': '98',
-		'D6': '99',
-		'DC': '9A',
-		'A2': '9B',
-		'A3': '9C',
-		'A5': '9D',
-		'20A7': '9E',
-		'192': '9F',
-		'E1': 'A0',
-		'ED': 'A1',
-		'F3': 'A2',
-		'FA': 'A3',
-		'F1': 'A4',
-		'D1': 'A5',
-		'AA': 'A6',
-		'BA': 'A7',
-		'BF': 'A8',
-		'2310': 'A9',
-		'AC': 'AA',
-		'BD': 'AB',
-		'BC': 'AC',
-		'A1': 'AD',
-		'AB': 'AE',
-		'BB': 'AF',
-		'2591': 'B0',
-		'2592': 'B1',
-		'2593': 'B2',
-		'2502': 'B3',
-		'2524': 'B4',
-		'2561': 'B5',
-		'2562': 'B6',
-		'2556': 'B7',
-		'2555': 'B8',
-		'2563': 'B9',
-		'2551': 'BA',
-		'2557': 'BB',
-		'255D': 'BC',
-		'255C': 'BD',
-		'255B': 'BE',
-		'2510': 'BF',
-		'2514': 'C0',
-		'2534': 'C1',
-		'252C': 'C2',
-		'251C': 'C3',
-		'2500': 'C4',
-		'253C': 'C5',
-		'255E': 'C6',
-		'255F': 'C7',
-		'255A': 'C8',
-		'2554': 'C9',
-		'2569': 'CA',
-		'2566': 'CB',
-		'2560': 'CC',
-		'2550': 'CD',
-		'256C': 'CE',
-		'2567': 'CF',
-		'2568': 'D0',
-		'2564': 'D1',
-		'2565': 'D2',
-		'2559': 'D3',
-		'2558': 'D4',
-		'2552': 'D5',
-		'2553': 'D6',
-		'256B': 'D7',
-		'256A': 'D8',
-		'2518': 'D9',
-		'250C': 'DA',
-		'2588': 'DB',
-		'2584': 'DC',
-		'258C': 'DD',
-		'2590': 'DE',
-		'2580': 'DF',
-		'3B1': 'E0',
-		'DF': 'E1',
-		'393': 'E2',
-		'3C0': 'E3',
-		'3A3': 'E4',
-		'3C3': 'E5',
-		'B5': 'E6',
-		'3C4': 'E7',
-		'3A6': 'E8',
-		'398': 'E9',
-		'3A9': 'EA',
-		'3B4': 'EB',
-		'221E': 'EC',
-		'3C6': 'ED',
-		'3B5': 'EE',
-		'2229': 'EF',
-		'2261': 'F0',
-		'B1': 'F1',
-		'2265': 'F2',
-		'2264': 'F3',
-		'2320': 'F4',
-		'2321': 'F5',
-		'F7': 'F6',
-		'2248': 'F7',
-		'B0': 'F8',
-		'2219': 'F9',
-		'B7': 'FA',
-		'221A': 'FB',
-		'207F': 'FC',
-		'B2': 'FD',
-		'25A0': 'FE',
-		'A0': 'FF'
-	};
-	
-	var hD = "0123456789ABCDEF";
-
-	function d2h(d) {
-		var h = hD.substr(d & 15, 1);
-		while (d > 15) {
-			d >>>= 4;
-			h = hD.substr(d & 15, 1) + h;
-		}
-		
-		return h;
-	}
-
-	function h2d(h) {
-		return parseInt(h, 16);
-	}
-
-	function _readFile(path) {
-		var bs = new ActiveXObject("ADODB.Stream");
-		bs.Type = 2;
-		bs.CharSet = '437';
-		bs.Open();
-		bs.LoadFromFile(path);
-		
-		var what = bs.ReadText;
-		bs.Close();
-		return what;
-	}
-
-	return {
-		read: function(path) {
-			var content = _readFile(path);
-			
-			// encode result
-			var encArray = [];
-			for (var i = 0, sL = content.length; i < sL; i++) {
-				var cc = content.charCodeAt(i);
-				if (cc >= 128) {
-					cc = h2d(backward['' + d2h(cc)]);
-				}
-				encArray.push(String.fromCharCode(cc));
-			}
-			
-			return encArray.join('') || '';
-		},
-		
-		locateFile: function(baseFile, fileName) {
-			var fso = new ActiveXObject("Scripting.FileSystemObject");
-			var parent = baseFile, tmp;
-			
-			while (parent = fso.GetParentFolderName(parent)) {
-				tmp = this.createPath(parent, fileName);
-				if (fso.FileExists(tmp)) {
-					return fso.GetAbsolutePathName(tmp);
-				}
-			}
-			
-			return '';
-		},
-		
-		createPath: function(parent, fileName) {
-			var fso = new ActiveXObject("Scripting.FileSystemObject");
-			return fso.BuildPath(parent, fileName);
-		},
-		
-		save: function(file, content) {
-			var fso = new ActiveXObject("Scripting.FileSystemObject");
-			var f = null;
-			
-			try {
-				f = fso.OpenTextFile(file, 2, true, 0);
-				f.Write(content);
-			} catch(e){
-				debug(e);
-			}
-			
-			if (f)
-				f.Close();
-		},
-		
-		getExt: function(file) {
-			var m = (file || '').match(/\.([\w\-]+)$/);
-			return m ? m[1].toLowerCase() : '';
-		}
-	};
-});/**
  * @param {Function} require
  * @param {Underscore} _
  * @constructor
@@ -13460,19 +12938,9 @@ emmet.define('editorProxy', function(require, _) {
 
 		getProfileName: function() {
 			return getView().profile;
-			//return require('actionUtils').detectProfile(this);
 		},
 
 		prompt: function(title, value) {
-			//var ie = new ActiveXObject("InternetExplorer.Application");
-			//ie.navigate('about:blank'); 
-			//ie.Visible = 0;
-			
-			//while (ie.Busy) {}
-		    //var obj = ie.Document.Script;
-		    //var input = obj.prompt(title, value || '');
-		    //ie.Quit();
-		    //return input;
 			return getView().prompt(title);
 		},
 
@@ -13490,57 +12958,10 @@ emmet.define('editorProxy', function(require, _) {
  * @param {Underscore} _
  */
 emmet.exec(function(require, _) {
-	var file = require('file');
-	
-	// path to Emmet extensions and user's custom snippets 
-	var extensionsDir = file.createPath(epp.stxDir, 'emmet-extensions');
-	
 	var bootstrap = require('bootstrap');
 	
 	// load snippets
-	bootstrap.loadSystemSnippets(file.read(file.createPath(epp.stxDir, 'snippets.json')));
-	
-	// load extensions
-	var fso = new ActiveXObject("Scripting.FileSystemObject");
-	if (fso.FolderExists(extensionsDir)) {
-		var fileList = [];
-		var extensionFiles = fso.GetFolder(extensionsDir).Files;
-		
-		var fileEnum = new Enumerator(extensionFiles);
-		for (; !fileEnum.atEnd(); fileEnum.moveNext()) {
-			fileList.push(fileEnum.item().Path);
-		}
-		
-		bootstrap.loadExtensions(fileList);
-	}
-	
-	//function addMenuItems(menu, items) {
-		//_.each(items, function(item) {
-			//if (item.type == 'action') {
-				//var cfg = {
-					//text: item.label,
-					//cmd: function() {
-						//return require('actions').run(item.name, require('editorProxy'));
-					//}
-				//};
-				
-				//if (item.name in keymap) {
-					//System.addHotkey(setupHotkey(cfg, keymap[item.name]));
-					//cfg.text += '\t' + keymap[item.name];
-				//}
-				
-				//menu.addItem(cfg);
-				
-			//} else if (item.type == 'submenu') {
-				//var submenu = menu.addMenu(item.name);
-				//addMenuItems(submenu, item.items);
-			//}
-		//});
-	//}
-	
-	//// create menu items
-	//var rootMenu = Editor.addMenu("Emmet");
-	//addMenuItems(rootMenu, require('actions').getMenu());
+	bootstrap.loadSystemSnippets(epp.snippets);
 });
 
 var zen_controller = {

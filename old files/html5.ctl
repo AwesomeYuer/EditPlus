@@ -214,10 +214,8 @@ This file is provided as a sample Cliptext library of EditPlus.
 #t=samp
 <samp>^!</samp>
 #t=script
-<script type="text/javascript">
-<!--
+<script>
 	^!
-//-->
 </script>
 #t=section
 <section>

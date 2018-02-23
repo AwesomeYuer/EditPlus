@@ -73,10 +73,8 @@
 	<area shape="" href="" coords="" alt="">
 </map>
 #T=SCRIPT
-<script type="text/javascript">
-<!--
+<script>
 	^!
-//-->
 </script>
 #T=VIDEO
 <video width="" height="" controls>
