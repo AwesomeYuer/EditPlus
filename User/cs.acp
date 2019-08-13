@@ -1,6 +1,6 @@
-#TITLE=Java
+#TITLE=C#
 ; EditPlus Auto-completion file v1.0 written by ES-Computing.
-; This file is provided as a default auto-completion file for Java.
+; This file is provided as a default auto-completion file for C#.
 
 #CASE=y
 #BRACKET1={}
@@ -48,6 +48,29 @@ interface ^!
 }
 #T=namespace
 namespace ^!
+{
+}
+#
+#T=foreach
+foreach (^!)
+{
+}
+#T=get
+get
+{
+	^!
+}
+#T=set
+set
+{
+	^!
+}
+#T=lock
+lock (^!)
+{
+}
+#T=struct
+struct ^!
 {
 }
 #

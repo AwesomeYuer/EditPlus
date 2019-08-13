@@ -17,9 +17,13 @@
 #KEYWORD=Reserved words
 abstract
 as
+ascending
+async
+await
 base
 bool
 break
+by
 byte
 case
 catch
@@ -31,6 +35,7 @@ continue
 decimal
 default
 delegate
+descending
 do
 double
 else
@@ -44,14 +49,19 @@ fixed
 float
 for
 foreach
+from
+get
 goto
+group
 if
 implicit
 in
 int
 interface
 internal
+into
 is
+let
 lock
 long
 namespace
@@ -59,6 +69,7 @@ new
 null
 object
 operator
+orderby
 out
 override
 params
@@ -70,6 +81,8 @@ ref
 return
 sbyte
 sealed
+select
+set
 short
 sizeof
 stackalloc
@@ -89,9 +102,12 @@ unsafe
 ushort
 using
 virtual
+var
 void
 volatile
+where
 while
+yield
 
 #KEYWORD=Compiler directives
 define
@@ -137,6 +153,7 @@ Generic
 Globalization
 Hosting
 HtmlControls
+Http
 IO
 IdentityModel
 Imaging
@@ -147,6 +164,7 @@ Install
 Integration
 Interop
 InteropServices
+Linq
 Localizer
 Log
 Mail
@@ -184,6 +202,7 @@ Specialized
 Storage
 StylusPlugIns
 System
+Tasks
 Text
 TextFormatting
 Themes
@@ -2225,6 +2244,8 @@ Timeout
 Timer
 WaitHandle
 WaitHandleCannotBeOpenedException
+; System.Threading.Tasks
+Task
 ; System.Timers
 ElapsedEventArgs
 Timer
@@ -5068,5 +5089,25 @@ XmlValidatingReader
 XmlWhitespace
 XmlWriter
 XmlWriterSettings
+; System.Xml.Linq
+Extensions
+XAttribute
+XCData
+XComment
+XContainer
+XDeclaration
+XDocument
+XDocumentType
+XElement
+XName
+XNamespace
+XNode
+XNodeDocumentOrderComparer
+XNodeEqualityComparer
+XObject
+XObjectChangeEventArgs
+XProcessingInstruction
+XStreamingElement
+XText
 ; UIAutomationClientsideProviders
 UIAutomationClientsideProviders

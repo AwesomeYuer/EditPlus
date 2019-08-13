@@ -4,66 +4,66 @@ Cliptext Library for control characters written by ES-Computing.
 This file is provided as a sample Clitext library of EditPlus.
 #SORT=n
 
-#T=01(01)	SOH	^A
+#T=01(01)    ^A    SOH
 
-#T=02(02)	STX	^B
+#T=02(02)    ^B    STX
 
-#T=03(03)	ETX	^C
+#T=03(03)    ^C    ETX
 
-#T=04(04)	EOT	^D
+#T=04(04)    ^D    EOT
 
-#T=05(05)	ENQ	^E
+#T=05(05)    ^E    ENQ
 
-#T=06(06)	ACK	^F
+#T=06(06)    ^F    ACK
 
-#T=07(07)	BEL	^G
+#T=07(07)    ^G    BEL
 
-#T=08(08)	BS	^H
+#T=08(08)    ^H    BS
 
-#T=09(09)	HT	^I
-	
-#T=10(0A)	LF	^J
+#T=09(09)    ^I    HT
+    
+#T=10(0A)    ^J    LF
 ^%0a
-#T=11(0B)	VT	^K
+#T=11(0B)    ^K    VT
 
-#T=12(0C)	FF	^L
+#T=12(0C)    ^L    FF
 
-#T=13(0D)	CR	^M
+#T=13(0D)    ^M    CR
 ^%0d
-#T=14(0E)	SO	^N
+#T=14(0E)    ^N    SO
 
-#T=15(0F)	SI	^O
+#T=15(0F)    ^O    SI
 
-#T=16(10)	DLE	^P
+#T=16(10)    ^P    DLE
 
-#T=17(11)	DC1	^Q
+#T=17(11)    ^Q    DC1
 
-#T=18(12)	DC2	^R
+#T=18(12)    ^R    DC2
 
-#T=19(13)	DC3	^S
+#T=19(13)    ^S    DC3
 
-#T=20(14)	DC4	^T
+#T=20(14)    ^T    DC4
 
-#T=21(15)	NAK	^U
+#T=21(15)    ^U    NAK
 
-#T=22(16)	SYN	^V
+#T=22(16)    ^V    SYN
 
-#T=23(17)	ETB	^W
+#T=23(17)    ^W    ETB
 
-#T=24(18)	CAN	^X
+#T=24(18)    ^X    CAN
 
-#T=25(19)	EM	^Y
+#T=25(19)    ^Y    EM
 
-#T=26(1A)	SUB	^Z
+#T=26(1A)    ^Z    SUB
 
-#T=27(1B)	ESC	^[
+#T=27(1B)    ^[    ESC
 
-#T=28(1C)	FS	^\
+#T=28(1C)    ^\    FS
 
-#T=29(1D)	GS	^]
+#T=29(1D)    ^]    GS
 
-#T=30(1E)	RS	^^
+#T=30(1E)    ^^    RS
 
-#T=31(1F)	US	^_
+#T=31(1F)    ^_    US
 
 #

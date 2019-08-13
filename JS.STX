@@ -2,7 +2,7 @@
 ; JavaScript syntax file written by ES-Computing.
 ; This file is required for EditPlus to run correctly.
 
-#DELIMITER=,(){}[]-+*%/\="'~!&|<>?:;.
+#DELIMITER=,(){}[]-+*%/\="'~!&|<>?:;.`
 #QUOTATION1='
 #QUOTATION2="
 #QUOTATION3=/
@@ -11,9 +11,12 @@
 #LINECOMMENT2=
 #COMMENTON=/*
 #COMMENTOFF=*/
+#COMMENTON2=`
+#COMMENTOFF2=`
 #ESCAPE=\
 #CASE=y
 #NUMBER_PATTERN=cpp
+#SPECIAL_STX=js
 
 #KEYWORD=Reserved words
 abstract

@@ -50,7 +50,7 @@ progid
 #KEYWORD=Attributes
 version
 encoding
-; XAML Standard 1.0 draft properties
+; XAML
 AcceptsReturn
 Background
 Click
@@ -70,8 +70,10 @@ PlaceholderText
 SelectedIndex
 SelectionChanged
 Text
+TextWrapping
 TextChanged
 VerticalAlignment
+Width
 xmlns:x
 x:Class
 x:Name

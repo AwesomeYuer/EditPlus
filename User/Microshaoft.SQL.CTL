@@ -1,7 +1,7 @@
 #TITLE=04.Microshaoft SQL
 #INFO
 New Cliptext library
-#SORT=y
+#SORT=n
 
 #T=ADSI
 EXEC sp_addlinkedsrvlogin 'ADSI', 'false', '数据库用户名', 'ad用户名', 'ad用户名称'
@@ -7649,6 +7649,54 @@ left   join    sys.extended_properties    properties
 WHERE TABLE_NAME='schools' 
 ORDER BY OrdinalPosition ASC 
 
+#T=sqlCmd
+@echo off
+SET /p pathScripts="PATH Scripts: "
+IF NOT EXIST "%pathScripts%" (
+	echo Path not found, create the folder and come back
+	Exit /b
+)
+SET /p pathlogs="PATH Logs: "
+IF NOT EXIST "%pathlogs%" (
+	echo Path not found, create the folder and come back
+	Exit /b
+)
+cd %pathScripts%
+IF NOT EXIST *.sql (
+	echo No.sql file(s) in this folder, check that and come back
+	Exit /b
+)
+FOR %%i IN (*.sql) do call :RunScript %%i 
+GOTO :END 
+
+:RunScript 
+SET name=%1
+SET name=%name:~0,-4%
+SET name=\%name%.log
+Echo Executing Script: %1 
+call :StartTimer
+echo Begin: %StartTime%
+SQLCMD -S MACHINE_NAME\INSTANCE_NAME -i %1 -o "%pathlogs%%name%"
+call :StopTimer
+Echo Script Done: %1
+Echo Log in: %pathlogs%%name%  
+echo End: %StopTime%
+echo Duration: %duration%  >> "%pathlogs%%name%"
+echo Duration: %duration%
+echo ------------------------------------------
+:END
+
+:StartTimer
+set StartTIME=%TIME:~0,-3%
+goto :EOF
+
+:StopTimer
+set StopTIME=%TIME:~0,-3%
+set /A "ss=(((1%StopTIME::=-100)*60+1%-100)-(((1%StartTIME::=-100)*60+1%-100)"
+set /A "hh=ss/3600+100,ss%%=3600,mm=ss/60+100,ss=ss%%60+100"
+set Duration=%hh:~1%:%mm:~1%:%ss:~1%
+
+goto :EOF
 #T=SQL sysfiles Info
 declare @sql varchar(max)
 set @sql = 'select a.[name] as DBName, t.* from [master]..sysdatabases a left join ('
@@ -14461,4 +14509,52 @@ FROM
 	sys.dm_exec_requests r
 		CROSS APPLY
 			sys.dm_exec_sql_text(r.sql_handle) s
+#T=SqlCmd run scripts.sql
+@echo off
+SET /p pathScripts="PATH Scripts: "
+IF NOT EXIST "%pathScripts%" (
+	echo Path not found, create the folder and come back
+	Exit /b
+)
+SET /p pathlogs="PATH Logs: "
+IF NOT EXIST "%pathlogs%" (
+	echo Path not found, create the folder and come back
+	Exit /b
+)
+cd %pathScripts%
+IF NOT EXIST *.sql (
+	echo No.sql file(s) in this folder, check that and come back
+	Exit /b
+)
+FOR %%i IN (*.sql) do call :RunScript %%i 
+GOTO :END 
+
+:RunScript 
+SET name=%1
+SET name=%name:~0,-4%
+SET name=\%name%.log
+Echo Executing Script: %1 
+call :StartTimer
+echo Begin: %StartTime%
+SQLCMD -S MACHINE_NAME\INSTANCE_NAME -i %1 -o "%pathlogs%%name%"
+call :StopTimer
+Echo Script Done: %1
+Echo Log in: %pathlogs%%name%  
+echo End: %StopTime%
+echo Duration: %duration%  >> "%pathlogs%%name%"
+echo Duration: %duration%
+echo ------------------------------------------
+:END
+
+:StartTimer
+set StartTIME=%TIME:~0,-3%
+goto :EOF
+
+:StopTimer
+set StopTIME=%TIME:~0,-3%
+set /A "ss=(((1%StopTIME::=-100)*60+1%-100)-(((1%StartTIME::=-100)*60+1%-100)"
+set /A "hh=ss/3600+100,ss%%=3600,mm=ss/60+100,ss=ss%%60+100"
+set Duration=%hh:~1%:%mm:~1%:%ss:~1%
+
+goto :EOF
 #

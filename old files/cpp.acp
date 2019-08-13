@@ -3,6 +3,9 @@
 ; This file is provided as a default auto-completion file for C/C++.
 
 #CASE=y
+#BRACKET1={}
+#BRACKET2=""
+#BRACKET3=''
 
 #T=if
 if (^!)
