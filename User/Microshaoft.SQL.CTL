@@ -1,7 +1,7 @@
 #TITLE=04.Microshaoft SQL
 #INFO
 New Cliptext library
-#SORT=n
+#SORT=y
 
 #T=ADSI
 EXEC sp_addlinkedsrvlogin 'ADSI', 'false', '数据库用户名', 'ad用户名', 'ad用户名称'
@@ -7397,6 +7397,57 @@ order by 1,2,3,4,5,6,7
 
 --drop table #ttt
 
+#T=SQL 2005/2008 数据字典
+SELECT
+	(case when a.colorder = 1 then d.[name] else '' end) as 表名
+	, a.colorder as 字段序号
+	, a.[name] as 字段名
+	, (case when COLUMNPROPERTY(a.id,a.[name], 'IsIdentity') = 1 then '*'else '' end) as 标识
+	, (case when (
+					SELECT count(*)
+					FROM sysobjects
+					WHERE ([name] in (
+										SELECT [name]
+										FROM sysindexes
+										WHERE (id = a.id)
+												AND
+												(indid in (
+															SELECT indid
+															FROM sysindexkeys
+															WHERE (id = a.id)
+																	AND
+																	(colid in (
+																				SELECT colid
+																				FROM syscolumns
+																				WHERE (id = a.id)
+																				AND 
+																				(name = a.name)
+																				)
+																	)
+															)
+												)
+										)
+							)
+							AND
+							(xtype = 'PK')
+					) > 0 then '√' else '' end) as 主键
+	, b.[name] as 类型
+	, a.length as 占用字节数
+	, COLUMNPROPERTY(a.id, a.[name], 'PRECISION') as 长度
+	, isnull(COLUMNPROPERTY(a.id,a.[name], 'Scale'), 0) as 小数位数
+	, (case when a.isnullable = 1 then '√' else '' end) as 允许空
+	, isnull(e.text,'') as 默认值
+	, isnull(g.[value],'') as 字段说明
+FROM syscolumns a 
+	left join systypes b
+		on a.xtype = b.xusertype
+	inner join sysobjects d
+		on a.id = d.id and d.xtype = 'U' and d.[name] <> 'dtproperties'
+	left join syscomments e
+		on a.cdefault = e.id
+	left join sys.extended_properties g
+		on a.id = g.major_id AND a.colid = g.minor_id
+order by a.id, a.colorder
 #T=SQL 2005/2008 表结构信息查询 邹建
 -- ========================================================================
 -- 表结构信息查询
@@ -7478,57 +7529,6 @@ FROM sys.columns C
 			AND C.column_id = IDX.column_id
 -- WHERE O.name = N'要查询的表'								-- 如果只查询指定表,加上此条件
 ORDER BY O.name,C.column_id
-#T=SQL 2005/2008 数据字典
-SELECT
-	(case when a.colorder = 1 then d.[name] else '' end) as 表名
-	, a.colorder as 字段序号
-	, a.[name] as 字段名
-	, (case when COLUMNPROPERTY(a.id,a.[name], 'IsIdentity') = 1 then '*'else '' end) as 标识
-	, (case when (
-					SELECT count(*)
-					FROM sysobjects
-					WHERE ([name] in (
-										SELECT [name]
-										FROM sysindexes
-										WHERE (id = a.id)
-												AND
-												(indid in (
-															SELECT indid
-															FROM sysindexkeys
-															WHERE (id = a.id)
-																	AND
-																	(colid in (
-																				SELECT colid
-																				FROM syscolumns
-																				WHERE (id = a.id)
-																				AND 
-																				(name = a.name)
-																				)
-																	)
-															)
-												)
-										)
-							)
-							AND
-							(xtype = 'PK')
-					) > 0 then '√' else '' end) as 主键
-	, b.[name] as 类型
-	, a.length as 占用字节数
-	, COLUMNPROPERTY(a.id, a.[name], 'PRECISION') as 长度
-	, isnull(COLUMNPROPERTY(a.id,a.[name], 'Scale'), 0) as 小数位数
-	, (case when a.isnullable = 1 then '√' else '' end) as 允许空
-	, isnull(e.text,'') as 默认值
-	, isnull(g.[value],'') as 字段说明
-FROM syscolumns a 
-	left join systypes b
-		on a.xtype = b.xusertype
-	inner join sysobjects d
-		on a.id = d.id and d.xtype = 'U' and d.[name] <> 'dtproperties'
-	left join syscomments e
-		on a.cdefault = e.id
-	left join sys.extended_properties g
-		on a.id = g.major_id AND a.colid = g.minor_id
-order by a.id, a.colorder
 #T=SQL Doc
 SELECT sp.major_id AS id, 
 so.name AS ObjectName, 
@@ -7649,54 +7649,6 @@ left   join    sys.extended_properties    properties
 WHERE TABLE_NAME='schools' 
 ORDER BY OrdinalPosition ASC 
 
-#T=sqlCmd
-@echo off
-SET /p pathScripts="PATH Scripts: "
-IF NOT EXIST "%pathScripts%" (
-	echo Path not found, create the folder and come back
-	Exit /b
-)
-SET /p pathlogs="PATH Logs: "
-IF NOT EXIST "%pathlogs%" (
-	echo Path not found, create the folder and come back
-	Exit /b
-)
-cd %pathScripts%
-IF NOT EXIST *.sql (
-	echo No.sql file(s) in this folder, check that and come back
-	Exit /b
-)
-FOR %%i IN (*.sql) do call :RunScript %%i 
-GOTO :END 
-
-:RunScript 
-SET name=%1
-SET name=%name:~0,-4%
-SET name=\%name%.log
-Echo Executing Script: %1 
-call :StartTimer
-echo Begin: %StartTime%
-SQLCMD -S MACHINE_NAME\INSTANCE_NAME -i %1 -o "%pathlogs%%name%"
-call :StopTimer
-Echo Script Done: %1
-Echo Log in: %pathlogs%%name%  
-echo End: %StopTime%
-echo Duration: %duration%  >> "%pathlogs%%name%"
-echo Duration: %duration%
-echo ------------------------------------------
-:END
-
-:StartTimer
-set StartTIME=%TIME:~0,-3%
-goto :EOF
-
-:StopTimer
-set StopTIME=%TIME:~0,-3%
-set /A "ss=(((1%StopTIME::=-100)*60+1%-100)-(((1%StartTIME::=-100)*60+1%-100)"
-set /A "hh=ss/3600+100,ss%%=3600,mm=ss/60+100,ss=ss%%60+100"
-set Duration=%hh:~1%:%mm:~1%:%ss:~1%
-
-goto :EOF
 #T=SQL sysfiles Info
 declare @sql varchar(max)
 set @sql = 'select a.[name] as DBName, t.* from [master]..sysdatabases a left join ('
@@ -7856,6 +7808,102 @@ FROM sys.dm_tran_locks t LEFT JOIN sys.partitions p
 WHERE resource_database_id = db_id() order by entity_name desc,resource desc,[description] desc,mode desc
 --############################################################################################3
 
+#T=sqlCmd
+@echo off
+SET /p pathScripts="PATH Scripts: "
+IF NOT EXIST "%pathScripts%" (
+	echo Path not found, create the folder and come back
+	Exit /b
+)
+SET /p pathlogs="PATH Logs: "
+IF NOT EXIST "%pathlogs%" (
+	echo Path not found, create the folder and come back
+	Exit /b
+)
+cd %pathScripts%
+IF NOT EXIST *.sql (
+	echo No.sql file(s) in this folder, check that and come back
+	Exit /b
+)
+FOR %%i IN (*.sql) do call :RunScript %%i 
+GOTO :END 
+
+:RunScript 
+SET name=%1
+SET name=%name:~0,-4%
+SET name=\%name%.log
+Echo Executing Script: %1 
+call :StartTimer
+echo Begin: %StartTime%
+SQLCMD -S MACHINE_NAME\INSTANCE_NAME -i %1 -o "%pathlogs%%name%"
+call :StopTimer
+Echo Script Done: %1
+Echo Log in: %pathlogs%%name%  
+echo End: %StopTime%
+echo Duration: %duration%  >> "%pathlogs%%name%"
+echo Duration: %duration%
+echo ------------------------------------------
+:END
+
+:StartTimer
+set StartTIME=%TIME:~0,-3%
+goto :EOF
+
+:StopTimer
+set StopTIME=%TIME:~0,-3%
+set /A "ss=(((1%StopTIME::=-100)*60+1%-100)-(((1%StartTIME::=-100)*60+1%-100)"
+set /A "hh=ss/3600+100,ss%%=3600,mm=ss/60+100,ss=ss%%60+100"
+set Duration=%hh:~1%:%mm:~1%:%ss:~1%
+
+goto :EOF
+#T=SqlCmd run scripts.sql
+@echo off
+SET /p pathScripts="PATH Scripts: "
+IF NOT EXIST "%pathScripts%" (
+	echo Path not found, create the folder and come back
+	Exit /b
+)
+SET /p pathlogs="PATH Logs: "
+IF NOT EXIST "%pathlogs%" (
+	echo Path not found, create the folder and come back
+	Exit /b
+)
+cd %pathScripts%
+IF NOT EXIST *.sql (
+	echo No.sql file(s) in this folder, check that and come back
+	Exit /b
+)
+FOR %%i IN (*.sql) do call :RunScript %%i 
+GOTO :END 
+
+:RunScript 
+SET name=%1
+SET name=%name:~0,-4%
+SET name=\%name%.log
+Echo Executing Script: %1 
+call :StartTimer
+echo Begin: %StartTime%
+SQLCMD -S MACHINE_NAME\INSTANCE_NAME -i %1 -o "%pathlogs%%name%"
+call :StopTimer
+Echo Script Done: %1
+Echo Log in: %pathlogs%%name%  
+echo End: %StopTime%
+echo Duration: %duration%  >> "%pathlogs%%name%"
+echo Duration: %duration%
+echo ------------------------------------------
+:END
+
+:StartTimer
+set StartTIME=%TIME:~0,-3%
+goto :EOF
+
+:StopTimer
+set StopTIME=%TIME:~0,-3%
+set /A "ss=(((1%StopTIME::=-100)*60+1%-100)-(((1%StartTIME::=-100)*60+1%-100)"
+set /A "hh=ss/3600+100,ss%%=3600,mm=ss/60+100,ss=ss%%60+100"
+set Duration=%hh:~1%:%mm:~1%:%ss:~1%
+
+goto :EOF
 #T=SQL查询技巧
 如何提高SQL查询效率
 
@@ -9581,159 +9629,2602 @@ select A.* from TestUser A
 	
 	
 drop table #testTable
-#T=表的磁盘使用情况 SQL 2008 R2 报表
---dbcc showfilestats
---DBCC SQLPERF(LOGSPACE)
-SELECT
-	--(row_number() over(order by a3.name, a2.name))%2 as l1,
-	a3.name AS [schemaname],
-	a2.name AS [tablename],
-	a1.rows as row_count,
-	((a1.reserved + ISNULL(a4.reserved,0))* 8)
-	/1024.0--/1024.0
-	AS [reserved(MB)], 
-	a1.data * 8
-	/1024.0--/1024.0
-	AS [data(MB)],
-	(
-		CASE
-			WHEN (a1.used + ISNULL(a4.used,0)) > a1.data 
-				THEN (a1.used + ISNULL(a4.used,0)) - a1.data 
-			ELSE
-				0 END
-	) * 8
-	/1024.0--/1024.0
-	 AS [index_size(MB)],
-	(
-		CASE
-			WHEN (a1.reserved + ISNULL(a4.reserved,0)) > a1.used
-				THEN (a1.reserved + ISNULL(a4.reserved,0)) - a1.used
-			ELSE
-				0
-			END
-	) * 8
-	/1024.0--/1024.0
-	AS [unused(MB)]
-FROM
-	(
-		SELECT 
-			ps.object_id,
-			SUM (
-					CASE
-						WHEN
-							(ps.index_id < 2)
-								THEN row_count
-						ELSE 0
-					END
-				) AS [rows],
-			SUM (ps.reserved_page_count) AS reserved,
-			SUM (
-					CASE
-						WHEN
-							(ps.index_id < 2)
-								THEN (ps.in_row_data_page_count + ps.lob_used_page_count + ps.row_overflow_used_page_count)
-						ELSE
-							(ps.lob_used_page_count + ps.row_overflow_used_page_count)
-					END
-				) AS data,
-			SUM (ps.used_page_count) AS used
-		FROM
-			sys.dm_db_partition_stats ps
-		GROUP BY
-			ps.object_id
-	) AS a1
-		LEFT OUTER JOIN 
-			(
-				SELECT 
-					it.parent_id,
-					SUM(ps.reserved_page_count) AS reserved,
-					SUM(ps.used_page_count) AS used
-				FROM
-					sys.dm_db_partition_stats ps
-						INNER JOIN sys.internal_tables it 
-							ON (it.object_id = ps.object_id)
-				WHERE
-					it.internal_type IN (202,204)
-				GROUP BY
-					it.parent_id
-			) AS a4 
-				ON (a4.parent_id = a1.object_id)
-		INNER JOIN
-			sys.all_objects a2
-				ON ( a1.object_id = a2.object_id ) 
-		INNER JOIN
-			sys.schemas a3
-				ON (a2.schema_id = a3.schema_id)
-	WHERE
-		a2.type <> N'S'
-		and a2.type <> N'IT'
-	ORDER BY
-		3 desc
-		, a3.name
-		, a2.name
+#T=一道褒贬不一的SQL考试题
+二维关系表 T(F1,F2,F3,F4,F5,F6,F7) 表示如下关系:
+┌─────┬─────┬─────┬─────┬─────┬─────┬─────┐
+│  学生ID  │ 学生姓名 │  课程ID  │ 课程名称 │   成绩   │  教师ID  │ 教师姓名 │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│    S3    │   王五   │    K4    │   政治   │    53    │    T4    │  赵老师  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│    S1    │   张三   │    K1    │   数学   │    61    │    T1    │  张老师  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│    S2    │   李四   │    K3    │   英语   │    88    │    T3    │  李老师  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│    S1    │   张三   │    K4    │   政治   │    77    │    T4    │  赵老师  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│    S2    │   李四   │    K4    │   政治   │    67    │    T5    │  周老师  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│    S3    │   王五   │    K2    │   语文   │    90    │    T2    │  王老师  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│    S3    │   王五   │    K1    │   数学   │    55    │    T1    │  张老师  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│    S1    │   张三   │    K2    │   语文   │    81    │    T2    │  王老师  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│    S4    │   赵六   │    K2    │   语文   │    59    │    T1    │  王老师  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│    S1    │   张三   │    K3    │   英语   │    37    │    T3    │  李老师  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│    S2    │   李四   │    K1    │   数学   │    81    │    T1    │  张老师  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│   ....   │          │          │          │          │          │          │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│   ....   │          │          │          │          │          │          │
+└─────┴─────┴─────┴─────┴─────┴─────┴─────┘
 
-#T=查询数据库空间使用状况 邹建
-查询数据库空间使用状况
-/*-- ===================================================================
-版本: SQL Server 2000, 2005
-功能: 查询数据库空间使用状况
-=================================================================== --*/
-USE [要查询空间信息的库名]
-GO
+
+请以一句 T-SQL (Ms SQL Server) 或 Jet SQL (Ms Access) 作答! 
+1.如果 T 表还有一字段 F0 数据类型为自动增量整型(唯一,不会重复), 
+ 而且 T 表中含有除 F0 字段外,请删除其它字段完全相同的重复多余的脏记录数据(要保留其中的一条): 
+
+
+2.查询列印各科成绩最高和最低的记录: (就是各门课程的最高、最低分的学生和老师) 
+ 课程ID,课程名称,最高分,学生ID,学生姓名,教师ID,教师姓名,最低分,学生ID,学生姓名,教师ID,教师姓名 
+
+
+3.按成绩从高到低顺序,查询列印所有学生四门(数学,语文,英语,政治)课程成绩: (就是每个学生的四门课程的成绩单) 
+ 学生ID,学生姓名,数学,语文,英语,政治,有效课程数,有效平均分 
+ (注: 有效课程即在 T 表中有该学生的成绩记录,如不明白可不列印"有效课程数"和"有效平均分") 
+
+
+4.查询列印数学成绩第 10 名到第 15 名的学生成绩单 
+ 或列印平均成绩第 10 名到第 15 名的学生成绩单 
+ [学生ID],[学生姓名],数学,语文,英语,政治,平均成绩 
+
+
+5.按各科不及格率的百分数从低到高和平均成绩从高到低顺序,查询统计列印各科平均成绩和不及格率的百分数(用"N行"表示): (就是分析哪门课程难) 
+ 课程ID,课程名称,平均成绩,及格百分数 
+
+
+6.查询列印四门课程平均成绩和及格率的百分数(用"1行4列"表示): (就是分析哪门课程难) 
+ 数学平均分,数学及格百分数,语文平均分,语文及格百分数,英语平均分,英语及格百分数,政治平均分,政治及格百分数 
+
+
+7.按不同老师所教不同课程平均分从高到低,查询列印: (就是分析哪个老师的哪个课程水平高) 
+ 教师ID,教师姓名,课程ID,课程名称,平均分 (平均分按去掉一个最高分和一个最低分后取) 
+
+
+8.查询统计列印各科成绩,各分数段人数: 
+ 课程ID,课程名称,[100-85],[85-70],[70-60],[<60] 
+
+
+9.查询列印学生平均成绩及其名次 
+
+
+11.查询列印参加了所有考试的学生
+
+
+12.查询列印"至少"与学生"S3 (王五)"参加了相同考试的学生
+
+
+13.规范化
+#T=从未使用的SQL索引
+select object_name(i.object_id) as ObjectName, i.name as [Unused Index]
+from sys.indexes i
+left join sys.dm_db_index_usage_stats s on s.object_id = i.object_id
+      and i.index_id = s.index_id
+      and s.database_id = db_id() 
+where objectproperty(i.object_id, 'IsIndexable') = 1
+AND objectproperty(i.object_id, 'IsIndexed') = 1 
+and s.index_id is null -- and dm_db_index_usage_stats has no reference to this index
+or (s.user_updates > 0 and s.user_seeks = 0 and s.user_scans = 0 and s.user_lookups = 0) -- index is being updated, but not used by seeks/scans/lookups
+order by object_name(i.object_id) asc
+
+#T=分区 简单示例
+CREATE PARTITION FUNCTION [UPF_Monthly] (varchar(100))
+AS RANGE RIGHT FOR VALUES
+(
+	'20140101'
+	, '20140201'
+	, '20140301'
+);
+
+ALTER DATABASE [PartitionsTest]
+ADD FILEGROUP [FG_Partition_0001];
+
+ALTER DATABASE [PartitionsTest] 
+ADD FILE 
+(
+    NAME = FG_Partition_0001_File_0001,
+    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0001_File_0001.mdf',
+    SIZE = 8MB,
+    MAXSIZE = unlimited,
+    FILEGROWTH = 8MB
+)
+,
+(
+    NAME = FG_Partition_0001_File_0002,
+    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0001_File_0002.ndf',
+    SIZE = 8MB,
+    MAXSIZE = unlimited,
+    FILEGROWTH = 8MB
+)
+TO FILEGROUP [FG_Partition_0001];
+
+
+ALTER DATABASE [PartitionsTest]
+ADD FILEGROUP [FG_Partition_0002];
+ALTER DATABASE [PartitionsTest] 
+ADD FILE 
+(
+    NAME = FG_Partition_0002_File_0001,
+    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0002_File_0001.mdf',
+    SIZE = 8MB,
+    MAXSIZE = unlimited,
+    FILEGROWTH = 8MB
+)
+,
+(
+    NAME = FG_Partition_0002_File_0002,
+    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0002_File_0002.ndf',
+    SIZE = 8MB,
+    MAXSIZE = unlimited,
+    FILEGROWTH = 8MB
+)
+TO FILEGROUP [FG_Partition_0002];
+
+
+ALTER DATABASE [PartitionsTest]
+ADD FILEGROUP [FG_Partition_0003];
+ALTER DATABASE [PartitionsTest] 
+ADD FILE 
+(
+    NAME = FG_Partition_0001_File_0003,
+    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0003_File_0001.mdf',
+    SIZE = 8MB,
+    MAXSIZE = unlimited,
+    FILEGROWTH = 8MB
+)
+,
+(
+    NAME = FG_Partition_0001_File_0003,
+    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0003_File_0002.ndf',
+    SIZE = 8MB,
+    MAXSIZE = unlimited,
+    FILEGROWTH = 8MB
+)
+TO FILEGROUP [FG_Partition_0003];
+
+
+ALTER DATABASE [PartitionsTest]
+ADD FILEGROUP [FG_Partition_0004];
+ALTER DATABASE [PartitionsTest] 
+ADD FILE 
+(
+    NAME = FG_Partition_0004_File_0001,
+    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0004_File_0001.mdf',
+    SIZE = 8MB,
+    MAXSIZE = unlimited,
+    FILEGROWTH = 8MB
+)
+,
+(
+    NAME = FG_Partition_0004_File_0002,
+    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0004_File_0002.ndf',
+    SIZE = 8MB,
+    MAXSIZE = unlimited,
+    FILEGROWTH = 8MB
+)
+TO FILEGROUP [FG_Partition_0004];
+
+
+ALTER DATABASE [PartitionsTest]
+ADD FILEGROUP [FG_Indexes_0001];
+ALTER DATABASE [PartitionsTest] 
+ADD FILE 
+(
+    NAME = FG_Indexes_0001_File_0001,
+    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Indexes_0001_File_0001.mdf',
+    SIZE = 8MB,
+    MAXSIZE = unlimited,
+    FILEGROWTH = 8MB
+)
+,
+(
+    NAME = FG_Indexes_0001_File_0002,
+    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Indexes_0001_File_0002.ndf',
+    SIZE = 8MB,
+    MAXSIZE = unlimited,
+    FILEGROWTH = 8MB
+)
+TO FILEGROUP [FG_Indexes_0001];
+
+
+CREATE PARTITION SCHEME UPS_Monthly
+AS PARTITION [UPF_Monthly]
+TO
+(
+	[FG_Partition_0001]
+	, [FG_Partition_0002]
+	, [FG_Partition_0003]
+	, [FG_Partition_0004]
+);
+
+CREATE TABLE Transactions
+	(
+		ID int NOT NULL IDENTITY (1, 1),
+		F1 varchar(50) NOT NULL,
+		DealDate date not NULL,
+		CreateTime datetime NULL,
+		CONSTRAINT [PK_Transactions] PRIMARY KEY CLUSTERED 
+		(
+			[ID] ASC
+			, DealDate desc
+		)
+		WITH
+		(
+			PAD_INDEX = OFF,
+			STATISTICS_NORECOMPUTE = OFF,
+			IGNORE_DUP_KEY = OFF,
+			ALLOW_ROW_LOCKS = ON,
+			ALLOW_PAGE_LOCKS = ON
+		) ON UPS_Monthly(DealDate) 
+	)
+	ON UPS_Monthly(DealDate) 
+
+#T=分区情况查询
+WITH
+TBINFO AS(
+	SELECT
+		SchemaName = S.name,
+		TableName = TB.name,
+		PartitionScheme = PS.name,
+		PartitionFunction = PF.name,
+		PartitionFunctionRangeType = CASE
+				WHEN boundary_value_on_right = 0 THEN 'LEFT'
+				ELSE 'RIGHT' END,
+		PartitionFunctionFanout = PF.fanout,
+		SchemaID = S.schema_id,
+		ObjectID = TB.object_id,
+		PartitionSchemeID = PS.data_space_id,
+		PartitionFunctionID = PS.function_id
+	FROM sys.schemas S
+		INNER JOIN sys.tables TB
+			ON S.schema_id = TB.schema_id
+		INNER JOIN sys.indexes IDX
+			on TB.object_id = IDX.object_id
+				AND IDX.index_id < 2
+		INNER JOIN sys.partition_schemes PS
+			ON PS.data_space_id = IDX.data_space_id
+		INNER JOIN sys.partition_functions PF
+			ON PS.function_id = PF.function_id
+),
+PF1 AS(
+	SELECT 
+		PFP.function_id, PFR.boundary_id, PFR.value,
+		Type = CONVERT(sysname, 
+			CASE T.name
+				WHEN 'numeric' THEN 'decimal'
+				WHEN 'real' THEN 'float'
+				ELSE T.name END
+			+ CASE 
+				WHEN T.name IN('decimal', 'numeric')
+					THEN QUOTENAME(RTRIM(PFP.precision) 
+						+ CASE WHEN PFP.scale > 0 THEN ',' + RTRIM(PFP.scale) ELSE '' END, '()')
+				WHEN T.name IN('float', 'real')
+					THEN QUOTENAME(PFP.precision, '()')
+				WHEN T.name LIKE 'n%char'
+					THEN QUOTENAME(PFP.max_length / 2, '()')
+				WHEN T.name LIKE '%char' OR T.name LIKE '%binary'
+					THEN QUOTENAME(PFP.max_length, '()')
+				ELSE '' END)
+	FROM sys.partition_parameters PFP
+		LEFT JOIN sys.partition_range_values PFR
+			ON PFR.function_id = PFP.function_id
+				AND PFR.parameter_id = PFP.parameter_id
+		INNER JOIN sys.types T
+			ON PFP.system_type_id = T.system_type_id
+),
+PF2 AS(
+	SELECT * FROM PF1
+	UNION ALL
+	SELECT
+		function_id, boundary_id = boundary_id - 1, value, type
+	FROM PF1
+	WHERE boundary_id = 1
+),
+PF AS(
+	SELECT 
+		B.function_id, boundary_id = ISNULL(B.boundary_id + 1, 1),
+		value = STUFF(
+			CASE
+				WHEN A.boundary_id IS NULL THEN ''
+				ELSE ' AND [partition_column_name] ' + PF.LessThan + ' ' + CONVERT(varchar(max), A.value) END
+			+ CASE
+				WHEN A.boundary_id = 1 THEN ''
+				ELSE ' AND [partition_column_name] ' + PF.MoreThan + ' ' + CONVERT(varchar(max), B.value) END,
+			1, 5, ''),
+		B.Type
+	FROM PF1 A		
+		RIGHT JOIN PF2 B
+			ON A.function_id = B.function_id
+				AND (A.boundary_id - 1 = B.boundary_id
+					OR(A.boundary_id IS NULL AND B.boundary_id IS NULL))
+		INNER JOIN(
+			SELECT
+				function_id,
+				LessThan = CASE 
+						WHEN boundary_value_on_right = 0 THEN '<='
+						ELSE '<' END,
+				MoreThan = CASE
+						WHEN boundary_value_on_right = 0 THEN '>'
+						ELSE '>=' END
+			FROM sys.partition_functions 
+		)PF
+			ON B.function_id = PF.function_id
+),
+PS AS(
+	SELECT 
+		DDS.partition_scheme_id, DDS.destination_id,
+		FileGroupName = FG.name, IsReadOnly = FG.is_read_only
+	FROM sys.destination_data_spaces DDS
+		INNER JOIN sys.filegroups FG
+			ON DDS.data_space_id = FG.data_space_id
+),
+PINFO AS(
+	SELECT
+		RowID = ROW_NUMBER() OVER(ORDER BY SchemaID, ObjectID, PS.destination_id),
+		TB.SchemaName, TB.TableName,
+		TB.PartitionScheme, PS.destination_id, PS.FileGroupName, PS.IsReadOnly,
+		TB.PartitionFunction, TB.PartitionFunctionRangeType, TB.PartitionFunctionFanout,
+		PF.boundary_id, PF.Type, PF.value
+	FROM TBINFO TB
+		INNER JOIN PS
+			ON TB.PartitionSchemeID = PS.partition_scheme_id
+		LEFT JOIN PF
+			ON TB.PartitionFunctionID = PF.function_id
+				AND PS.destination_id = PF.boundary_id
+)
+SELECT 
+	RowID,
+	SchemaName = CASE destination_id 
+			WHEN 1 THEN SchemaName
+			ELSE N'' END,
+	TableName = CASE destination_id 
+			WHEN 1 THEN TableName
+			ELSE N'' END,
+	PartitionScheme = CASE destination_id 
+			WHEN 1 THEN PartitionScheme
+			ELSE N'' END,
+	destination_id, FileGroupName, IsReadOnly,
+	PartitionFunction = CASE destination_id 
+			WHEN 1 THEN PartitionFunction
+			ELSE N'' END,
+	PartitionFunctionRangeType = CASE destination_id 
+			WHEN 1 THEN PartitionFunctionRangeType
+			ELSE N'' END,
+	PartitionFunctionFanout = CASE destination_id 
+			WHEN 1 THEN CONVERT(varchar(20), PartitionFunctionFanout)
+			ELSE N'' END,
+	boundary_id = ISNULL(CONVERT(varchar(20), boundary_id), ''),
+	Type = ISNULL(Type, N''),
+	value = CASE PartitionFunctionFanout 
+			WHEN 1 THEN '<ALL Data>'
+			ELSE ISNULL(value, N'<NEXT USED>') END
+FROM PINFO
+ORDER BY RowID
+#T=分区数据情况查询
 SELECT
+	$partition.UPF_Monthly(sendtime) AS [Partition Number]
+	, min(SendTime) AS [Min SendTime]
+	, max(SendTime) AS [Max SendTime]
+	, count(*) AS [Rows In Partition]
+FROM ehomesmscontent with(nolock)
+GROUP BY $partition.UPF_Monthly(SendTime)
+ORDER BY [Partition Number]
+#T=分区测试数据库
+USE [master]
+GO
+/****** Object:  Database [PartitionsTest]    Script Date: 2014/12/12 9:56:22 ******/
+
+CREATE DATABASE [PartitionsTest]
+ CONTAINMENT = NONE
+ ON  PRIMARY
+( NAME = N'FG_PRIMARY_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_PRIMARY_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_PRIMARY_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_PRIMARY_Data_File_002.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_PRIMARY_Data_File_003', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_PRIMARY_Data_File_003.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_PRIMARY_Data_File_004', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_PRIMARY_Data_File_004.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+ FILEGROUP [FG_Transactions_Monthly_201412]
+( NAME = N'FG_Transactions_Monthly_201412_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201412_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_Transactions_Monthly_201412_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201412_Data_File_002.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+ FILEGROUP [FG_Transactions_Monthly_201501]
+( NAME = N'FG_Transactions_Monthly_201501_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201501_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_Transactions_Monthly_201501_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201501_Data_File_002.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+ FILEGROUP [FG_Transactions_Monthly_201502]
+( NAME = N'FG_Transactions_Monthly_201502_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201502_Data_File_001.mdf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_Transactions_Monthly_201502_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201502_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+ FILEGROUP [FG_Transactions_Monthly_201503]
+( NAME = N'FG_Transactions_Monthly_201503_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201503_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_Transactions_Monthly_201503_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201503_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+ FILEGROUP [FG_Transactions_Monthly_201504]
+( NAME = N'FG_Transactions_Monthly_201504_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201504_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_Transactions_Monthly_201504_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201504_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+ FILEGROUP [FG_Transactions_Monthly_201505]
+( NAME = N'FG_Transactions_Monthly_201505_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201505_Data_File_001.mdf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_Transactions_Monthly_201505_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201505_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+ FILEGROUP [FG_Transactions_Monthly_201506]
+( NAME = N'FG_Transactions_Monthly_201506_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201506_Data_File_001.mdf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_Transactions_Monthly_201506_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201506_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+ FILEGROUP [FG_Transactions_Monthly_201507]
+( NAME = N'FG_Transactions_Monthly_201507_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201507_Data_File_001.mdf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_Transactions_Monthly_201507_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201507_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+ FILEGROUP [FG_Transactions_Monthly_201508]
+( NAME = N'FG_Transactions_Monthly_201508_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201508_Data_File_001.mdf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_Transactions_Monthly_201508_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201508_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+ FILEGROUP [FG_Transactions_Nonaligned_Indexes]
+( NAME = N'FG_Transactions_Nonaligned_Indexes_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Nonaligned_Indexes_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
+( NAME = N'FG_Transactions_Nonaligned_Indexes_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Nonaligned_Indexes_Data_File_002.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB )
+ LOG ON
+( NAME = N'FG_log_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_log_Data_File_001.ldf' , SIZE = 8MB , MAXSIZE = UNLIMITED , FILEGROWTH = 8192KB ),
+( NAME = N'FG_log_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_log_Data_File_002.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED , FILEGROWTH = 8192KB ),
+( NAME = N'FG_log_Data_File_003', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_log_Data_File_003.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED , FILEGROWTH = 8192KB ),
+( NAME = N'FG_log_Data_File_004', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_log_Data_File_004.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED , FILEGROWTH = 8192KB )
+
+
+GO
+ALTER DATABASE [PartitionsTest] SET COMPATIBILITY_LEVEL = 120
+GO
+IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
+begin
+EXEC [PartitionsTest].[dbo].[sp_fulltext_database] @action = 'enable'
+end
+GO
+ALTER DATABASE [PartitionsTest] SET ANSI_NULL_DEFAULT OFF
+GO
+ALTER DATABASE [PartitionsTest] SET ANSI_NULLS OFF
+GO
+ALTER DATABASE [PartitionsTest] SET ANSI_PADDING OFF
+GO
+ALTER DATABASE [PartitionsTest] SET ANSI_WARNINGS OFF
+GO
+ALTER DATABASE [PartitionsTest] SET ARITHABORT OFF
+GO
+ALTER DATABASE [PartitionsTest] SET AUTO_CLOSE OFF
+GO
+ALTER DATABASE [PartitionsTest] SET AUTO_SHRINK OFF
+GO
+ALTER DATABASE [PartitionsTest] SET AUTO_UPDATE_STATISTICS ON
+GO
+ALTER DATABASE [PartitionsTest] SET CURSOR_CLOSE_ON_COMMIT OFF
+GO
+ALTER DATABASE [PartitionsTest] SET CURSOR_DEFAULT  GLOBAL
+GO
+ALTER DATABASE [PartitionsTest] SET CONCAT_NULL_YIELDS_NULL OFF
+GO
+ALTER DATABASE [PartitionsTest] SET NUMERIC_ROUNDABORT OFF
+GO
+ALTER DATABASE [PartitionsTest] SET QUOTED_IDENTIFIER OFF
+GO
+ALTER DATABASE [PartitionsTest] SET RECURSIVE_TRIGGERS OFF
+GO
+ALTER DATABASE [PartitionsTest] SET  ENABLE_BROKER
+GO
+ALTER DATABASE [PartitionsTest] SET AUTO_UPDATE_STATISTICS_ASYNC OFF
+GO
+ALTER DATABASE [PartitionsTest] SET DATE_CORRELATION_OPTIMIZATION OFF
+GO
+ALTER DATABASE [PartitionsTest] SET TRUSTWORTHY OFF
+GO
+ALTER DATABASE [PartitionsTest] SET ALLOW_SNAPSHOT_ISOLATION OFF
+GO
+ALTER DATABASE [PartitionsTest] SET PARAMETERIZATION SIMPLE
+GO
+ALTER DATABASE [PartitionsTest] SET READ_COMMITTED_SNAPSHOT OFF
+GO
+ALTER DATABASE [PartitionsTest] SET HONOR_BROKER_PRIORITY OFF
+GO
+ALTER DATABASE [PartitionsTest] SET RECOVERY FULL
+GO
+ALTER DATABASE [PartitionsTest] SET  MULTI_USER
+GO
+ALTER DATABASE [PartitionsTest] SET PAGE_VERIFY CHECKSUM
+GO
+ALTER DATABASE [PartitionsTest] SET DB_CHAINING OFF
+GO
+ALTER DATABASE [PartitionsTest] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF )
+GO
+ALTER DATABASE [PartitionsTest] SET TARGET_RECOVERY_TIME = 0 SECONDS
+GO
+ALTER DATABASE [PartitionsTest] SET DELAYED_DURABILITY = DISABLED
+GO
+EXEC sys.sp_db_vardecimal_storage_format N'PartitionsTest', N'ON'
+GO
+USE [PartitionsTest]
+GO
+/****** Object:  PartitionFunction [UPF_Monthly]    Script Date: 2014/12/12 9:56:23 ******/
+CREATE PARTITION FUNCTION [UPF_Monthly](date) AS RANGE RIGHT FOR VALUES (N'2015-01-01T00:00:00.000', N'2015-02-01T00:00:00.000', N'2015-03-01T00:00:00.000', N'2015-04-01T00:00:00.000', N'2015-05-01T00:00:00.000', N'2015-06-01T00:00:00.000', N'2015-07-01T00:00:00.000', N'2015-08-01T00:00:00.000')
+GO
+/****** Object:  PartitionScheme [UPS_Monthly]    Script Date: 2014/12/12 9:56:23 ******/
+CREATE PARTITION SCHEME [UPS_Monthly] AS PARTITION [UPF_Monthly] TO ([FG_Transactions_Monthly_201412], [FG_Transactions_Monthly_201501], [FG_Transactions_Monthly_201502], [FG_Transactions_Monthly_201503], [FG_Transactions_Monthly_201504], [FG_Transactions_Monthly_201505], [FG_Transactions_Monthly_201506], [FG_Transactions_Monthly_201507], [FG_Transactions_Monthly_201508])
+GO
+/****** Object:  Table [dbo].[Transactions]    Script Date: 2014/12/12 9:56:23 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[Transactions](
+	[id] [bigint] IDENTITY(1,1) NOT NULL,
+	[TransactionDate] [date] NULL,
+	[UniqueID] [uniqueidentifier] NULL CONSTRAINT [DF_Transactions_UniqueID]  DEFAULT (newid()),
+	[CreateTime] [datetime] NULL CONSTRAINT [DF_Transactions_CreateTime]  DEFAULT (getdate()),
+	[Remark] [varchar](max) NULL,
+	[F1] [nvarchar](50) NULL,
+ CONSTRAINT [PK_Transactions] PRIMARY KEY NONCLUSTERED
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+ CONSTRAINT [Constraint_UniqueKey_ix_Transactions_UniqueID] UNIQUE NONCLUSTERED
+(
+	[UniqueID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [FG_Transactions_Nonaligned_Indexes]
+) ON [UPS_Monthly]([TransactionDate])
+
+GO
+SET ANSI_PADDING OFF
+GO
+/****** Object:  Index [ix_Transactions_UniqueID]    Script Date: 2014/12/12 9:56:23 ******/
+CREATE UNIQUE NONCLUSTERED INDEX [ix_Transactions_UniqueID] ON [dbo].[Transactions]
+(
+	[UniqueID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [FG_Transactions_Nonaligned_Indexes]
+GO
+/****** Object:  StoredProcedure [dbo].[zsp_PartitionsInfo]    Script Date: 2014/12/12 9:56:23 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[zsp_PartitionsInfo]
+as
+begin
+SELECT
+	$partition.UPF_Monthly(TransactionDate) AS [Partition Number]
+	, min(TransactionDate) AS [Min TransactionDate]
+	, max(TransactionDate) AS [Max TransactionDate]
+	, count(*) AS [Rows In Partition]
+FROM
+	Transactions with(nolock)
+GROUP BY
+	$partition.UPF_Monthly(TransactionDate)
+ORDER BY
+	[Partition Number]
+
+;WITH
+TBINFO AS(
+	SELECT
+		SchemaName = S.name,
+		TableName = TB.name,
+		PartitionScheme = PS.name,
+		PartitionFunction = PF.name,
+		PartitionFunctionRangeType = CASE
+				WHEN boundary_value_on_right = 0 THEN 'LEFT'
+				ELSE 'RIGHT' END,
+		PartitionFunctionFanout = PF.fanout,
+		SchemaID = S.schema_id,
+		ObjectID = TB.object_id,
+		PartitionSchemeID = PS.data_space_id,
+		PartitionFunctionID = PS.function_id
+	FROM sys.schemas S
+		INNER JOIN sys.tables TB
+			ON S.schema_id = TB.schema_id
+		INNER JOIN sys.indexes IDX
+			on TB.object_id = IDX.object_id
+				AND IDX.index_id < 2
+		INNER JOIN sys.partition_schemes PS
+			ON PS.data_space_id = IDX.data_space_id
+		INNER JOIN sys.partition_functions PF
+			ON PS.function_id = PF.function_id
+),
+PF1 AS(
+	SELECT
+		PFP.function_id, PFR.boundary_id, PFR.value,
+		Type = CONVERT(sysname,
+			CASE T.name
+				WHEN 'numeric' THEN 'decimal'
+				WHEN 'real' THEN 'float'
+				ELSE T.name END
+			+ CASE
+				WHEN T.name IN('decimal', 'numeric')
+					THEN QUOTENAME(RTRIM(PFP.precision)
+						+ CASE WHEN PFP.scale > 0 THEN ',' + RTRIM(PFP.scale) ELSE '' END, '()')
+				WHEN T.name IN('float', 'real')
+					THEN QUOTENAME(PFP.precision, '()')
+				WHEN T.name LIKE 'n%char'
+					THEN QUOTENAME(PFP.max_length / 2, '()')
+				WHEN T.name LIKE '%char' OR T.name LIKE '%binary'
+					THEN QUOTENAME(PFP.max_length, '()')
+				ELSE '' END)
+	FROM sys.partition_parameters PFP
+		LEFT JOIN sys.partition_range_values PFR
+			ON PFR.function_id = PFP.function_id
+				AND PFR.parameter_id = PFP.parameter_id
+		INNER JOIN sys.types T
+			ON PFP.system_type_id = T.system_type_id
+),
+PF2 AS(
+	SELECT * FROM PF1
+	UNION ALL
+	SELECT
+		function_id, boundary_id = boundary_id - 1, value, type
+	FROM PF1
+	WHERE boundary_id = 1
+),
+PF AS(
+	SELECT
+		B.function_id
+		, boundary_id = ISNULL(B.boundary_id + 1, 1)
+		, a.value as av
+		, b.value as bv
+		,
+		value = STUFF(
+			CASE
+				WHEN A.boundary_id IS NULL THEN ''
+				ELSE ' AND [partition_column_name] ' + PF.LessThan + ' ' + CONVERT(varchar(max), A.value) END
+			+ CASE
+				WHEN A.boundary_id = 1 THEN ''
+				ELSE ' AND [partition_column_name] ' + PF.MoreThan + ' ' + CONVERT(varchar(max), B.value) END,
+			1, 5, ''),
+		B.Type
+	FROM PF1 A		
+		RIGHT JOIN PF2 B
+			ON A.function_id = B.function_id
+				AND (A.boundary_id - 1 = B.boundary_id
+					OR(A.boundary_id IS NULL AND B.boundary_id IS NULL))
+		INNER JOIN(
+			SELECT
+				function_id,
+				LessThan = CASE
+						WHEN boundary_value_on_right = 0 THEN '<='
+						ELSE '<' END,
+				MoreThan = CASE
+						WHEN boundary_value_on_right = 0 THEN '>'
+						ELSE '>=' END
+			FROM sys.partition_functions
+		)PF
+			ON B.function_id = PF.function_id
+),
+PS AS(
+	SELECT
+		DDS.partition_scheme_id, DDS.destination_id,
+		FileGroupName = FG.name, IsReadOnly = FG.is_read_only
+	FROM sys.destination_data_spaces DDS
+		INNER JOIN sys.filegroups FG
+			ON DDS.data_space_id = FG.data_space_id
+),
+PINFO AS(
+	SELECT
+		RowID = ROW_NUMBER() OVER(ORDER BY SchemaID, ObjectID, PS.destination_id),
+		TB.SchemaName, TB.TableName,
+		TB.PartitionScheme, PS.destination_id, PS.FileGroupName, PS.IsReadOnly,
+		TB.PartitionFunction, TB.PartitionFunctionRangeType, TB.PartitionFunctionFanout,
+		PF.boundary_id, PF.Type, PF.value
+		,pf.av
+		,pf.bv
+	FROM TBINFO TB
+		INNER JOIN PS
+			ON TB.PartitionSchemeID = PS.partition_scheme_id
+		LEFT JOIN PF
+			ON TB.PartitionFunctionID = PF.function_id
+				AND PS.destination_id = PF.boundary_id
+)
+SELECT
+	RowID,
+	SchemaName = CASE destination_id
+			WHEN 1 THEN SchemaName
+			ELSE N'' END,
+	TableName = CASE destination_id
+			WHEN 1 THEN TableName
+			ELSE N'' END,
+	PartitionScheme = CASE destination_id
+			WHEN 1 THEN PartitionScheme
+			ELSE N'' END,
+	destination_id, FileGroupName, IsReadOnly,
+	PartitionFunction = CASE destination_id
+			WHEN 1 THEN PartitionFunction
+			ELSE N'' END,
+	PartitionFunctionRangeType = CASE destination_id
+			WHEN 1 THEN PartitionFunctionRangeType
+			ELSE N'' END,
+	PartitionFunctionFanout = CASE destination_id
+			WHEN 1 THEN CONVERT(varchar(20), PartitionFunctionFanout)
+			ELSE N'' END,
+	boundary_id = ISNULL(CONVERT(varchar(20), boundary_id), ''),
+	Type = ISNULL(Type, N''),
+	bv,
+	av,
+	value = CASE PartitionFunctionFanout
+			WHEN 1 THEN '<ALL Data>'
+			ELSE ISNULL(value, N'<NEXT USED>') END
+FROM PINFO
+ORDER BY RowID
+end
+GO
+USE [master]
+GO
+ALTER DATABASE [PartitionsTest] SET  READ_WRITE
+GO
+
+#T=分区脚本 生成
+--生成分区脚本
+DECLARE @DataBaseName NVARCHAR(50)--数据库名称
+DECLARE @TableName NVARCHAR(50)--表名称
+DECLARE @ColumnName NVARCHAR(50)--字段名称
+DECLARE @PartNumber INT--需要分多少个区
+DECLARE @Location NVARCHAR(50)--保存分区文件的路径
+DECLARE @Size NVARCHAR(50)--分区初始化大小
+DECLARE @FileGrowth NVARCHAR(50)--分区文件增量
+DECLARE @FunValue INT--分区分段值
+DECLARE @i INT
+DECLARE @PartNumberStr NVARCHAR(50)
+DECLARE @sql NVARCHAR(max)
+ 
+--设置下面变量
+SET @DataBaseName = 'MyDataBase'
+SET @TableName = 'User'
+SET @ColumnName = 'Id'
+SET @PartNumber = 4
+SET @Location = 'E:\DataBase\'
+SET @Size = '30MB'
+SET @FileGrowth = '10%'
+SET @FunValue = 10000000
+ 
+ 
+--1.创建文件组
+SET @i = 1
+PRINT '--1.创建文件组'
+WHILE @i <= @PartNumber
+BEGIN
+    SET @PartNumberStr = RIGHT('0' + CONVERT(NVARCHAR,@i),2)
+    SET @sql = 'ALTER DATABASE ['+@DataBaseName +']
+ADD FILEGROUP [FG_'+@TableName+'_'+@ColumnName+'_'+@PartNumberStr+']'
+    PRINT @sql + CHAR(13)
+    SET @i=@i+1
+END
+ 
+--2.创建文件
+SET @i = 1
+PRINT CHAR(13)+'--2.创建文件'
+WHILE @i <= @PartNumber
+BEGIN
+    SET @PartNumberStr = RIGHT('0' + CONVERT(NVARCHAR,@i),2)
+    SET @sql = 'ALTER DATABASE ['+@DataBaseName +']
+ADD FILE
+(NAME = N''FG_'+@TableName+'_'+@ColumnName+'_'+@PartNumberStr+'_data'',FILENAME = N'''+@Location+'FG_'+@TableName+'_'+@ColumnName+'_'+@PartNumberStr+'_data.ndf'',SIZE = '+@Size+', FILEGROWTH = '+@FileGrowth+' )
+TO FILEGROUP [FG_'+@TableName+'_'+@ColumnName+'_'+@PartNumberStr+'];'
+    PRINT @sql + CHAR(13)
+    SET @i=@i+1
+END
+ 
+ 
+--3.创建分区函数
+PRINT CHAR(13)+'--3.创建分区函数'
+DECLARE @FunValueStr NVARCHAR(MAX) 
+SET @i = 1
+SET @FunValueStr = ''
+WHILE @i < @PartNumber
+BEGIN
+    SET @FunValueStr = @FunValueStr + convert(NVARCHAR(50),(@i*@FunValue)) + ','
+    SET @i=@i+1
+END
+SET @FunValueStr = substring(@FunValueStr,1,len(@FunValueStr)-1)
+SET @sql = 'CREATE PARTITION FUNCTION
+Fun_'+@TableName+'_'+@ColumnName+'(INT) AS
+RANGE RIGHT
+FOR VALUES('+@FunValueStr+')'
+PRINT @sql + CHAR(13)
+ 
+ 
+--4.创建分区方案
+PRINT CHAR(13)+'--4.创建分区方案'
+DECLARE @FileGroupStr NVARCHAR(MAX) 
+SET @i = 1
+SET @FileGroupStr = ''
+WHILE @i <= @PartNumber
+BEGIN
+    SET @PartNumberStr = RIGHT('0' + CONVERT(NVARCHAR,@i),2)
+    SET @FileGroupStr = @FileGroupStr + '[FG_'+@TableName+'_'+@ColumnName+'_'+@PartNumberStr+'],'
+    SET @i=@i+1
+END
+SET @FileGroupStr = substring(@FileGroupStr,1,len(@FileGroupStr)-1)
+SET @sql = 'CREATE PARTITION SCHEME
+Sch_'+@TableName+'_'+@ColumnName+' AS
+PARTITION Fun_'+@TableName+'_'+@ColumnName+'
+TO('+@FileGroupStr+')'
+PRINT @sql + CHAR(13)
+ 
+ 
+--5.分区函数的记录数
+PRINT CHAR(13)+'--5.分区函数的记录数'
+SET @sql = 'SELECT $PARTITION.Fun_'+@TableName+'_'+@ColumnName+'('+@ColumnName+') AS Partition_num,
+ MIN('+@ColumnName+') AS Min_value,MAX('+@ColumnName+') AS Max_value,COUNT(1) AS Record_num
+FROM dbo.'+@TableName+'
+GROUP BY $PARTITION.Fun_'+@TableName+'_'+@ColumnName+'('+@ColumnName+')
+ORDER BY $PARTITION.Fun_'+@TableName+'_'+@ColumnName+'('+@ColumnName+');'
+PRINT @sql + CHAR(13)
+ 
+/*
+生成的脚本如下：
+--1.创建文件组
+ALTER DATABASE [MyDataBase]
+ADD FILEGROUP [FG_User_Id_01]
+ 
+ALTER DATABASE [MyDataBase]
+ADD FILEGROUP [FG_User_Id_02]
+ 
+ALTER DATABASE [MyDataBase]
+ADD FILEGROUP [FG_User_Id_03]
+ 
+ALTER DATABASE [MyDataBase]
+ADD FILEGROUP [FG_User_Id_04]
+ 
+ 
+--2.创建文件
+ALTER DATABASE [MyDataBase]
+ADD FILE
+(NAME = N'FG_User_Id_01_data',FILENAME = N'E:\DataBase\FG_User_Id_01_data.ndf',SIZE = 30MB, FILEGROWTH = 10% )
+TO FILEGROUP [FG_User_Id_01];
+ 
+ALTER DATABASE [MyDataBase]
+ADD FILE
+(NAME = N'FG_User_Id_02_data',FILENAME = N'E:\DataBase\FG_User_Id_02_data.ndf',SIZE = 30MB, FILEGROWTH = 10% )
+TO FILEGROUP [FG_User_Id_02];
+ 
+ALTER DATABASE [MyDataBase]
+ADD FILE
+(NAME = N'FG_User_Id_03_data',FILENAME = N'E:\DataBase\FG_User_Id_03_data.ndf',SIZE = 30MB, FILEGROWTH = 10% )
+TO FILEGROUP [FG_User_Id_03];
+ 
+ALTER DATABASE [MyDataBase]
+ADD FILE
+(NAME = N'FG_User_Id_04_data',FILENAME = N'E:\DataBase\FG_User_Id_04_data.ndf',SIZE = 30MB, FILEGROWTH = 10% )
+TO FILEGROUP [FG_User_Id_04];
+ 
+ 
+--3.创建分区函数
+CREATE PARTITION FUNCTION
+Fun_User_Id(INT) AS
+RANGE RIGHT
+FOR VALUES(10000000,20000000,30000000)
+ 
+ 
+--4.创建分区方案
+CREATE PARTITION SCHEME
+Sch_User_Id AS
+PARTITION Fun_User_Id
+TO([FG_User_Id_01],[FG_User_Id_02],[FG_User_Id_03],[FG_User_Id_04])
+ 
+ 
+--5.分区函数的记录数
+SELECT $PARTITION.Fun_User_Id(Id) AS Partition_num,
+ MIN(Id) AS Min_value,MAX(Id) AS Max_value,COUNT(1) AS Record_num
+FROM dbo.User
+GROUP BY $PARTITION.Fun_User_Id(Id)
+ORDER BY $PARTITION.Fun_User_Id(Id);
+*/
+#T=分区表 分区方案 文件组
+alter database [eUserprofile]
+add filegroup [smsdata_FG_200908]
+
+go
+
+alter database [eUserprofile]
+ADD FILE 
+(
+	NAME = smsdata_200908_01,
+	FILENAME = 'r:\mssql\data\eUserProfile\smsdata_200908_01.mdf',
+	SIZE = 8MB,
+	MAXSIZE = 8192MB,
+	FILEGROWTH = 16MB
+)
+,
+(
+	NAME = smsdata_200908_02,
+	FILENAME = 'r:\mssql\data\eUserProfile\smsdata_200908_02.ndf',
+	SIZE = 8MB,
+	MAXSIZE = 8192MB,
+	FILEGROWTH = 16MB
+)
+,
+(
+	NAME = smsdata_200908_03,
+	FILENAME = 's:\mssql\data\eUserProfile\smsdata_200908_03.ndf',
+	SIZE = 8MB,
+	MAXSIZE = 8192MB,
+	FILEGROWTH = 16MB
+)
+,
+(
+	NAME = smsdata_200908_04,
+	FILENAME = 's:\mssql\data\eUserProfile\smsdata_200908_04.ndf',
+	SIZE = 8MB,
+	MAXSIZE = 8192MB,
+	FILEGROWTH = 16MB
+)
+,
+(
+	NAME = smsdata_200908_05,
+	FILENAME = 't:\mssql\data\eUserProfile\smsdata_200908_05.ndf',
+	SIZE = 8MB,
+	MAXSIZE = 8192MB,
+	FILEGROWTH = 16MB
+)
+,
+(
+	NAME = smsdata_200908_06,
+	FILENAME = 't:\mssql\data\eUserProfile\smsdata_200908_06.ndf',
+	SIZE = 8MB,
+	MAXSIZE = 8192MB,
+	FILEGROWTH = 16MB
+)
+,
+(
+	NAME = smsdata_200908_07,
+	FILENAME = 'u:\mssql\data\eUserProfile\smsdata_200908_07.ndf',
+	SIZE = 8MB,
+	MAXSIZE = 8192MB,
+	FILEGROWTH = 16MB
+)
+,
+(
+	NAME = smsdata_200908_08,
+	FILENAME = 'u:\mssql\data\eUserProfile\smsdata_200908_08.ndf',
+	SIZE = 8MB,
+	MAXSIZE = 8192MB,
+	FILEGROWTH = 16MB
+)
+
+TO FILEGROUP smsdata_FG_200908
+
+go
+
+CREATE PARTITION FUNCTION [UPF_Monthly] (datetime)
+AS RANGE RIGHT FOR VALUES 
+(
+	 '20090801'
+	,'20090901'
+	,'20091001'
+	,'20091101'
+	,'20091201'
+	,'20100101'
+	,'20100201'	
+	,'20100301'
+	,'20100401'
+	,'20100501'
+	,'20100601'
+	,'20100701'
+	,'20100801'
+	,'20100901'
+)
+go
+
+CREATE PARTITION SCHEME [UPS_SMSData_Monthly]
+AS PARTITION [UPF_Monthly]
+TO 
+(
+	  smsdata_FG_200908
+	, smsdata_FG_200909
+	, smsdata_FG_200910
+	, smsdata_FG_200911
+	, smsdata_FG_200912
+	, smsdata_FG_201001
+	, smsdata_FG_201002
+	, smsdata_FG_201003
+	, smsdata_FG_201004
+	, smsdata_FG_201005
+	, smsdata_FG_201006
+	, smsdata_FG_201007
+	, smsdata_FG_201008
+	, smsdata_FG_201009
+	, smsdata_FG_201010
+)
+#T=分区表和索引 数据库
+--http://technet.microsoft.com/zh-cn/library/ms345599.aspx
+USE master;
+GO
+IF DB_ID (N'db_sales_test') IS NOT NULL
+    DROP DATABASE db_sales_test;
+GO
+CREATE DATABASE db_sales_test;
+GO
+USE db_sales_test;
+GO
+CREATE PARTITION FUNCTION [pf_range_fact](int) AS RANGE RIGHT FOR VALUES 
+(20080801, 20080901, 20081001, 20081101, 20081201, 20090101);
+GO
+CREATE PARTITION SCHEME [ps_fact_sales] AS PARTITION [pf_range_fact] 
+ALL TO ([PRIMARY]);
+GO
+CREATE TABLE fact_sales(date_id int, product_id int, store_id int, 
+    quantity int, unit_price numeric(7,2), other_data char(1000))
+ON ps_fact_sales(date_id);
+GO
+CREATE CLUSTERED INDEX ci ON fact_sales(date_id);
+GO
+PRINT 'Loading...';
+SET NOCOUNT ON;
+DECLARE @i int;
+SET @i = 1;
+WHILE (@i<1000000)
+BEGIN
+    INSERT INTO fact_sales VALUES(20080800 + (@i%30) + 1, @i%10000, @i%200, RAND() * 25, (@i%3) + 1, '');
+    SET @i += 1;
+END;
+GO
+DECLARE @i int;
+SET @i = 1;
+WHILE (@i<10000)
+BEGIN
+    INSERT INTO fact_sales VALUES(20080900 + (@i%30) + 1, @i%10000, @i%200, RAND() * 25, (@i%3) + 1, '');
+    SET @i += 1;
+END;
+PRINT 'Done.';
+GO
+-- Two-partition query.
+SET STATISTICS XML ON;
+GO
+SELECT date_id, SUM(quantity*unit_price) AS total_price
+FROM fact_sales
+WHERE date_id BETWEEN 20080802 AND 20080902
+GROUP BY date_id ;
+GO
+SET STATISTICS XML OFF;
+GO
+-- Single-partition query.
+SET STATISTICS XML ON;
+GO
+SELECT date_id, SUM(quantity*unit_price) AS total_price
+FROM fact_sales
+WHERE date_id BETWEEN 20080801 AND 20080831
+GROUP BY date_id;
+GO
+SET STATISTICS XML OFF;
+GO
+#T=分区表定义及实际数据信息 2019-11-11
+USE [MonthlyPartitionsTest]
+GO
+/****** Object:  UserDefinedFunction [dbo].[iTVF_TablesPartitionsStorageInfo]    Script Date: 11/22/2019 10:59:46 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+ALTER FUNCTION [dbo].[iTVF_TablesPartitionsStorageInfo] 
+(	
+	-- Add the parameters for the function here
+	@TableName varchar(128)
+)
+RETURNS TABLE 
+/*
+SP_help 'sys.partition_range_values'
+select
+	*
+from
+	[iTVF_TablesPartitionsStorageInfo](null) a
+*/
+AS
+RETURN 
+(
+with TPartitions
+as
+(
+	SELECT
+		  sc.name											as [SchemeName]
+		, so.name											as [TableName]
+		, p.partition_number								as [PartitionNumber]
+		, pf.name											as [PartitionFunction]
+		, ps.name											as [PartitionScheme]
+		, pf.boundary_value_on_right						as BoundaryValueOnRight
+		, iif
+			(
+				pf.boundary_value_on_right = 1
+				, '[x , y)'
+				, '(x , y]'
+			)												as [BoundaryType]
+		, prv.value											as [BoundaryOrignalValue]
+		, isnull
+			(
+				prv.value
+				, 
+					iif
+					(
+						pf.boundary_value_on_right = 1
+						, min
+							(
+								cast(prv.value as Date)
+							) over (partition by pf.name) 
+						, max
+							(
+								cast(prv.value as Date)
+							) over (partition by pf.name) 
+					)
+			)												as BoundaryValue
+		, fg.name											as [FileGroupName]
+		, si.index_id										as [IndexID]
+		, si.type_desc										as [IndexStructure]
+		, si.name											as [Index]
+		, stat.row_count									as [StorageRows]
+		, stat.in_row_reserved_page_count * 8./1024./1024.	as [InRowReservedInGB]
+		, stat.lob_reserved_page_count * 8./1024./1024.		as [LobReservedInGB]
+	FROM
+		sys.partition_functions AS pf
+			JOIN
+				sys.partition_schemes as ps
+					on
+						ps.function_id = pf.function_id
+			JOIN
+				sys.indexes as si
+					on
+						si.data_space_id = ps.data_space_id
+						and
+						si.index_id < 2
+			JOIN
+				sys.objects as so
+					on
+						si.object_id = so.object_id
+			JOIN
+				sys.schemas as sc
+					on
+						so.schema_id = sc.schema_id
+			JOIN
+				sys.partitions as p
+					on 
+						si.object_id = p.object_id 
+						and
+						si.index_id = p.index_id
+			LEFT JOIN
+				sys.partition_range_values as prv
+					on
+						prv.function_id = pf.function_id
+						and
+						p.partition_number
+						=
+						iif
+							(
+								pf.boundary_value_on_right = 1
+								, prv.boundary_id + 1
+								, prv.boundary_id
+							)
+						/*
+							For left-based functions, partition_number = boundary_id, 
+							for right-based functions we need to add 1
+						*/
+			JOIN
+				sys.dm_db_partition_stats as stat
+					on
+						stat.object_id = p.object_id
+						and
+						stat.index_id = p.index_id
+						and
+						stat.index_id = p.index_id
+						and
+						stat.partition_id = p.partition_id
+						and
+						stat.partition_number = p.partition_number
+			JOIN
+				sys.allocation_units as au
+					on
+						au.container_id = p.hobt_id
+						and
+						au.type_desc ='IN_ROW_DATA' 
+						/* Avoiding double rows for columnstore indexes. */
+						/* We can pick up LOB page count from partition_stats */
+			JOIN
+				sys.filegroups as fg
+					on
+						fg.data_space_id = au.data_space_id
+	where
+		(
+			@TableName is null
+			or
+			so.[name] = @TableName
+		)
+)
+, T 
+as
+(
+	select
+		a.*
+		, cast(a.BoundaryValue as date)			as LeftValue
+		, cast
+			(
+				lead(a.BoundaryValue) 
+					over
+						(
+							partition by a.[PartitionFunction]
+							order by a.BoundaryValue
+						)
+				as date
+			)									as RightValue
+	from
+		TPartitions a
+)
+select
+	a.SchemeName
+	, a.TableName
+	, a.PartitionFunction
+	, a.PartitionScheme
+	, a.PartitionNumber
+	, a.FileGroupName
+	, a.BoundaryType
+	, a.BoundaryValue
+	, a.LeftValue
+	, a.RightValue
+	--, min(a.LeftValue) over()				as MinLeftValue
+	--, max(a.LeftValue) over()				as MaxLeftValue
+	--, min(a.RightValue) over()			as MinRightValue
+	--, max(a.RightValue) over()			as MaxRightValue
+	, min(a.BoundaryValue) over()			as MinBoundaryValue
+	, max(a.BoundaryValue) over()			as MaxBoundaryValue
+	, count(a.BoundaryValue) over()			as CountBoundaryValue
+	, a.StorageRows
+	, sum(a.StorageRows) over()				as TotalStorageRows
+	, a.IndexID
+	, a.IndexStructure
+	, a.InRowReservedInGB
+	, a.LobReservedInGB
+from
+	T a
+
+--ORDER BY
+--	SchemeName
+--	, TableName
+--	, [IndexID]
+--	, [PartitionFunction]
+--	, [PartitionNumber]
+
+)
+
+#T=利息资金计算.OLD.2012-12-19
+USE [FundManagement]
+GO
+/****** Object:  StoredProcedure [dbo].[usp_CalcDailyLedgerResult_debug1]    Script Date: 2012/12/17 12:23:11 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+alter proc [dbo].[usp_CalcDailyLedgerResult_debug2]
+@today date = null
+as
+begin
+	set xact_abort on
+	begin transaction
+		declare @now datetime = getdate()
+		if @today is null
+		begin
+			set @today = @now
+		end
+		
+		delete
+			[DailyLedgerResultProcessing]
+		--where
+			
+		--select @today
+		-- usp_CalcDailyLedgerResult_debug2 '2012-12-15'
+		
+		declare @AmountType varchar(100)
+		declare @DirectionConsistency bit
+		
+
+		--==================================================================
+		--今日新交易
+		set @AmountType = '当日新交易本金'
+		set @DirectionConsistency = 1
+		select
+			@DirectionConsistency = DirectionConsistency
+		from
+			AmountTypes
+		where
+			AmountType = @AmountType
+
+		--交易本金
+		--按发起行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, BankID
+			, CurrencyType
+			, BankParty
+			, sum(amount)				--本金
+			, count(1)
+			, @AmountType
+			, @DirectionConsistency
+			, 1							--是否发起行
+			, '当日新交易按发起行group by'
+		from
+			Transactions
+		where
+			beginDate = @today			--今日新交易
+			and [status] = 10
+		group by
+			BankID
+			, CurrencyType
+			, BankParty		--本行 借出方、贷入方
+
+		--按对手行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, AgainstBankID
+			, CurrencyType
+			, AgainstParty
+			, sum(amount)				--本金
+			, count(1)
+			, @AmountType
+			, @DirectionConsistency
+			,0							--是否发起行			
+			, '当日新交易按对手行group by'
+		from
+			Transactions
+		where
+			beginDate = @today			--今日新交易
+			and [status] = 10
+		group by
+			AgainstBankID
+			, CurrencyType
+			, AgainstParty		--本行 借出方、贷入方
+		--======================================================================		
+
+
+		--未到期日利息
+		set @AmountType = '未到期日利息'
+		set @DirectionConsistency = 1
+		select
+			@DirectionConsistency = DirectionConsistency
+		from
+			AmountTypes
+		where
+			AmountType = @AmountType
+		
+		--按发起行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, BankID
+			, CurrencyType
+			, BankParty
+			, sum(DayInterest)				--日利息
+			, count(1)
+			, @AmountType
+			, @DirectionConsistency
+			,1							--是否发起行			
+			, '每日未到期交易按发起行group by'
+		from
+			Transactions
+		where
+			beginDate <= @today
+			and endDate > @today
+			and [status] = 10
+		group by
+			BankID
+			, CurrencyType
+			, BankParty		--本行 借出方、贷入方
+
+		--按对手行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, AgainstBankID
+			, CurrencyType
+			, AgainstParty
+			, sum(DayInterest)				--日利息
+			, count(1)
+			, @AmountType
+			, @DirectionConsistency
+			,0							--是否发起行			
+			, '每日未到期交易按对手行group by'
+		from
+			Transactions
+		where
+			beginDate <= @today
+			and endDate > @today
+			and [status] = 10
+		group by
+			AgainstBankID
+			, CurrencyType
+			, AgainstParty		--对手行 借出方、贷入方
+		--======================================================================================
+
+
+		--到期日利息
+		set @AmountType = '到期日利息'
+		set @DirectionConsistency = 1
+		select
+			@DirectionConsistency = DirectionConsistency
+		from
+			AmountTypes
+		where
+			AmountType = @AmountType
+		
+		--按发起行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, BankID
+			, CurrencyType
+			, BankParty
+			, sum(DayInterest)				--日利息
+			, count(1)
+			, @AmountType
+			, @DirectionConsistency
+			,1							--是否发起行			
+			, '每日到期交易日利息按发起行group by'
+		from
+			Transactions
+		where
+			endDate = @today
+			and [status] = 10
+			and BankParty = 'Creditor'
+		group by
+			BankID
+			, CurrencyType
+			, BankParty		--本行 借出方、贷入方
+
+		--按对手行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, AgainstBankID
+			, CurrencyType
+			, AgainstParty
+			, sum(DayInterest)				--日利息
+			, count(1)
+			, @AmountType
+			, @DirectionConsistency
+			,0							--是否发起行
+			, '每日到期交易日利息按对手行group by'
+		from
+			Transactions
+		where
+			endDate = @today
+			and AgainstParty = 'Debtor'
+			and [status] = 10
+		group by
+			AgainstBankID
+			, CurrencyType
+			, AgainstParty		--对手行 借出方、贷入方
+		--======================================================================================
+
+
+
+		--到期日结清本金
+		set @AmountType = '到期日结清本金'
+		set @DirectionConsistency = 1
+		select
+			@DirectionConsistency = DirectionConsistency
+		from
+			AmountTypes
+		where
+			AmountType = @AmountType
+
+		--按发起行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, BankID
+			, CurrencyType
+			, BankParty
+			, sum(Amount)				--本金
+			, count(1)
+			, @AmountType
+			, @DirectionConsistency
+			,1							--是否发起行
+			, '到期交易汇总本金按发起行group by'
+		from
+			Transactions
+		where
+			endDate = @today
+			and BankParty = 'creditor'
+			and [status] = 10
+		group by
+			BankID
+			, CurrencyType
+			, BankParty		--本行 借出方、贷入方
+
+		--按对手行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, AgainstBankID
+			, CurrencyType
+			, AgainstParty
+			, sum(Amount)				--本金
+			, count(1)
+			, @AmountType
+			, @DirectionConsistency
+			,0							--是否发起行
+			, '到期交易汇总本金按对手行group by'
+		from
+			Transactions
+		where
+			endDate = @today
+			and AgainstParty = 'debtor'
+			and [status] = 10
+		group by
+			AgainstBankID
+			, CurrencyType
+			, AgainstParty		--对手行 借出方、贷入方
+		--=====================================================================================
+
+		--到期日汇总本金及结清总利息 连本带息
+		set @AmountType = '到期日汇总本金及结清总利息'
+		set @DirectionConsistency = 1
+		select
+			@DirectionConsistency = DirectionConsistency
+		from
+			AmountTypes
+		where
+			AmountType = @AmountType
+
+		--按发起行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, BankID
+			, CurrencyType
+			, BankParty
+			, sum(SumInterest)+ sum(amount)				--连本带利
+			, count(1)			
+			, @AmountType
+			, @DirectionConsistency
+			,1							--是否发起行
+			, '到期交易结清总利息按发起行group by'
+		from
+			Transactions
+		where
+			endDate = @today
+			and BankParty = 'Debtor'
+			and [status] = 10
+		group by
+			BankID
+			, CurrencyType
+			, BankParty		--本行 借出方、贷入方
+
+		--按对手行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, AgainstBankID
+			, CurrencyType
+			, AgainstParty
+			, sum(SumInterest)+ sum(amount)				--连本带利
+			, count(1)
+			, @AmountType
+			, @DirectionConsistency
+			,0							--是否发起行			
+			, '到期交易结清总利息按对手行group by'
+		from
+			Transactions
+		where
+			endDate = @today
+			and AgainstParty ='Creditor'
+			and [status] = 10
+		group by
+			AgainstBankID
+			, CurrencyType
+			, AgainstParty		--对手行 借出方、贷入方
+
+		--===============================================================
+
+		--to do
+		--冲回昨日
+		set @AmountType = '冲回昨日'
+		set @DirectionConsistency = 1
+
+		declare @yesterday date = dateadd(day, -1, @today)
+
+
+		--按发起行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, BankID
+			, CurrencyType
+			, BankParty
+			, sum(DayInterest)				--日利息
+			, count(1)
+			, @AmountType
+			, @DirectionConsistency
+			,1							--是否发起行			
+			, '冲回昨天按发起行group by'
+		from
+			Transactions
+		where
+			beginDate <= @yesterday
+			and EndDate > @yesterday
+			and [status] = 10
+		group by
+			BankID
+			, CurrencyType
+			, BankParty		--本行 借出方、贷入方
+
+		--按对手行group by
+		insert into [DailyLedgerResultProcessing]
+					(
+						[LedgerDate]			--[date] NOT NULL,
+						,[BankID]				--[varchar](50) NOT NULL,
+						,[CurrencyType]			--[varchar](3) NOT NULL,
+						,[Party]				--[varchar](10) NOT NULL,
+						,[Amount]				--[decimal](18, 4) NULL,
+						,[Counts]
+						,[AmountType]
+						,[DirectionConsistency]
+						,[IsSender]
+						,[Remark]
+					)
+		select
+			@today
+			--min(beginDate)
+			, AgainstBankID
+			, CurrencyType
+			, AgainstParty
+			, sum(DayInterest)				--日利息
+			, count(1)			
+			, @AmountType
+			, @DirectionConsistency
+			,0							--是否发起行			
+			, '冲回昨天按对手行group by'
+		from
+			Transactions
+		where
+			beginDate <= @yesterday
+			and EndDate > @yesterday
+			and [status] = 10
+		group by
+			AgainstBankID
+			, CurrencyType
+			, AgainstParty		--对手行 借出方、贷入方
+
+
+		--=====================================================================
+
+
+		--select * from [DailyLedgerResultProcessing]
+
+
+
+		select
+			a.LedgerDate
+			, a.BankID
+			, b.Accounting
+			, sum
+				(
+					case
+						when
+							(
+								a.Party = 'debtor'
+								and a.DirectionConsistency = 1
+							)
+							or
+							(
+								a.Party = 'creditor'
+								and a.DirectionConsistency = 0
+							)
+							then a.Amount
+						else
+							0
+					end
+				)
+				as [DebtorBalance]
+			, sum
+				(
+					case
+						when
+							(
+								a.Party = 'debtor'
+								and a.DirectionConsistency = 0
+							)
+							or
+							(
+								a.Party = 'creditor'
+								and a.DirectionConsistency = 1
+							)
+							then a.Amount
+						else
+							0
+					end
+				)
+				as [CreditorBalance]
+			--,*
+		from
+			[DailyLedgerResultProcessing] a
+				left join [AccountingRules] b
+					on
+						a.Party = b.Party
+						and a.AmountType = b.AmountType
+						and a.IsSender = b.Direction
+		group by
+			a.LedgerDate
+			, a.BankID
+			, b.Accounting									
+		order by
+			a.LedgerDate
+			,a.BankID
+			,b.Accounting
+	commit transaction
+end
+#T=双not exists 至少存在
+USE [Test]
+GO
+/****** Object:  Table [dbo].[Table_1]    Script Date: 2015/4/17 15:50:19 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[Table_1](
+	[GroupID] [varchar](50) NOT NULL,
+	[RootID] [varchar](50) NOT NULL,
+	[ID] [varchar](500) NOT NULL,
+ CONSTRAINT [PK_Table_1] PRIMARY KEY CLUSTERED 
+(
+	[GroupID] ASC,
+	[RootID] ASC,
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+/****** Object:  Table [dbo].[Table_2]    Script Date: 2015/4/17 15:50:19 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[Table_2](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[TableName] [varchar](50) NOT NULL,
+	[ColumnName] [varchar](50) NOT NULL,
+	[ColumnValue] [nchar](10) NULL,
+ CONSTRAINT [PK_Table_2] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R001', N'R001-A-A001')
+GO
+INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R001', N'R001-A-A002')
+GO
+INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R002', N'R002-A-A002')
+GO
+INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R002', N'R002-A-A003')
+GO
+INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R002', N'R002-A-A004')
+GO
+INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R003', N'R003-A-A003')
+GO
+SET IDENTITY_INSERT [dbo].[Table_2] ON 
+
+GO
+INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (1, N'Person', N'Name', N'Tom       ')
+GO
+INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (2, N'Person', N'Age', N'11        ')
+GO
+INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (3, N'Person', N'Gender', N'F         ')
+GO
+INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (4, N'Person', N'Name', N'Mike      ')
+GO
+INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (5, N'Person', N'Age', N'12        ')
+GO
+INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (6, N'Person', N'Gender', N'M         ')
+GO
+SET IDENTITY_INSERT [dbo].[Table_2] OFF
+GO
+/****** Object:  StoredProcedure [dbo].[zDoubleNotExistsTest]    Script Date: 2015/4/17 15:50:19 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE proc [dbo].[zDoubleNotExistsTest]
+as
+begin
+--双 not exists , 不存在 不存在 , 至少 
+;with T
+as
+(
+	select
+		'R001' as RootID,'R001-A-A002' as ID
+	union all
+	select
+		'R002' as RootID,'R002-A-A005' as ID
+	union all
+	select
+		'R002' as RootID,'R002-A-A008' as ID
+	union all
+	select
+		'R003' as RootID,'R003-A-A003' as ID
+)
+, TResult
+as
+(
+	select
+		*
+	from
+		Table_1 a with(nolock)
+	where
+		not exists
+			(
+				select
+					1
+				from
+					T aa
+				where
+					not exists
+						(
+							select
+								1
+							from
+								Table_1 aaa with(nolock)
+							where
+								aaa.GroupID = a.GroupID
+								and aaa.RootID = aa.RootID
+								--每个 GroupRoot 至少存在一个
+								and
+									(
+										exists
+											(
+												select
+													1
+												from
+													T aaaa
+												where
+													aaaa.RootID = aaa.RootID
+													--重要条件
+													and
+													aaaa.ID = aaa.ID
+											)
+									)
+						)
+			)
+)
+, TGroupsRoots		--debug
+as
+(
+	select
+		*
+	from
+		Table_1 a with(nolock)
+	where
+		not exists
+			(
+				select
+					1
+				from
+					T aa
+				where
+					not exists
+						(
+							select
+								1
+							from
+								Table_1 aaa with(nolock)
+							where
+								(
+									aaa.GroupID = a.GroupID
+								)
+								and
+								(
+									aaa.RootID = aa.RootID
+								)
+						)
+			)
+)
+, TGroupsRootsIDs		--debug
+as
+(
+	select
+		*
+	from
+		TGroupsRoots a
+	where
+		not exists
+			(
+				select
+					1
+				from
+					T aa
+				where
+					not exists
+						(
+							select
+								1
+							from
+								TGroupsRoots aaa
+							where
+								aaa.GroupID = a.GroupID
+									
+								--重要条件
+								and
+								aaa.RootID = aa.RootID
+
+								--重要条件
+								and
+								(
+									exists
+										(
+											select
+												1
+											from
+												T aaaa
+											where
+												aaaa.RootID = aaa.RootID
+												and
+												aaaa.ID = aaa.ID
+										)
+								)
+						)
+			)
+)
+, T4
+as
+(
+	select
+		distinct
+			a.GroupID
+	from
+		--TGroupsRootsIDs a
+		TResult a
+)
+, T5		--debug
+as
+(
+	select
+		*
+	from
+		TGroupsRootsIDs a
+	where
+		exists
+			(
+				select
+					1
+				from
+					T aa
+				where
+					aa.RootID = a.RootID
+					and
+					aa.ID = aa.ID
+			)
+)
+, T6	--debug
+as
+(
+	select
+		a.GroupID
+		, a.ID
+		, b.ID as ID2
+		, a.RootID
+		, b.RootID as RootID2
+	from
+		T5 a
+			full join
+				T b
+			on
+				a.RootID = b.RootID
+				and
+				a.ID = b.ID
+)
+select
+	*
+from
+	--TGroupsRootsIDs
+	TResult
+	--T5
+	--T4
+			a
+order by
+	a.GroupID
+	--, a.RootID
+
+
+end
+
+
+GO
+
+#T=对齐时间函数
+ALTER FUNCTION [dbo].[DateTimeMinutesAlign]
+	(
+		@Time datetime
+		, @Minutes int
+	)
+RETURNS datetime
+AS
+BEGIN
+	return dateadd(minute, @Minutes * (datediff(minute, 0, @Time)/@Minutes), 0)
+END
+
+#T=年日历 简单
+declare @ date = getdate()
+;with
+TMonths
+as
+(
+select 0 as M
+union all select 1 union all select 2 union all select 3
+union all select 4 union all select 5 union all select 6
+union all select 7 union all select 8 union all select 9
+union all select 10 union all select 11
+)
+, TDays
+as
+(
+select 0 as D
+union all select 1 union all select 2 union all select 3 union all select 4 union all select 5
+union all select 6 union all select 7 union all select 8 union all select 9 union all select 10
+union all select 11 union all select 12 union all select 13 union all select 14
+union all select 15 union all select 16 union all select 17 union all select 18
+union all select 19 union all select 20 union all select 21 union all select 22
+union all select 23 union all select 24 union all select 25 union all select 26
+union all select 27 union all select 28 union all select 29 union all select 30
+) 
+, TDates
+as
+(
+	select
+		cast
+			(
+				dateadd(year,datediff(YEAR,0,@),0) 
+				+ ROW_NUMBER() over(order by a.M) as date
+			)
+		 as [theDate]
+	from
+		TMonths a
+		, Tdays b
+	
+)
+, TYearDates
+as
+(
+	select
+		*
+		,(@@Datefirst + datepart(weekday,theDate)) % 7 
+       + case when (@@Datefirst + datepart(weekday,theDate)) % 7 < 2 
+                   then 6 
+              else 
+                   -1 
+         end as WeekDayID
+	from
+		TDates
+	where
+		datediff(YEAR,@,theDate) = 0
+)
+SELECT 
+	*
+FROM
+	TYearDates
+
+#T=当前所有进程运行的 SQL语句
+-- Current processes and their SQL statements 
+SELECT
+	a.loginame AS LoginName 
+	,b.name AS DatabaseName 
+	,a.[status] as ProcessStatus 
+	,a.cmd AS Command 
+	,a.last_batch AS LastBatch 
+	,a.cpu AS Cpu 
+	,a.physical_io AS PhysicalIo 
+	,c.row_count AS [RowCount] 
+	,e.[text] AS SQLStatement 
+FROM
+	sys.sysprocesses a 
+		INNER JOIN
+			sys.databases b 
+				ON
+					a.dbid = b.database_id
+		INNER JOIN
+			sys.dm_exec_sessions c 
+				ON
+					a.spid = c.session_id
+		CROSS APPLY
+			sys.dm_exec_sql_text(a.sql_handle) e
+WHERE
+	a.spid >= 50  -- Exclude system processes
+ORDER BY
+	a.physical_io DESC
+	,a.cpu DESC;
+#T=执行中的SQL
+SELECT
+	[Spid] = session_Id
+	,ecid
+	,[Database] = DB_NAME(sp.dbid)
+	,nt_username
+	,er.status
+	,wait_type
+	,[Individual Query] =
+							SUBSTRING
+								(
+									qt.text
+									, er.statement_start_offset / 2
+									,
+										(
+											CASE
+												WHEN
+													er.statement_end_offset = -1
+													THEN
+														LEN(CONVERT(NVARCHAR(MAX), qt.text))
+														* 2
+												ELSE
+														er.statement_end_offset
+											END
+											- er.statement_start_offset
+										)
+										/ 2
+								)
+	,[Parent Query] = qt.text
+	,Program = program_name
+	,Hostname
+	,nt_domain
+	,start_time
+FROM
+	sys.dm_exec_requests er
+		INNER JOIN
+			sys.sysprocesses sp
+				ON
+					er.session_id = sp.spid
+		CROSS APPLY
+			sys.dm_exec_sql_text(er.sql_handle) AS qt
+WHERE
+	session_Id >= 51
+
+SELECT
+	m.session_id
+	,m.start_time
+	,m.command
+	,m.wait_type
+	,m.cpu_time
+	,CAST(s.text AS VARCHAR(max)) AS sqlText
+FROM
+	master.sys.dm_exec_requests m WITH ( NOLOCK )
+		CROSS APPLY
+			fn_get_sql(m.sql_handle) s
+
+SELECT
+	r.session_id
+	,r.start_time
+	,r.command
+	,r.wait_type
+	,r.cpu_time
+	,s.text
+FROM
+	sys.dm_exec_requests r
+		CROSS APPLY
+			sys.dm_exec_sql_text(r.sql_handle) s
+#T=扩展存储过程用户角色 sysprotects
+SELECT
+	c.name as UserLogin,b.name as ObjectName
+FROM sysprotects a
+	left join sysobjects b
+		on a.id = b.id
+	left join sysusers c
+		on a.uid = c.uid
+WHERE
+--a.action IN (193, 195, 196, 197, 224, 26)
+--and 
+b.xtype in ('x','p')
+order by
+	b.name
+
+#T=排序规则 collation
+select
 	ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName')),
 	DatabaseID = DB_ID(),
 	DatabaseName = DB_NAME(),
-	DatabaseSize = CONVERT(decimal(15, 2), DB.DbSize / SPER.PageSperMB),
-	DataFileSize = CONVERT(decimal(15, 2), DB.DataFileSize / SPER.PageSperMB),
-	LogFileSize = CONVERT(decimal(15, 2), DB.LogFileSize / SPER.PageSperMB),
-	UnAllocated = CONVERT(decimal(15, 2), (DB.DataFileSize - DATA.Reserved) / SPER.PageSperMB),
-	DataReserved = CONVERT(decimal(15, 2), DATA.Reserved / SPER.PageSperMB),
-	DataSize = CONVERT(decimal(15, 2), (DATA.DataSize + DATA.[TextSize]) / SPER.PageSperMB),
-	IndexSize = CONVERT(decimal(15, 2), (DATA.IndexSize - DATA.DataSize - DATA.[TextSize]) / SPER.PageSperMB),
-	UnUsedSize = CONVERT(decimal(15, 2), (DATA.Reserved - DATA.IndexSize) / SPER.PageSperMB),
-	CountProcedure = OBJS.ProcudureS,
-	CountFunction = OBJS.FunctionS,
-	CountTrigger = OBJS.TriggerS,
-	CountUserTable = OBJS.TableS,
-	CountView = OBJS.ViewS,
-	RecoveryMode = CONVERT(varchar(12), DATABASEPROPERTYEX(DB_NAME(), N'Recovery')),
-	PrimaryDrive = CONVERT(char(1), (
-			SELECT TOP 1 UPPER(LEFT(FileName, 1))
-			FROM master.dbo.sysdatabases WITH(NOLOCK)
-			WHERE dbid = DB_ID()))
-FROM(
-	SELECT
-		DbSize = ISNULL(SUM(CONVERT(dec(15), size)), 0),
-		DataFileSize = ISNULL(SUM(CASE WHEN status & 0x40 =0 THEN CONVERT(dec(15), size) ELSE 0 END), 0),
-		LogFileSize = ISNULL(SUM(CASE WHEN status & 0x40 =0 THEN 0 ELSE CONVERT(dec(15), size) END), 0)
-	FROM dbo.sysfiles WITH (NOLOCK)
-)DB
-	CROSS JOIN(
-		SELECT
-			Reserved = ISNULL(SUM(CASE WHEN indid IN (0, 1, 255) THEN CONVERT(dec(15), reserved) ELSE 0 END), 0),
-			DataSize = ISNULL(SUM(CASE WHEN indid < 2 THEN CONVERT(dec(15), dpages) ELSE 0 END), 0),
-			[TextSize] = ISNULL(SUM(CASE WHEN indid = 255 THEN CONVERT(dec(15), used) ELSE 0 END), 0),
-			IndexSize = ISNULL(SUM(CASE WHEN indid IN (0, 1, 255) THEN CONVERT(dec(15), used) ELSE 0 END), 0)
-		FROM dbo.sysindexes WITH(NOLOCK)
-		WHERE (indid < 2 OR indid = 255)
-	)DATA
-	CROSS JOIN(
-		SELECT PageSperMB = 1048576. / low
-		FROM master.dbo.spt_values
-		WHERE number = 1
-				AND type = 'E'
-	)SPER
-	CROSS JOIN(
-		SELECT
-			TableS = SUM(CASE xtype WHEN 'U' THEN 1 ELSE 0 END),
-			ProcudureS = SUM(CASE xtype WHEN 'P' THEN 1 ELSE 0 END),
-			ViewS = SUM(CASE xtype WHEN 'V' THEN 1 ELSE 0 END),
-			TriggerS = SUM(CASE xtype WHEN 'TR' THEN 1 ELSE 0 END),
-			FunctionS = SUM(CASE WHEN xtype IN('FN', 'IF', 'TF') THEN 1 ELSE 0 END)
-		FROM dbo.sysobjects
-	)OBJS
+	DATABASEPROPERTYEX(DB_NAME(),'collation') as database_collation_name,
+	ss.name as schema_name,
+	so.name as table_name,
+	sc.name as column_name,
+	st.system_type_id,
+	st.name as type_name,
+	sc.collation_name
+from
+	sys.objects so
+		inner join
+			sys.columns sc
+				on so.object_id = sc.object_id
+		inner join
+			sys.types st
+				on sc.system_type_id = st.system_type_id
+		inner join
+			sys.schemas ss
+				on ss.schema_id = so.schema_id
+where
+	so.type = 'U'
+	and 
+	sc.collation_name is not null
+	--and
+	--st.system_type_id in
+	--					(
+	--						35 /* text */
+	--						, 99 /* ntext */
+	--						, 167 /* varchar */
+	--						, 175 /* char */
+	--						, 231 /* nvarchar, sysname */
+	--						, 239 /* nchar */
+	--					)
+order by
+	table_name,
+	sc.column_id
+
+#T=提取数字、字符串
+/****** Object:  UserDefinedFunction [dbo].[F_Get_No]    Script Date: 10/18/2013 22:03:13 ******/
+SET ANSI_NULLS ON
 GO
+SET QUOTED_IDENTIFIER ON
+GO
+create function [dbo].[F_Get_No]
+(
+	@No varchar(100)
+)
+RETURNS bigint
+AS
+BEGIN
+	WHILE PATINDEX('%[^0-9]%',@No)>0
+	BEGIN
+		SET @No=STUFF(@No,PATINDEX('%[^0-9]%',@No),1,'') --删掉一个非数字的字符，循环结束，剩余的为数字部分
+	END
+	RETURN CONVERT(bigint,@No)
+END
+
+GO
+
+create function [dbo].[F_GetChar]
+(
+	@No varchar(100)
+)
+RETURNS varchar(100)
+AS
+BEGIN
+	WHILE PATINDEX('%[^A-Za-z]%',@No)>0
+	BEGIN
+		SET @No=STUFF(@No,PATINDEX('%[^A-Za-z]%',@No),1,'') --删掉一个非数字的字符，循环结束，剩余的为数字部分
+	END
+	RETURN CONVERT(varchar(100),@No)
+END
+--select dbo.F_GetChar('wwww23')
+#T=数据库的磁盘使用情况 SQL 2008 R2 报表
+
+declare @dbsize bigint 
+declare @logsize bigint 
+declare @database_size_mb float  
+declare @unallocated_space_mb float  
+declare @reserved_mb float  
+declare @data_mb float  
+declare @log_size_mb float
+declare @index_mb float  
+declare @unused_mb float  
+declare @reservedpages bigint 
+declare @pages bigint 
+declare @usedpages bigint
+
+select @dbsize = sum(convert(bigint,case when status & 64 = 0 then size else 0 end)) 
+        ,@logsize = sum(convert(bigint,case when status & 64 != 0 then size else 0 end)) 
+from dbo.sysfiles 
+
+select @reservedpages = sum(a.total_pages) 
+        ,@usedpages = sum(a.used_pages) 
+        ,@pages = sum(CASE 
+                        WHEN it.internal_type IN (202,204) THEN 0 
+                        WHEN a.type != 1 THEN a.used_pages 
+                        WHEN p.index_id < 2 THEN a.data_pages 
+                        ELSE 0 
+                     END) 
+from sys.partitions p  
+join sys.allocation_units a on p.partition_id = a.container_id 
+left join sys.internal_tables it on p.object_id = it.object_id 
+ 
+select @database_size_mb = (convert(dec (15,2),@dbsize) + convert(dec(15,2),@logsize)) * 8192 / 1048576.0 
+select @unallocated_space_mb =(case 
+                                when @dbsize >= @reservedpages then (convert (dec (15,2),@dbsize) - convert (dec (15,2),@reservedpages)) * 8192 / 1048576.0  
+                                else 0  
+                              end)
+                               
+select  @reserved_mb = @reservedpages * 8192 / 1048576.0 
+select  @data_mb = @pages * 8192 / 1048576.0 
+select  @log_size_mb = convert(dec(15,2),@logsize) * 8192 / 1048576.0
+select  @index_mb = (@usedpages - @pages) * 8192 / 1048576.0 
+select  @unused_mb = (@reservedpages - @usedpages) * 8192 / 1048576.0
+
+select 
+        @database_size_mb as 'database_size_mb'
+,       @reserved_mb as 'reserved_mb'
+,       @unallocated_space_mb as 'unallocated_space_mb'
+,       (@reserved_mb + @unallocated_space_mb) as 'data_size'
+,       @log_size_mb as 'transaction_log_size'
+,       cast(@unallocated_space_mb*100.0/(@reserved_mb + @unallocated_space_mb) as decimal(10,2))as  'unallocated'
+,       cast(@reserved_mb*100/(@reserved_mb + @unallocated_space_mb) as decimal(10,2))as 'reserved'
+,       cast(@data_mb*100/(@reserved_mb + @unallocated_space_mb) as decimal(10,2))as 'data'
+,       cast(@index_mb*100/(@reserved_mb + @unallocated_space_mb) as decimal(10,2)) as 'index_1'
+,       cast(@unused_mb*100/(@reserved_mb + @unallocated_space_mb) as decimal(10,2))as 'unused';
+
+
+#T=查询所有数据库read DMV
+SELECT TOP 10
+	ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName'))
+	, DatabaseName = DB_NAME(qt.dbid)
+	,[Total_Logical_Reads] = SUM(total_logical_reads)
+	,[Total_Writes] = SUM(total_logical_writes)
+	,[Total_Physical Reads] =SUM(total_physical_reads)
+	,[Total_Duration] = SUM(qs.total_elapsed_time)
+	,[Total_CPU] = SUM(qs.total_worker_time )
+	,[Execution_count] = SUM(qs.execution_count)
+	,min(qs.creation_time) as [最早编译计划的时间]
+	,max(qs.last_execution_time) as [最晚上次开始执行计划的时间]
+	--,[Individual_Query] = SUBSTRING
+	--						(
+	--							qt.text,
+	--							qs.statement_start_offset/2,
+	--							(
+	--								CASE
+	--									WHEN qs.statement_end_offset = -1
+	--										THEN LEN(CONVERT(NVARCHAR(MAX), qt.text)) * 2
+	--									ELSE
+	--										qs.statement_end_offset 
+	--								END
+	--								- qs.statement_start_offset
+	--							) /2
+	--						)
+	--,[Parent_Query] = qt.text
+	, @@version as Version
+FROM
+	sys.dm_exec_query_stats qs
+		CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) as qt
+WHERE
+	qt.dbid is not null
+GROUP BY
+	DB_NAME(qt.dbid)
+ORDER BY
+	[Total_Logical_Reads] DESC
+#T=查询所有数据库空间 sys.master_files
+--===========================================================================
+--数据库文件大小
+select
+	*
+	--, COUNT(distinct left([DatabaseFile],1)) OVER(PARTITION BY ServerName) AS [ServerDatabasesDisks]
+	, sum([DatabaseSize(MB)]) OVER(PARTITION BY ServerName) AS [ServerSumDatabasesSize(MB)]
+from
+(
+	select
+		top 100 percent
+		ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName'))
+		, a.name as DatabaseName
+		, count(distinct b.physical_name) as [DatabaseFilesCount]
+		, count(distinct left(b.physical_name,1)) as [DatabaseDisksCount]
+		, sum(b.size) as [DatabaseSize(8KB)]
+		, sum(1.0 * b.size/128) as [DatabaseSize(MB)]
+	from
+		sys.databases a
+			left join sys.master_files b
+				on a.database_id = b.database_id
+	group by
+		a.name
+	order by
+		[DatabaseSize(8KB)] desc,
+		a.name
+) T
+--===========================================================================
+--数据库文件明晰
+select
+	a.database_id
+	, a.name
+	, a.create_date
+	, b.physical_name
+	, 1.0 * b.size/128 [size(MB)]
+	, b.type
+	, b.type_desc
+	--, *
+from
+	sys.databases a
+		left join sys.master_files b
+			on a.database_id = b.database_id
+order by
+	a.database_id
+--===========================================================================
+--所有数据库文件大小
+select
+	ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName'))
+	, count(distinct database_id) as [ServerDatabasesCount]
+	, count(distinct physical_name) as [ServerDatabasesFile]
+	, count(distinct left(physical_name,3)) as [ServerDatabasesDisksCount]
+	, sum([size]) as [ServerSumDatabasesSize(8KB)]
+	, sum(1.0 * [size]/128) as [ServerSumDatabasesSize(MB)]
+	, @@version as [Version]
+from
+	sys.master_files
+--===========================================================================
+--各磁盘的空间占用
+declare @T1 table
+(
+	drive nvarchar(2)
+	, OS_Free_Space_MB int
+);
+insert into @T1
+exec ('xp_fixeddrives')
+select
+	ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName'))
+	, b.*
+	, a.*
+from
+	@T1 a
+		left join
+				(
+				select
+					left(physical_name, 3) as [ServerDisk]
+					, count(distinct database_id) as [ServerDiskDatabasesCount]
+					, sum([size]) as [ServerSumDatabasesSize(8KB)]
+					, sum(1.0 * [size]/128) as [ServerSumDatabasesSize(MB)]
+					--, @@version as [Version]
+				from
+					sys.master_files with(nolock)
+				group by
+					left(physical_name, 3)
+				) b
+			on left(a.drive,1) = left(b.[ServerDisk],1)
+order by
+	drive
 
 #T=查询数据库中表空间使用状况 All DataBases Tables
 --查询数据库中表空间使用状况
@@ -9895,390 +12386,349 @@ FROM(
 ORDER BY ObjectName, Owner
 GO
 
-#T=查询所有数据库read DMV
-SELECT TOP 10
-	ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName'))
-	, DatabaseName = DB_NAME(qt.dbid)
-	,[Total_Logical_Reads] = SUM(total_logical_reads)
-	,[Total_Writes] = SUM(total_logical_writes)
-	,[Total_Physical Reads] =SUM(total_physical_reads)
-	,[Total_Duration] = SUM(qs.total_elapsed_time)
-	,[Total_CPU] = SUM(qs.total_worker_time )
-	,[Execution_count] = SUM(qs.execution_count)
-	,min(qs.creation_time) as [最早编译计划的时间]
-	,max(qs.last_execution_time) as [最晚上次开始执行计划的时间]
-	--,[Individual_Query] = SUBSTRING
-	--						(
-	--							qt.text,
-	--							qs.statement_start_offset/2,
-	--							(
-	--								CASE
-	--									WHEN qs.statement_end_offset = -1
-	--										THEN LEN(CONVERT(NVARCHAR(MAX), qt.text)) * 2
-	--									ELSE
-	--										qs.statement_end_offset 
-	--								END
-	--								- qs.statement_start_offset
-	--							) /2
-	--						)
-	--,[Parent_Query] = qt.text
-	, @@version as Version
-FROM
-	sys.dm_exec_query_stats qs
-		CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) as qt
-WHERE
-	qt.dbid is not null
-GROUP BY
-	DB_NAME(qt.dbid)
-ORDER BY
-	[Total_Logical_Reads] DESC
-#T=查询所有数据库空间 sys.master_files
---===========================================================================
---数据库文件大小
+#T=查询数据库空间使用状况 邹建
+查询数据库空间使用状况
+/*-- ===================================================================
+版本: SQL Server 2000, 2005
+功能: 查询数据库空间使用状况
+=================================================================== --*/
+USE [要查询空间信息的库名]
+GO
+SELECT
+	ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName')),
+	DatabaseID = DB_ID(),
+	DatabaseName = DB_NAME(),
+	DatabaseSize = CONVERT(decimal(15, 2), DB.DbSize / SPER.PageSperMB),
+	DataFileSize = CONVERT(decimal(15, 2), DB.DataFileSize / SPER.PageSperMB),
+	LogFileSize = CONVERT(decimal(15, 2), DB.LogFileSize / SPER.PageSperMB),
+	UnAllocated = CONVERT(decimal(15, 2), (DB.DataFileSize - DATA.Reserved) / SPER.PageSperMB),
+	DataReserved = CONVERT(decimal(15, 2), DATA.Reserved / SPER.PageSperMB),
+	DataSize = CONVERT(decimal(15, 2), (DATA.DataSize + DATA.[TextSize]) / SPER.PageSperMB),
+	IndexSize = CONVERT(decimal(15, 2), (DATA.IndexSize - DATA.DataSize - DATA.[TextSize]) / SPER.PageSperMB),
+	UnUsedSize = CONVERT(decimal(15, 2), (DATA.Reserved - DATA.IndexSize) / SPER.PageSperMB),
+	CountProcedure = OBJS.ProcudureS,
+	CountFunction = OBJS.FunctionS,
+	CountTrigger = OBJS.TriggerS,
+	CountUserTable = OBJS.TableS,
+	CountView = OBJS.ViewS,
+	RecoveryMode = CONVERT(varchar(12), DATABASEPROPERTYEX(DB_NAME(), N'Recovery')),
+	PrimaryDrive = CONVERT(char(1), (
+			SELECT TOP 1 UPPER(LEFT(FileName, 1))
+			FROM master.dbo.sysdatabases WITH(NOLOCK)
+			WHERE dbid = DB_ID()))
+FROM(
+	SELECT
+		DbSize = ISNULL(SUM(CONVERT(dec(15), size)), 0),
+		DataFileSize = ISNULL(SUM(CASE WHEN status & 0x40 =0 THEN CONVERT(dec(15), size) ELSE 0 END), 0),
+		LogFileSize = ISNULL(SUM(CASE WHEN status & 0x40 =0 THEN 0 ELSE CONVERT(dec(15), size) END), 0)
+	FROM dbo.sysfiles WITH (NOLOCK)
+)DB
+	CROSS JOIN(
+		SELECT
+			Reserved = ISNULL(SUM(CASE WHEN indid IN (0, 1, 255) THEN CONVERT(dec(15), reserved) ELSE 0 END), 0),
+			DataSize = ISNULL(SUM(CASE WHEN indid < 2 THEN CONVERT(dec(15), dpages) ELSE 0 END), 0),
+			[TextSize] = ISNULL(SUM(CASE WHEN indid = 255 THEN CONVERT(dec(15), used) ELSE 0 END), 0),
+			IndexSize = ISNULL(SUM(CASE WHEN indid IN (0, 1, 255) THEN CONVERT(dec(15), used) ELSE 0 END), 0)
+		FROM dbo.sysindexes WITH(NOLOCK)
+		WHERE (indid < 2 OR indid = 255)
+	)DATA
+	CROSS JOIN(
+		SELECT PageSperMB = 1048576. / low
+		FROM master.dbo.spt_values
+		WHERE number = 1
+				AND type = 'E'
+	)SPER
+	CROSS JOIN(
+		SELECT
+			TableS = SUM(CASE xtype WHEN 'U' THEN 1 ELSE 0 END),
+			ProcudureS = SUM(CASE xtype WHEN 'P' THEN 1 ELSE 0 END),
+			ViewS = SUM(CASE xtype WHEN 'V' THEN 1 ELSE 0 END),
+			TriggerS = SUM(CASE xtype WHEN 'TR' THEN 1 ELSE 0 END),
+			FunctionS = SUM(CASE WHEN xtype IN('FN', 'IF', 'TF') THEN 1 ELSE 0 END)
+		FROM dbo.sysobjects
+	)OBJS
+GO
+
+#T=汇总行 grouping rollup pivot
+USE [Funds]
+GO
+/****** Object:  StoredProcedure [dbo].[zsp_Calc]    Script Date: 2013/11/14 12:35:33 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER procedure [dbo].[zsp_Calc]
+as
+begin
+;with T
+as
+(
+	SELECT
+		 [净值日期]
+		 ,[基金]
+		 , min([万份基金单位收益]) as [万份基金单位收益]
+		 --, max([七日年化收益率]) as [七日年化收益率]
+	FROM 
+		[基金收益]
+	group by
+		[基金]
+		,[净值日期]
+)
+, TT
+as
+(
+select
+	TOP
+		100 percent
+	[净值日期]
+	, [工银7天理财A]
+	, [余额宝]
+	, [招商理财7天A级]
+from
+	T
+PIVOT
+(
+	avg([万份基金单位收益])
+	FOR
+		[基金] IN
+	(
+		[工银7天理财A]
+		,[余额宝]
+		,[招商理财7天A级]
+	)
+) AS pvt
+order by
+	1
+)
+, TTT
+as
+(
+select
+	[基金]
+	, max([万份基金单位收益]) as [万份基金单位最大收益]
+	, min([万份基金单位收益]) as [万份基金单位最小收益]
+	, avg([万份基金单位收益]) as [万份基金单位平均收益]
+	, max([七日年化收益率]) as [七日年化最大收益率]
+	, min([七日年化收益率]) as [七日年化最小收益率]
+	, avg([七日年化收益率]) as [七日年化平均收益率]
+from
+	[基金收益]
+group by
+	[基金]
+)
 select
 	*
-	--, COUNT(distinct left([DatabaseFile],1)) OVER(PARTITION BY ServerName) AS [ServerDatabasesDisks]
-	, sum([DatabaseSize(MB)]) OVER(PARTITION BY ServerName) AS [ServerSumDatabasesSize(MB)]
 from
+	TT
+
+
+;with T
+as
 (
 	select
-		top 100 percent
-		ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName'))
-		, a.name as DatabaseName
-		, count(distinct b.physical_name) as [DatabaseFilesCount]
-		, count(distinct left(b.physical_name,1)) as [DatabaseDisksCount]
-		, sum(b.size) as [DatabaseSize(8KB)]
-		, sum(1.0 * b.size/128) as [DatabaseSize(MB)]
-	from
-		sys.databases a
-			left join sys.master_files b
-				on a.database_id = b.database_id
-	group by
-		a.name
-	order by
-		[DatabaseSize(8KB)] desc,
-		a.name
-) T
---===========================================================================
---数据库文件明晰
-select
-	a.database_id
-	, a.name
-	, a.create_date
-	, b.physical_name
-	, 1.0 * b.size/128 [size(MB)]
-	, b.type
-	, b.type_desc
-	--, *
-from
-	sys.databases a
-		left join sys.master_files b
-			on a.database_id = b.database_id
-order by
-	a.database_id
---===========================================================================
---所有数据库文件大小
-select
-	ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName'))
-	, count(distinct database_id) as [ServerDatabasesCount]
-	, count(distinct physical_name) as [ServerDatabasesFile]
-	, count(distinct left(physical_name,3)) as [ServerDatabasesDisksCount]
-	, sum([size]) as [ServerSumDatabasesSize(8KB)]
-	, sum(1.0 * [size]/128) as [ServerSumDatabasesSize(MB)]
-	, @@version as [Version]
-from
-	sys.master_files
---===========================================================================
---各磁盘的空间占用
-declare @T1 table
-(
-	drive nvarchar(2)
-	, OS_Free_Space_MB int
-);
-insert into @T1
-exec ('xp_fixeddrives')
-select
-	ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName'))
-	, b.*
-	, a.*
-from
-	@T1 a
-		left join
-				(
-				select
-					left(physical_name, 3) as [ServerDisk]
-					, count(distinct database_id) as [ServerDiskDatabasesCount]
-					, sum([size]) as [ServerSumDatabasesSize(8KB)]
-					, sum(1.0 * [size]/128) as [ServerSumDatabasesSize(MB)]
-					--, @@version as [Version]
-				from
-					sys.master_files with(nolock)
-				group by
-					left(physical_name, 3)
-				) b
-			on left(a.drive,1) = left(b.[ServerDisk],1)
-order by
-	drive
-
-#T=磁盘OS所有数据库数据文件使用情况
-alter proc zsp_SpaceMon
-as
-create table #T
-(
-	  dbname nvarchar(100)
-	, [file_group_name] nvarchar(500)
-	, logical_file_name nvarchar(500)
-	, physical_file_name nvarchar(500)
-	, [space_reserved_MB]decimal(10,2)
-	, [space_used_MB] decimal(10,2)
-	, [space_unused_MB] decimal(10,2)
-);
-
-declare @sql nvarchar(2000)
-set @sql  = N'
-declare @T table
-(
-	  file_id int
-	, file_group_id int
-	, total_extents int
-	, used_extents int
-	, logical_file_name nvarchar(500) collate database_default
-	, physical_file_name nvarchar(500) collate database_default
-);
-
-use [?]
-insert into @T
-exec (''DBCC SHOWFILESTATS'');
-
-insert into #T
-(
-	dbname --nvarchar(100)
-	, [file_group_name] --nvarchar(500)
-	, logical_file_name --nvarchar(500)
-	, physical_file_name --nvarchar(500)
-	, [space_reserved_MB]--decimal(10,2)
-	, [space_used_MB] --decimal(10,2)
-	, [space_unused_MB] --decimal(10,2)
-)
-select
-	--(row_number() over (order by t2.name))%2 as l1
-	''?'' as db
-	, t2.name as [file_group_name]
-	, t1.logical_file_name
-	, t1.physical_file_name
-	, cast((total_extents * 64 / 1024.0) as decimal(10,2)) as [space_reserved_MB]
-	, cast((used_extents * 64 / 1024.0) as decimal(10,2)) as [space_used_MB]
-	, cast(((total_extents - used_extents) * 64 / 1024.0) as decimal(10,2)) as [space_unused_MB]
-from
-	@T t1
-		inner join sys.data_spaces t2
-			on t1.file_group_id = t2.data_space_id
-order by
-	  t2.name
-	, t1.logical_file_name
-	, t1.physical_file_name
-'
-
-exec sp_MSForEachdb @command1=@sql
-
-declare @T1 table
-(
-	  drive nvarchar(2)
-	, OS_Free_Space_MB int
-);
-
-
-insert into @T1
-exec ('xp_fixeddrives');
-
-
-insert into master..SpaceMonLog
-(
-	  drive
-	, OS_Free_Space_MB
-	, [db_space_unused_MB]
-	, dbCount
-	, StampTime
-)
-
-select
-	  a.drive
-	, a.OS_Free_Space_MB
-	, T.[db_space_unused_MB]
-	, t.dbCount
-	, GETDATE() as StampTime
-	--into SpaceMonLog
-from
-	@T1 a
-		inner join
+		ROW_NUMBER() over
 			(
-				select
-					  LEFT(physical_file_name, 1) as drive
-					, SUM([space_unused_MB]) as [db_space_unused_MB]
-					, isnull(COUNT(distinct dbname), 0) as [dbCount]
-				from
-					#T
-				group by
-					LEFT(physical_file_name,1)
-			) T
-on a.drive = T.drive
-order by
-	  T.[db_space_unused_MB]
-	, a.OS_Free_Space_MB
-drop table #T
+				order by
+					[净值日期]
+					,[基金]
+					,[万份基金单位收益]
+					,[七日年化收益率]
+			) as F1
+		,[净值日期]
+		,[基金]
+		,[万份基金单位收益]
+		,[七日年化收益率]
+	from
+		[基金收益]
+)
+select
+	--F1
+	--,
+	case
+		when
+			GROUPING(F1) = 1
+				then
+					getdate()
+		else
+			max([净值日期])
+	end
+	,case
+		when
+			GROUPING(F1) = 1
+				then
+					'合计'
+		else
+			max([基金])
+	end
+	,sum([万份基金单位收益])
+	,sum([七日年化收益率]) 
+from
+	T
+group by
+	rollup
+		(
+			F1
+		)
+
+end
+
+#T=生日查询
+--测试数据
+--http://topic.csdn.net/t/20040908/12/3351763.html
+
+declare @BeginDate date = '2013-12-30' --getdate()
+declare @ int = 70
+declare @EndDate date = dateadd(day, @, @BeginDate)
+declare @TodayDate date = getdate()
 
 select
-	top 10
+	@BeginDate
+	,@EndDate
+
+;with persons
+as
+(
+	SELECT 1 as ID,'aa' as [Name],cast('1999-01-01' as date) as Birthday 
+	UNION ALL
+	SELECT 2,'bb','1996-02-29'
+	UNION ALL
+	SELECT 3,'bb','1934-03-01'
+	UNION ALL
+	SELECT 4,'bb','1966-04-01'
+	UNION ALL
+	SELECT 5,'bb','1997-05-01'
+	UNION ALL
+	SELECT 6,'bb','1922-11-21'
+	UNION ALL
+	SELECT 7,'bb','1989-12-11'
+)
+,T
+as
+(
+	select
+		*
+		,
+		datediff(year, birthday, @BeginDate)
+		+
+		case
+			when
+				datediff(year, birthday, @BeginDate)
+				!= datediff(year, birthday, @EndDate)
+					then
+						1
+			else
+				0
+		end as years
+					
+	from
+		persons
+)
+, TT
+as
+(
+	select
+		*
+		, dateadd(year, years, birthday) as RecentBirthday
+	from
+		T
+
+)
+,TTT
+as
+(
+	select
+		*
+		,
+		datediff(year,birthday,RecentBirthday)
+		-
+		case
+			when
+				datediff(day,dateadd(year,datediff(year,birthday,@TodayDate),birthday),@TodayDate) >= 0
+					then
+					0
+			else
+					1
+		end as TodayAge
+	from
+		TT
+
+)
+select
 	*
 from
-	master..SpaceMonLog
-order by
-	stampTime desc
+	TTT
+where
+	datediff(year, Birthday, @BeginDate)
+	+
+	case
+		when
+			dateadd(year, datediff(year, Birthday, @BeginDate), Birthday) < @BeginDate
+				then
+					1
+		else
+					0
+	end
+	<
+	datediff(year, Birthday, @EndDate)
+	+
+	case
+		when
+			dateadd(year, datediff(year, Birthday, @EndDate), Birthday) <= @EndDate
+				then
+					1
+		else
+					0
+	end
 
-#T=磁盘剩余空间
-declare @T1 table
+
+
+DECLARE @t TABLE
 (
-	drive nvarchar(2)
-	, OS_Free_Space_MB int
-);
-insert into @T1
-exec ('xp_fixeddrives')
+	ID int,
+	Name varchar(10),
+	Birthday datetime
+)
+INSERT @t
+SELECT 1,'aa','1999-01-01'
+UNION ALL
+SELECT 2,'bb','1996-02-29'
+UNION ALL
+SELECT 3,'bb','1934-03-01'
+UNION ALL
+SELECT 4,'bb','1966-04-01'
+UNION ALL
+SELECT 5,'bb','1997-05-01'
+UNION ALL
+SELECT 6,'bb','1922-11-21'
+UNION ALL
+SELECT 7,'bb','1989-12-11'
 
-
-select
-	ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName'))
-	, b.*
-	, a.*
-from
-	@T1 a
-		left join
-				(
-				select
-					left(physical_name,3) as [ServerDisk]
-					, count(distinct database_id) as [ServerDiskDatabasesCount]
-					, sum([size]) as [ServerSumDatabasesSize(8KB)]
-					, sum(1.0 * [size]/128) as [ServerSumDatabasesSize(MB)]
-					--, @@version as [Version]
-				from
-					sys.master_files with(nolock)
-				group by
-					left(physical_name,3)
-				) b
-			on left(a.drive,1) = left(b.[ServerDisk],1)
-order by
-	drive
-
-#T=磁盘数据文件使用情况
-
-declare @filestats_temp_table table
-(
-	file_id int
-	,file_group_id int
-	,total_extents int
-	,used_extents int
-	,logical_file_name nvarchar(500) collate database_default
-	,physical_file_name nvarchar(500) collate database_default
-);
-
-insert into @filestats_temp_table
-exec ('DBCC SHOWFILESTATS');
-
-select (row_number() over (order by t2.name))%2 as l1
-,t2.name as [file_group_name]
-,       t1.logical_file_name
-,       t1.physical_file_name
-,       cast(case when (total_extents * 64) < 1024 then (total_extents * 64)
-                 when (total_extents * 64 / 1024.0) < 1024 then  (total_extents * 64 / 1024.0)
-                 else (total_extents * 64 / 1048576.0)
-        end as decimal(10,2)) as space_reserved
-,       case when (total_extents * 64) < 1024 then 'KB'
-                when (total_extents * 64 / 1024.0) < 1024 then  'MB'
-                else 'GB'
-        end as space_reserved_unit
-,		cast(case when (used_extents * 64) < 1024 then (used_extents * 64)
-                when (used_extents * 64 / 1024.0) < 1024 then  (used_extents * 64 / 1024.0)
-                else (used_extents * 64 / 1048576.0)
-        end as decimal(10,2)) as space_used
-,		case when (used_extents * 64) < 1024 then 'KB'
-                when (used_extents * 64 / 1024.0) < 1024 then  'MB'
-                else 'GB'
-        end as space_used_unit
-from    @filestats_temp_table t1
-inner join sys.data_spaces t2 on ( t1.file_group_id = t2.data_space_id );
-
-#T=磁盘数据文件使用情况(MB)
-
-declare @T table
-(
-	file_id int
-	,file_group_id int
-	,total_extents int
-	,used_extents int
-	,logical_file_name nvarchar(500) collate database_default
-	,physical_file_name nvarchar(500) collate database_default
-);
-
-insert into @T
-exec ('DBCC SHOWFILESTATS');
-
-select
-	--(row_number() over (order by t2.name))%2 as l1
-	t2.name as [file_group_name]
-	, t1.logical_file_name
-	, t1.physical_file_name
-	, cast((total_extents * 64 / 1024.0) as decimal(10,2)) as [space_reserved(MB)]
-	, cast((used_extents * 64 / 1024.0) as decimal(10,2)) as [space_used_unit(MB)]
-	, cast(((total_extents - used_extents) * 64 / 1024.0) as decimal(10,2)) as [space_unused_unit(MB)]
-from
-	@T t1
-		inner join sys.data_spaces t2
-			on t1.file_group_id = t2.data_space_id
-order by
-	t2.name
-	, t1.logical_file_name
-	, t1.physical_file_name 
-
-#T=从未使用的SQL索引
-select object_name(i.object_id) as ObjectName, i.name as [Unused Index]
-from sys.indexes i
-left join sys.dm_db_index_usage_stats s on s.object_id = i.object_id
-      and i.index_id = s.index_id
-      and s.database_id = db_id() 
-where objectproperty(i.object_id, 'IsIndexable') = 1
-AND objectproperty(i.object_id, 'IsIndexed') = 1 
-and s.index_id is null -- and dm_db_index_usage_stats has no reference to this index
-or (s.user_updates > 0 and s.user_seeks = 0 and s.user_scans = 0 and s.user_lookups = 0) -- index is being updated, but not used by seeks/scans/lookups
-order by object_name(i.object_id) asc
-
-#T=当前所有进程运行的 SQL语句
--- Current processes and their SQL statements 
+--查询 2003-12-05 至 2004-02-28 生日的记录
+DECLARE 
+	@b datetime,
+	@e datetime
 SELECT
-	a.loginame AS LoginName 
-	,b.name AS DatabaseName 
-	,a.[status] as ProcessStatus 
-	,a.cmd AS Command 
-	,a.last_batch AS LastBatch 
-	,a.cpu AS Cpu 
-	,a.physical_io AS PhysicalIo 
-	,c.row_count AS [RowCount] 
-	,e.[text] AS SQLStatement 
-FROM
-	sys.sysprocesses a 
-		INNER JOIN
-			sys.databases b 
-				ON
-					a.dbid = b.database_id
-		INNER JOIN
-			sys.dm_exec_sessions c 
-				ON
-					a.spid = c.session_id
-		CROSS APPLY
-			sys.dm_exec_sql_text(a.sql_handle) e
-WHERE
-	a.spid >= 50  -- Exclude system processes
-ORDER BY
-	a.physical_io DESC
-	,a.cpu DESC;
+	@b = '2003-11-21',
+	@e = '2004-02-28'--,
+	--@e = '2006-02-28'
+
+select
+	*
+from
+	@T
+where
+	datediff(year, Birthday, @b)
+	+ case when dateadd(year, datediff(year, Birthday, @b), Birthday) < @b
+				then 1
+				else 0
+		end
+	<
+	datediff(year, Birthday, @e)
+	+ case when dateadd(year, datediff(year, Birthday, @e), Birthday) <= @e
+				then 1
+				else 0
+		end
+
 #T=短信额度控制
 USE [SmsPlatform]
 GO
@@ -11002,2658 +13452,356 @@ declare @blackListFlag int = 0
 	commit transaction
 END
 
-#T=对齐时间函数
-ALTER FUNCTION [dbo].[DateTimeMinutesAlign]
-	(
-		@Time datetime
-		, @Minutes int
-	)
-RETURNS datetime
-AS
-BEGIN
-	return dateadd(minute, @Minutes * (datediff(minute, 0, @Time)/@Minutes), 0)
-END
-
-#T=分区 简单示例
-CREATE PARTITION FUNCTION [UPF_Monthly] (varchar(100))
-AS RANGE RIGHT FOR VALUES
-(
-	'20140101'
-	, '20140201'
-	, '20140301'
-);
-
-ALTER DATABASE [PartitionsTest]
-ADD FILEGROUP [FG_Partition_0001];
-
-ALTER DATABASE [PartitionsTest] 
-ADD FILE 
-(
-    NAME = FG_Partition_0001_File_0001,
-    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0001_File_0001.mdf',
-    SIZE = 8MB,
-    MAXSIZE = unlimited,
-    FILEGROWTH = 8MB
-)
-,
-(
-    NAME = FG_Partition_0001_File_0002,
-    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0001_File_0002.ndf',
-    SIZE = 8MB,
-    MAXSIZE = unlimited,
-    FILEGROWTH = 8MB
-)
-TO FILEGROUP [FG_Partition_0001];
-
-
-ALTER DATABASE [PartitionsTest]
-ADD FILEGROUP [FG_Partition_0002];
-ALTER DATABASE [PartitionsTest] 
-ADD FILE 
-(
-    NAME = FG_Partition_0002_File_0001,
-    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0002_File_0001.mdf',
-    SIZE = 8MB,
-    MAXSIZE = unlimited,
-    FILEGROWTH = 8MB
-)
-,
-(
-    NAME = FG_Partition_0002_File_0002,
-    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0002_File_0002.ndf',
-    SIZE = 8MB,
-    MAXSIZE = unlimited,
-    FILEGROWTH = 8MB
-)
-TO FILEGROUP [FG_Partition_0002];
-
-
-ALTER DATABASE [PartitionsTest]
-ADD FILEGROUP [FG_Partition_0003];
-ALTER DATABASE [PartitionsTest] 
-ADD FILE 
-(
-    NAME = FG_Partition_0001_File_0003,
-    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0003_File_0001.mdf',
-    SIZE = 8MB,
-    MAXSIZE = unlimited,
-    FILEGROWTH = 8MB
-)
-,
-(
-    NAME = FG_Partition_0001_File_0003,
-    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0003_File_0002.ndf',
-    SIZE = 8MB,
-    MAXSIZE = unlimited,
-    FILEGROWTH = 8MB
-)
-TO FILEGROUP [FG_Partition_0003];
-
-
-ALTER DATABASE [PartitionsTest]
-ADD FILEGROUP [FG_Partition_0004];
-ALTER DATABASE [PartitionsTest] 
-ADD FILE 
-(
-    NAME = FG_Partition_0004_File_0001,
-    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0004_File_0001.mdf',
-    SIZE = 8MB,
-    MAXSIZE = unlimited,
-    FILEGROWTH = 8MB
-)
-,
-(
-    NAME = FG_Partition_0004_File_0002,
-    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Partition_0004_File_0002.ndf',
-    SIZE = 8MB,
-    MAXSIZE = unlimited,
-    FILEGROWTH = 8MB
-)
-TO FILEGROUP [FG_Partition_0004];
-
-
-ALTER DATABASE [PartitionsTest]
-ADD FILEGROUP [FG_Indexes_0001];
-ALTER DATABASE [PartitionsTest] 
-ADD FILE 
-(
-    NAME = FG_Indexes_0001_File_0001,
-    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Indexes_0001_File_0001.mdf',
-    SIZE = 8MB,
-    MAXSIZE = unlimited,
-    FILEGROWTH = 8MB
-)
-,
-(
-    NAME = FG_Indexes_0001_File_0002,
-    FILENAME = 'D:\mssql\data\MSSQL11.ENTERPRISE2012\MSSQL\DATA\PartitionsTest\FG_Indexes_0001_File_0002.ndf',
-    SIZE = 8MB,
-    MAXSIZE = unlimited,
-    FILEGROWTH = 8MB
-)
-TO FILEGROUP [FG_Indexes_0001];
-
-
-CREATE PARTITION SCHEME UPS_Monthly
-AS PARTITION [UPF_Monthly]
-TO
-(
-	[FG_Partition_0001]
-	, [FG_Partition_0002]
-	, [FG_Partition_0003]
-	, [FG_Partition_0004]
-);
-
-CREATE TABLE Transactions
-	(
-		ID int NOT NULL IDENTITY (1, 1),
-		F1 varchar(50) NOT NULL,
-		DealDate date not NULL,
-		CreateTime datetime NULL,
-		CONSTRAINT [PK_Transactions] PRIMARY KEY CLUSTERED 
-		(
-			[ID] ASC
-			, DealDate desc
-		)
-		WITH
-		(
-			PAD_INDEX = OFF,
-			STATISTICS_NORECOMPUTE = OFF,
-			IGNORE_DUP_KEY = OFF,
-			ALLOW_ROW_LOCKS = ON,
-			ALLOW_PAGE_LOCKS = ON
-		) ON UPS_Monthly(DealDate) 
-	)
-	ON UPS_Monthly(DealDate) 
-
-#T=分区表 分区方案 文件组
-alter database [eUserprofile]
-add filegroup [smsdata_FG_200908]
-
-go
-
-alter database [eUserprofile]
-ADD FILE 
-(
-	NAME = smsdata_200908_01,
-	FILENAME = 'r:\mssql\data\eUserProfile\smsdata_200908_01.mdf',
-	SIZE = 8MB,
-	MAXSIZE = 8192MB,
-	FILEGROWTH = 16MB
-)
-,
-(
-	NAME = smsdata_200908_02,
-	FILENAME = 'r:\mssql\data\eUserProfile\smsdata_200908_02.ndf',
-	SIZE = 8MB,
-	MAXSIZE = 8192MB,
-	FILEGROWTH = 16MB
-)
-,
-(
-	NAME = smsdata_200908_03,
-	FILENAME = 's:\mssql\data\eUserProfile\smsdata_200908_03.ndf',
-	SIZE = 8MB,
-	MAXSIZE = 8192MB,
-	FILEGROWTH = 16MB
-)
-,
-(
-	NAME = smsdata_200908_04,
-	FILENAME = 's:\mssql\data\eUserProfile\smsdata_200908_04.ndf',
-	SIZE = 8MB,
-	MAXSIZE = 8192MB,
-	FILEGROWTH = 16MB
-)
-,
-(
-	NAME = smsdata_200908_05,
-	FILENAME = 't:\mssql\data\eUserProfile\smsdata_200908_05.ndf',
-	SIZE = 8MB,
-	MAXSIZE = 8192MB,
-	FILEGROWTH = 16MB
-)
-,
-(
-	NAME = smsdata_200908_06,
-	FILENAME = 't:\mssql\data\eUserProfile\smsdata_200908_06.ndf',
-	SIZE = 8MB,
-	MAXSIZE = 8192MB,
-	FILEGROWTH = 16MB
-)
-,
-(
-	NAME = smsdata_200908_07,
-	FILENAME = 'u:\mssql\data\eUserProfile\smsdata_200908_07.ndf',
-	SIZE = 8MB,
-	MAXSIZE = 8192MB,
-	FILEGROWTH = 16MB
-)
-,
-(
-	NAME = smsdata_200908_08,
-	FILENAME = 'u:\mssql\data\eUserProfile\smsdata_200908_08.ndf',
-	SIZE = 8MB,
-	MAXSIZE = 8192MB,
-	FILEGROWTH = 16MB
-)
-
-TO FILEGROUP smsdata_FG_200908
-
-go
-
-CREATE PARTITION FUNCTION [UPF_Monthly] (datetime)
-AS RANGE RIGHT FOR VALUES 
-(
-	 '20090801'
-	,'20090901'
-	,'20091001'
-	,'20091101'
-	,'20091201'
-	,'20100101'
-	,'20100201'	
-	,'20100301'
-	,'20100401'
-	,'20100501'
-	,'20100601'
-	,'20100701'
-	,'20100801'
-	,'20100901'
-)
-go
-
-CREATE PARTITION SCHEME [UPS_SMSData_Monthly]
-AS PARTITION [UPF_Monthly]
-TO 
-(
-	  smsdata_FG_200908
-	, smsdata_FG_200909
-	, smsdata_FG_200910
-	, smsdata_FG_200911
-	, smsdata_FG_200912
-	, smsdata_FG_201001
-	, smsdata_FG_201002
-	, smsdata_FG_201003
-	, smsdata_FG_201004
-	, smsdata_FG_201005
-	, smsdata_FG_201006
-	, smsdata_FG_201007
-	, smsdata_FG_201008
-	, smsdata_FG_201009
-	, smsdata_FG_201010
-)
-#T=分区表和索引 数据库
---http://technet.microsoft.com/zh-cn/library/ms345599.aspx
-USE master;
-GO
-IF DB_ID (N'db_sales_test') IS NOT NULL
-    DROP DATABASE db_sales_test;
-GO
-CREATE DATABASE db_sales_test;
-GO
-USE db_sales_test;
-GO
-CREATE PARTITION FUNCTION [pf_range_fact](int) AS RANGE RIGHT FOR VALUES 
-(20080801, 20080901, 20081001, 20081101, 20081201, 20090101);
-GO
-CREATE PARTITION SCHEME [ps_fact_sales] AS PARTITION [pf_range_fact] 
-ALL TO ([PRIMARY]);
-GO
-CREATE TABLE fact_sales(date_id int, product_id int, store_id int, 
-    quantity int, unit_price numeric(7,2), other_data char(1000))
-ON ps_fact_sales(date_id);
-GO
-CREATE CLUSTERED INDEX ci ON fact_sales(date_id);
-GO
-PRINT 'Loading...';
-SET NOCOUNT ON;
-DECLARE @i int;
-SET @i = 1;
-WHILE (@i<1000000)
-BEGIN
-    INSERT INTO fact_sales VALUES(20080800 + (@i%30) + 1, @i%10000, @i%200, RAND() * 25, (@i%3) + 1, '');
-    SET @i += 1;
-END;
-GO
-DECLARE @i int;
-SET @i = 1;
-WHILE (@i<10000)
-BEGIN
-    INSERT INTO fact_sales VALUES(20080900 + (@i%30) + 1, @i%10000, @i%200, RAND() * 25, (@i%3) + 1, '');
-    SET @i += 1;
-END;
-PRINT 'Done.';
-GO
--- Two-partition query.
-SET STATISTICS XML ON;
-GO
-SELECT date_id, SUM(quantity*unit_price) AS total_price
-FROM fact_sales
-WHERE date_id BETWEEN 20080802 AND 20080902
-GROUP BY date_id ;
-GO
-SET STATISTICS XML OFF;
-GO
--- Single-partition query.
-SET STATISTICS XML ON;
-GO
-SELECT date_id, SUM(quantity*unit_price) AS total_price
-FROM fact_sales
-WHERE date_id BETWEEN 20080801 AND 20080831
-GROUP BY date_id;
-GO
-SET STATISTICS XML OFF;
-GO
-#T=分区测试数据库
-USE [master]
-GO
-/****** Object:  Database [PartitionsTest]    Script Date: 2014/12/12 9:56:22 ******/
-
-CREATE DATABASE [PartitionsTest]
- CONTAINMENT = NONE
- ON  PRIMARY
-( NAME = N'FG_PRIMARY_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_PRIMARY_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_PRIMARY_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_PRIMARY_Data_File_002.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_PRIMARY_Data_File_003', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_PRIMARY_Data_File_003.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_PRIMARY_Data_File_004', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_PRIMARY_Data_File_004.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
- FILEGROUP [FG_Transactions_Monthly_201412]
-( NAME = N'FG_Transactions_Monthly_201412_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201412_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_Transactions_Monthly_201412_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201412_Data_File_002.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
- FILEGROUP [FG_Transactions_Monthly_201501]
-( NAME = N'FG_Transactions_Monthly_201501_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201501_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_Transactions_Monthly_201501_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201501_Data_File_002.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
- FILEGROUP [FG_Transactions_Monthly_201502]
-( NAME = N'FG_Transactions_Monthly_201502_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201502_Data_File_001.mdf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_Transactions_Monthly_201502_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201502_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
- FILEGROUP [FG_Transactions_Monthly_201503]
-( NAME = N'FG_Transactions_Monthly_201503_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201503_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_Transactions_Monthly_201503_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201503_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
- FILEGROUP [FG_Transactions_Monthly_201504]
-( NAME = N'FG_Transactions_Monthly_201504_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201504_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_Transactions_Monthly_201504_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201504_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
- FILEGROUP [FG_Transactions_Monthly_201505]
-( NAME = N'FG_Transactions_Monthly_201505_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201505_Data_File_001.mdf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_Transactions_Monthly_201505_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201505_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
- FILEGROUP [FG_Transactions_Monthly_201506]
-( NAME = N'FG_Transactions_Monthly_201506_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201506_Data_File_001.mdf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_Transactions_Monthly_201506_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201506_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
- FILEGROUP [FG_Transactions_Monthly_201507]
-( NAME = N'FG_Transactions_Monthly_201507_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201507_Data_File_001.mdf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_Transactions_Monthly_201507_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201507_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
- FILEGROUP [FG_Transactions_Monthly_201508]
-( NAME = N'FG_Transactions_Monthly_201508_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201508_Data_File_001.mdf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_Transactions_Monthly_201508_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Monthly_201508_Data_File_002.ndf' , SIZE = 8MB, MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
- FILEGROUP [FG_Transactions_Nonaligned_Indexes]
-( NAME = N'FG_Transactions_Nonaligned_Indexes_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Nonaligned_Indexes_Data_File_001.mdf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB ),
-( NAME = N'FG_Transactions_Nonaligned_Indexes_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_Transactions_Nonaligned_Indexes_Data_File_002.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED, FILEGROWTH = 8192KB )
- LOG ON
-( NAME = N'FG_log_Data_File_001', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_log_Data_File_001.ldf' , SIZE = 8MB , MAXSIZE = UNLIMITED , FILEGROWTH = 8192KB ),
-( NAME = N'FG_log_Data_File_002', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_log_Data_File_002.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED , FILEGROWTH = 8192KB ),
-( NAME = N'FG_log_Data_File_003', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_log_Data_File_003.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED , FILEGROWTH = 8192KB ),
-( NAME = N'FG_log_Data_File_004', FILENAME = N'D:\mssql\data\MSSQL12.ENTERPRISE2014\MSSQL\DATA\PartitionsTest\FG_log_Data_File_004.ndf' , SIZE = 8MB , MAXSIZE = UNLIMITED , FILEGROWTH = 8192KB )
-
-
-GO
-ALTER DATABASE [PartitionsTest] SET COMPATIBILITY_LEVEL = 120
-GO
-IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
-begin
-EXEC [PartitionsTest].[dbo].[sp_fulltext_database] @action = 'enable'
-end
-GO
-ALTER DATABASE [PartitionsTest] SET ANSI_NULL_DEFAULT OFF
-GO
-ALTER DATABASE [PartitionsTest] SET ANSI_NULLS OFF
-GO
-ALTER DATABASE [PartitionsTest] SET ANSI_PADDING OFF
-GO
-ALTER DATABASE [PartitionsTest] SET ANSI_WARNINGS OFF
-GO
-ALTER DATABASE [PartitionsTest] SET ARITHABORT OFF
-GO
-ALTER DATABASE [PartitionsTest] SET AUTO_CLOSE OFF
-GO
-ALTER DATABASE [PartitionsTest] SET AUTO_SHRINK OFF
-GO
-ALTER DATABASE [PartitionsTest] SET AUTO_UPDATE_STATISTICS ON
-GO
-ALTER DATABASE [PartitionsTest] SET CURSOR_CLOSE_ON_COMMIT OFF
-GO
-ALTER DATABASE [PartitionsTest] SET CURSOR_DEFAULT  GLOBAL
-GO
-ALTER DATABASE [PartitionsTest] SET CONCAT_NULL_YIELDS_NULL OFF
-GO
-ALTER DATABASE [PartitionsTest] SET NUMERIC_ROUNDABORT OFF
-GO
-ALTER DATABASE [PartitionsTest] SET QUOTED_IDENTIFIER OFF
-GO
-ALTER DATABASE [PartitionsTest] SET RECURSIVE_TRIGGERS OFF
-GO
-ALTER DATABASE [PartitionsTest] SET  ENABLE_BROKER
-GO
-ALTER DATABASE [PartitionsTest] SET AUTO_UPDATE_STATISTICS_ASYNC OFF
-GO
-ALTER DATABASE [PartitionsTest] SET DATE_CORRELATION_OPTIMIZATION OFF
-GO
-ALTER DATABASE [PartitionsTest] SET TRUSTWORTHY OFF
-GO
-ALTER DATABASE [PartitionsTest] SET ALLOW_SNAPSHOT_ISOLATION OFF
-GO
-ALTER DATABASE [PartitionsTest] SET PARAMETERIZATION SIMPLE
-GO
-ALTER DATABASE [PartitionsTest] SET READ_COMMITTED_SNAPSHOT OFF
-GO
-ALTER DATABASE [PartitionsTest] SET HONOR_BROKER_PRIORITY OFF
-GO
-ALTER DATABASE [PartitionsTest] SET RECOVERY FULL
-GO
-ALTER DATABASE [PartitionsTest] SET  MULTI_USER
-GO
-ALTER DATABASE [PartitionsTest] SET PAGE_VERIFY CHECKSUM
-GO
-ALTER DATABASE [PartitionsTest] SET DB_CHAINING OFF
-GO
-ALTER DATABASE [PartitionsTest] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF )
-GO
-ALTER DATABASE [PartitionsTest] SET TARGET_RECOVERY_TIME = 0 SECONDS
-GO
-ALTER DATABASE [PartitionsTest] SET DELAYED_DURABILITY = DISABLED
-GO
-EXEC sys.sp_db_vardecimal_storage_format N'PartitionsTest', N'ON'
-GO
-USE [PartitionsTest]
-GO
-/****** Object:  PartitionFunction [UPF_Monthly]    Script Date: 2014/12/12 9:56:23 ******/
-CREATE PARTITION FUNCTION [UPF_Monthly](date) AS RANGE RIGHT FOR VALUES (N'2015-01-01T00:00:00.000', N'2015-02-01T00:00:00.000', N'2015-03-01T00:00:00.000', N'2015-04-01T00:00:00.000', N'2015-05-01T00:00:00.000', N'2015-06-01T00:00:00.000', N'2015-07-01T00:00:00.000', N'2015-08-01T00:00:00.000')
-GO
-/****** Object:  PartitionScheme [UPS_Monthly]    Script Date: 2014/12/12 9:56:23 ******/
-CREATE PARTITION SCHEME [UPS_Monthly] AS PARTITION [UPF_Monthly] TO ([FG_Transactions_Monthly_201412], [FG_Transactions_Monthly_201501], [FG_Transactions_Monthly_201502], [FG_Transactions_Monthly_201503], [FG_Transactions_Monthly_201504], [FG_Transactions_Monthly_201505], [FG_Transactions_Monthly_201506], [FG_Transactions_Monthly_201507], [FG_Transactions_Monthly_201508])
-GO
-/****** Object:  Table [dbo].[Transactions]    Script Date: 2014/12/12 9:56:23 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_PADDING ON
-GO
-CREATE TABLE [dbo].[Transactions](
-	[id] [bigint] IDENTITY(1,1) NOT NULL,
-	[TransactionDate] [date] NULL,
-	[UniqueID] [uniqueidentifier] NULL CONSTRAINT [DF_Transactions_UniqueID]  DEFAULT (newid()),
-	[CreateTime] [datetime] NULL CONSTRAINT [DF_Transactions_CreateTime]  DEFAULT (getdate()),
-	[Remark] [varchar](max) NULL,
-	[F1] [nvarchar](50) NULL,
- CONSTRAINT [PK_Transactions] PRIMARY KEY NONCLUSTERED
-(
-	[id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
- CONSTRAINT [Constraint_UniqueKey_ix_Transactions_UniqueID] UNIQUE NONCLUSTERED
-(
-	[UniqueID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [FG_Transactions_Nonaligned_Indexes]
-) ON [UPS_Monthly]([TransactionDate])
-
-GO
-SET ANSI_PADDING OFF
-GO
-/****** Object:  Index [ix_Transactions_UniqueID]    Script Date: 2014/12/12 9:56:23 ******/
-CREATE UNIQUE NONCLUSTERED INDEX [ix_Transactions_UniqueID] ON [dbo].[Transactions]
-(
-	[UniqueID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [FG_Transactions_Nonaligned_Indexes]
-GO
-/****** Object:  StoredProcedure [dbo].[zsp_PartitionsInfo]    Script Date: 2014/12/12 9:56:23 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE proc [dbo].[zsp_PartitionsInfo]
+#T=磁盘OS所有数据库数据文件使用情况
+alter proc zsp_SpaceMon
 as
-begin
-SELECT
-	$partition.UPF_Monthly(TransactionDate) AS [Partition Number]
-	, min(TransactionDate) AS [Min TransactionDate]
-	, max(TransactionDate) AS [Max TransactionDate]
-	, count(*) AS [Rows In Partition]
-FROM
-	Transactions with(nolock)
-GROUP BY
-	$partition.UPF_Monthly(TransactionDate)
-ORDER BY
-	[Partition Number]
+create table #T
+(
+	  dbname nvarchar(100)
+	, [file_group_name] nvarchar(500)
+	, logical_file_name nvarchar(500)
+	, physical_file_name nvarchar(500)
+	, [space_reserved_MB]decimal(10,2)
+	, [space_used_MB] decimal(10,2)
+	, [space_unused_MB] decimal(10,2)
+);
 
-;WITH
-TBINFO AS(
-	SELECT
-		SchemaName = S.name,
-		TableName = TB.name,
-		PartitionScheme = PS.name,
-		PartitionFunction = PF.name,
-		PartitionFunctionRangeType = CASE
-				WHEN boundary_value_on_right = 0 THEN 'LEFT'
-				ELSE 'RIGHT' END,
-		PartitionFunctionFanout = PF.fanout,
-		SchemaID = S.schema_id,
-		ObjectID = TB.object_id,
-		PartitionSchemeID = PS.data_space_id,
-		PartitionFunctionID = PS.function_id
-	FROM sys.schemas S
-		INNER JOIN sys.tables TB
-			ON S.schema_id = TB.schema_id
-		INNER JOIN sys.indexes IDX
-			on TB.object_id = IDX.object_id
-				AND IDX.index_id < 2
-		INNER JOIN sys.partition_schemes PS
-			ON PS.data_space_id = IDX.data_space_id
-		INNER JOIN sys.partition_functions PF
-			ON PS.function_id = PF.function_id
-),
-PF1 AS(
-	SELECT
-		PFP.function_id, PFR.boundary_id, PFR.value,
-		Type = CONVERT(sysname,
-			CASE T.name
-				WHEN 'numeric' THEN 'decimal'
-				WHEN 'real' THEN 'float'
-				ELSE T.name END
-			+ CASE
-				WHEN T.name IN('decimal', 'numeric')
-					THEN QUOTENAME(RTRIM(PFP.precision)
-						+ CASE WHEN PFP.scale > 0 THEN ',' + RTRIM(PFP.scale) ELSE '' END, '()')
-				WHEN T.name IN('float', 'real')
-					THEN QUOTENAME(PFP.precision, '()')
-				WHEN T.name LIKE 'n%char'
-					THEN QUOTENAME(PFP.max_length / 2, '()')
-				WHEN T.name LIKE '%char' OR T.name LIKE '%binary'
-					THEN QUOTENAME(PFP.max_length, '()')
-				ELSE '' END)
-	FROM sys.partition_parameters PFP
-		LEFT JOIN sys.partition_range_values PFR
-			ON PFR.function_id = PFP.function_id
-				AND PFR.parameter_id = PFP.parameter_id
-		INNER JOIN sys.types T
-			ON PFP.system_type_id = T.system_type_id
-),
-PF2 AS(
-	SELECT * FROM PF1
-	UNION ALL
-	SELECT
-		function_id, boundary_id = boundary_id - 1, value, type
-	FROM PF1
-	WHERE boundary_id = 1
-),
-PF AS(
-	SELECT
-		B.function_id
-		, boundary_id = ISNULL(B.boundary_id + 1, 1)
-		, a.value as av
-		, b.value as bv
-		,
-		value = STUFF(
-			CASE
-				WHEN A.boundary_id IS NULL THEN ''
-				ELSE ' AND [partition_column_name] ' + PF.LessThan + ' ' + CONVERT(varchar(max), A.value) END
-			+ CASE
-				WHEN A.boundary_id = 1 THEN ''
-				ELSE ' AND [partition_column_name] ' + PF.MoreThan + ' ' + CONVERT(varchar(max), B.value) END,
-			1, 5, ''),
-		B.Type
-	FROM PF1 A		
-		RIGHT JOIN PF2 B
-			ON A.function_id = B.function_id
-				AND (A.boundary_id - 1 = B.boundary_id
-					OR(A.boundary_id IS NULL AND B.boundary_id IS NULL))
-		INNER JOIN(
-			SELECT
-				function_id,
-				LessThan = CASE
-						WHEN boundary_value_on_right = 0 THEN '<='
-						ELSE '<' END,
-				MoreThan = CASE
-						WHEN boundary_value_on_right = 0 THEN '>'
-						ELSE '>=' END
-			FROM sys.partition_functions
-		)PF
-			ON B.function_id = PF.function_id
-),
-PS AS(
-	SELECT
-		DDS.partition_scheme_id, DDS.destination_id,
-		FileGroupName = FG.name, IsReadOnly = FG.is_read_only
-	FROM sys.destination_data_spaces DDS
-		INNER JOIN sys.filegroups FG
-			ON DDS.data_space_id = FG.data_space_id
-),
-PINFO AS(
-	SELECT
-		RowID = ROW_NUMBER() OVER(ORDER BY SchemaID, ObjectID, PS.destination_id),
-		TB.SchemaName, TB.TableName,
-		TB.PartitionScheme, PS.destination_id, PS.FileGroupName, PS.IsReadOnly,
-		TB.PartitionFunction, TB.PartitionFunctionRangeType, TB.PartitionFunctionFanout,
-		PF.boundary_id, PF.Type, PF.value
-		,pf.av
-		,pf.bv
-	FROM TBINFO TB
-		INNER JOIN PS
-			ON TB.PartitionSchemeID = PS.partition_scheme_id
-		LEFT JOIN PF
-			ON TB.PartitionFunctionID = PF.function_id
-				AND PS.destination_id = PF.boundary_id
+declare @sql nvarchar(2000)
+set @sql  = N'
+declare @T table
+(
+	  file_id int
+	, file_group_id int
+	, total_extents int
+	, used_extents int
+	, logical_file_name nvarchar(500) collate database_default
+	, physical_file_name nvarchar(500) collate database_default
+);
+
+use [?]
+insert into @T
+exec (''DBCC SHOWFILESTATS'');
+
+insert into #T
+(
+	dbname --nvarchar(100)
+	, [file_group_name] --nvarchar(500)
+	, logical_file_name --nvarchar(500)
+	, physical_file_name --nvarchar(500)
+	, [space_reserved_MB]--decimal(10,2)
+	, [space_used_MB] --decimal(10,2)
+	, [space_unused_MB] --decimal(10,2)
 )
-SELECT
-	RowID,
-	SchemaName = CASE destination_id
-			WHEN 1 THEN SchemaName
-			ELSE N'' END,
-	TableName = CASE destination_id
-			WHEN 1 THEN TableName
-			ELSE N'' END,
-	PartitionScheme = CASE destination_id
-			WHEN 1 THEN PartitionScheme
-			ELSE N'' END,
-	destination_id, FileGroupName, IsReadOnly,
-	PartitionFunction = CASE destination_id
-			WHEN 1 THEN PartitionFunction
-			ELSE N'' END,
-	PartitionFunctionRangeType = CASE destination_id
-			WHEN 1 THEN PartitionFunctionRangeType
-			ELSE N'' END,
-	PartitionFunctionFanout = CASE destination_id
-			WHEN 1 THEN CONVERT(varchar(20), PartitionFunctionFanout)
-			ELSE N'' END,
-	boundary_id = ISNULL(CONVERT(varchar(20), boundary_id), ''),
-	Type = ISNULL(Type, N''),
-	bv,
-	av,
-	value = CASE PartitionFunctionFanout
-			WHEN 1 THEN '<ALL Data>'
-			ELSE ISNULL(value, N'<NEXT USED>') END
-FROM PINFO
-ORDER BY RowID
-end
-GO
-USE [master]
-GO
-ALTER DATABASE [PartitionsTest] SET  READ_WRITE
+select
+	--(row_number() over (order by t2.name))%2 as l1
+	''?'' as db
+	, t2.name as [file_group_name]
+	, t1.logical_file_name
+	, t1.physical_file_name
+	, cast((total_extents * 64 / 1024.0) as decimal(10,2)) as [space_reserved_MB]
+	, cast((used_extents * 64 / 1024.0) as decimal(10,2)) as [space_used_MB]
+	, cast(((total_extents - used_extents) * 64 / 1024.0) as decimal(10,2)) as [space_unused_MB]
+from
+	@T t1
+		inner join sys.data_spaces t2
+			on t1.file_group_id = t2.data_space_id
+order by
+	  t2.name
+	, t1.logical_file_name
+	, t1.physical_file_name
+'
+
+exec sp_MSForEachdb @command1=@sql
+
+declare @T1 table
+(
+	  drive nvarchar(2)
+	, OS_Free_Space_MB int
+);
+
+
+insert into @T1
+exec ('xp_fixeddrives');
+
+
+insert into master..SpaceMonLog
+(
+	  drive
+	, OS_Free_Space_MB
+	, [db_space_unused_MB]
+	, dbCount
+	, StampTime
+)
+
+select
+	  a.drive
+	, a.OS_Free_Space_MB
+	, T.[db_space_unused_MB]
+	, t.dbCount
+	, GETDATE() as StampTime
+	--into SpaceMonLog
+from
+	@T1 a
+		inner join
+			(
+				select
+					  LEFT(physical_file_name, 1) as drive
+					, SUM([space_unused_MB]) as [db_space_unused_MB]
+					, isnull(COUNT(distinct dbname), 0) as [dbCount]
+				from
+					#T
+				group by
+					LEFT(physical_file_name,1)
+			) T
+on a.drive = T.drive
+order by
+	  T.[db_space_unused_MB]
+	, a.OS_Free_Space_MB
+drop table #T
+
+select
+	top 10
+	*
+from
+	master..SpaceMonLog
+order by
+	stampTime desc
+
+#T=磁盘剩余空间
+declare @T1 table
+(
+	drive nvarchar(2)
+	, OS_Free_Space_MB int
+);
+insert into @T1
+exec ('xp_fixeddrives')
+
+
+select
+	ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName'))
+	, b.*
+	, a.*
+from
+	@T1 a
+		left join
+				(
+				select
+					left(physical_name,3) as [ServerDisk]
+					, count(distinct database_id) as [ServerDiskDatabasesCount]
+					, sum([size]) as [ServerSumDatabasesSize(8KB)]
+					, sum(1.0 * [size]/128) as [ServerSumDatabasesSize(MB)]
+					--, @@version as [Version]
+				from
+					sys.master_files with(nolock)
+				group by
+					left(physical_name,3)
+				) b
+			on left(a.drive,1) = left(b.[ServerDisk],1)
+order by
+	drive
+
+#T=磁盘数据文件使用情况
+
+declare @filestats_temp_table table
+(
+	file_id int
+	,file_group_id int
+	,total_extents int
+	,used_extents int
+	,logical_file_name nvarchar(500) collate database_default
+	,physical_file_name nvarchar(500) collate database_default
+);
+
+insert into @filestats_temp_table
+exec ('DBCC SHOWFILESTATS');
+
+select (row_number() over (order by t2.name))%2 as l1
+,t2.name as [file_group_name]
+,       t1.logical_file_name
+,       t1.physical_file_name
+,       cast(case when (total_extents * 64) < 1024 then (total_extents * 64)
+                 when (total_extents * 64 / 1024.0) < 1024 then  (total_extents * 64 / 1024.0)
+                 else (total_extents * 64 / 1048576.0)
+        end as decimal(10,2)) as space_reserved
+,       case when (total_extents * 64) < 1024 then 'KB'
+                when (total_extents * 64 / 1024.0) < 1024 then  'MB'
+                else 'GB'
+        end as space_reserved_unit
+,		cast(case when (used_extents * 64) < 1024 then (used_extents * 64)
+                when (used_extents * 64 / 1024.0) < 1024 then  (used_extents * 64 / 1024.0)
+                else (used_extents * 64 / 1048576.0)
+        end as decimal(10,2)) as space_used
+,		case when (used_extents * 64) < 1024 then 'KB'
+                when (used_extents * 64 / 1024.0) < 1024 then  'MB'
+                else 'GB'
+        end as space_used_unit
+from    @filestats_temp_table t1
+inner join sys.data_spaces t2 on ( t1.file_group_id = t2.data_space_id );
+
+#T=磁盘数据文件使用情况(MB)
+
+declare @T table
+(
+	file_id int
+	,file_group_id int
+	,total_extents int
+	,used_extents int
+	,logical_file_name nvarchar(500) collate database_default
+	,physical_file_name nvarchar(500) collate database_default
+);
+
+insert into @T
+exec ('DBCC SHOWFILESTATS');
+
+select
+	--(row_number() over (order by t2.name))%2 as l1
+	t2.name as [file_group_name]
+	, t1.logical_file_name
+	, t1.physical_file_name
+	, cast((total_extents * 64 / 1024.0) as decimal(10,2)) as [space_reserved(MB)]
+	, cast((used_extents * 64 / 1024.0) as decimal(10,2)) as [space_used_unit(MB)]
+	, cast(((total_extents - used_extents) * 64 / 1024.0) as decimal(10,2)) as [space_unused_unit(MB)]
+from
+	@T t1
+		inner join sys.data_spaces t2
+			on t1.file_group_id = t2.data_space_id
+order by
+	t2.name
+	, t1.logical_file_name
+	, t1.physical_file_name 
+
+#T=稀疏列 sparse column
+/*
+在下面的示例中，文档表包含列 DocID 和 Title 的通用集。生产组希望所有生产文档都有一个 ProductionSpecification 列和一个 ProductionLocation 列。市场组希望所有市场文档都有一个 MarketingSurveyGroup 列。
+
+A. 创建具有列集的表
+下面的示例创建使用稀疏列并包括列集 SpecialPurposeColumns 的表。该示例在表中插入两行，然后从表中选择数据。
+
+注意： 
+该表只有五列，以便易于显示和读取。
+ 
+
+ 复制代码 
+ */
+USE AdventureWorks2008R2;
 GO
 
-#T=分区脚本 生成
---生成分区脚本
-DECLARE @DataBaseName NVARCHAR(50)--数据库名称
-DECLARE @TableName NVARCHAR(50)--表名称
-DECLARE @ColumnName NVARCHAR(50)--字段名称
-DECLARE @PartNumber INT--需要分多少个区
-DECLARE @Location NVARCHAR(50)--保存分区文件的路径
-DECLARE @Size NVARCHAR(50)--分区初始化大小
-DECLARE @FileGrowth NVARCHAR(50)--分区文件增量
-DECLARE @FunValue INT--分区分段值
-DECLARE @i INT
-DECLARE @PartNumberStr NVARCHAR(50)
-DECLARE @sql NVARCHAR(max)
- 
---设置下面变量
-SET @DataBaseName = 'MyDataBase'
-SET @TableName = 'User'
-SET @ColumnName = 'Id'
-SET @PartNumber = 4
-SET @Location = 'E:\DataBase\'
-SET @Size = '30MB'
-SET @FileGrowth = '10%'
-SET @FunValue = 10000000
- 
- 
---1.创建文件组
-SET @i = 1
-PRINT '--1.创建文件组'
-WHILE @i <= @PartNumber
-BEGIN
-    SET @PartNumberStr = RIGHT('0' + CONVERT(NVARCHAR,@i),2)
-    SET @sql = 'ALTER DATABASE ['+@DataBaseName +']
-ADD FILEGROUP [FG_'+@TableName+'_'+@ColumnName+'_'+@PartNumberStr+']'
-    PRINT @sql + CHAR(13)
-    SET @i=@i+1
-END
- 
---2.创建文件
-SET @i = 1
-PRINT CHAR(13)+'--2.创建文件'
-WHILE @i <= @PartNumber
-BEGIN
-    SET @PartNumberStr = RIGHT('0' + CONVERT(NVARCHAR,@i),2)
-    SET @sql = 'ALTER DATABASE ['+@DataBaseName +']
-ADD FILE
-(NAME = N''FG_'+@TableName+'_'+@ColumnName+'_'+@PartNumberStr+'_data'',FILENAME = N'''+@Location+'FG_'+@TableName+'_'+@ColumnName+'_'+@PartNumberStr+'_data.ndf'',SIZE = '+@Size+', FILEGROWTH = '+@FileGrowth+' )
-TO FILEGROUP [FG_'+@TableName+'_'+@ColumnName+'_'+@PartNumberStr+'];'
-    PRINT @sql + CHAR(13)
-    SET @i=@i+1
-END
- 
- 
---3.创建分区函数
-PRINT CHAR(13)+'--3.创建分区函数'
-DECLARE @FunValueStr NVARCHAR(MAX) 
-SET @i = 1
-SET @FunValueStr = ''
-WHILE @i < @PartNumber
-BEGIN
-    SET @FunValueStr = @FunValueStr + convert(NVARCHAR(50),(@i*@FunValue)) + ','
-    SET @i=@i+1
-END
-SET @FunValueStr = substring(@FunValueStr,1,len(@FunValueStr)-1)
-SET @sql = 'CREATE PARTITION FUNCTION
-Fun_'+@TableName+'_'+@ColumnName+'(INT) AS
-RANGE RIGHT
-FOR VALUES('+@FunValueStr+')'
-PRINT @sql + CHAR(13)
- 
- 
---4.创建分区方案
-PRINT CHAR(13)+'--4.创建分区方案'
-DECLARE @FileGroupStr NVARCHAR(MAX) 
-SET @i = 1
-SET @FileGroupStr = ''
-WHILE @i <= @PartNumber
-BEGIN
-    SET @PartNumberStr = RIGHT('0' + CONVERT(NVARCHAR,@i),2)
-    SET @FileGroupStr = @FileGroupStr + '[FG_'+@TableName+'_'+@ColumnName+'_'+@PartNumberStr+'],'
-    SET @i=@i+1
-END
-SET @FileGroupStr = substring(@FileGroupStr,1,len(@FileGroupStr)-1)
-SET @sql = 'CREATE PARTITION SCHEME
-Sch_'+@TableName+'_'+@ColumnName+' AS
-PARTITION Fun_'+@TableName+'_'+@ColumnName+'
-TO('+@FileGroupStr+')'
-PRINT @sql + CHAR(13)
- 
- 
---5.分区函数的记录数
-PRINT CHAR(13)+'--5.分区函数的记录数'
-SET @sql = 'SELECT $PARTITION.Fun_'+@TableName+'_'+@ColumnName+'('+@ColumnName+') AS Partition_num,
- MIN('+@ColumnName+') AS Min_value,MAX('+@ColumnName+') AS Max_value,COUNT(1) AS Record_num
-FROM dbo.'+@TableName+'
-GROUP BY $PARTITION.Fun_'+@TableName+'_'+@ColumnName+'('+@ColumnName+')
-ORDER BY $PARTITION.Fun_'+@TableName+'_'+@ColumnName+'('+@ColumnName+');'
-PRINT @sql + CHAR(13)
+CREATE TABLE DocumentStoreWithColumnSet
+(DocID int PRIMARY KEY,
+Title varchar(200) NOT NULL,
+ProductionSpecification varchar(20) SPARSE NULL,
+ProductionLocation smallint SPARSE NULL,
+MarketingSurveyGroup varchar(20) SPARSE NULL,
+MarketingProgramID int SPARSE NULL,
+SpecialPurposeColumns XML COLUMN_SET FOR ALL_SPARSE_COLUMNS);
+GO
  
 /*
-生成的脚本如下：
---1.创建文件组
-ALTER DATABASE [MyDataBase]
-ADD FILEGROUP [FG_User_Id_01]
+B. 使用稀疏列的名称向表中插入数据
+下面的示例向示例 A 中创建的表插入两行。这些示例使用稀疏列的名称，而不引用列集。
+
+ 复制代码 
+ */
+
+INSERT DocumentStoreWithColumnSet (DocID, Title, ProductionSpecification, ProductionLocation)
+VALUES (1, 'Tire Spec 1', 'AXZZ217', 27)
+GO
+
+INSERT DocumentStoreWithColumnSet (DocID, Title, MarketingSurveyGroup)
+VALUES (2, 'Survey 2142', 'Men 25 - 35')
+GO
  
-ALTER DATABASE [MyDataBase]
-ADD FILEGROUP [FG_User_Id_02]
+/*
+C. 使用列集的名称向表中插入数据
+下面的示例向示例 A 中创建的表插入第三行。这一次不使用稀疏列的名称，而是使用列集的名称，插入操作以 XML 格式为四个稀疏列中的两列提供值。
+
+ 复制代码 
+ */
+INSERT DocumentStoreWithColumnSet (DocID, Title, SpecialPurposeColumns)
+VALUES (3, 'Tire Spec 2', '<ProductionSpecification>AXW9R411</ProductionSpecification><ProductionLocation>38</ProductionLocation>')
+GO
  
-ALTER DATABASE [MyDataBase]
-ADD FILEGROUP [FG_User_Id_03]
+/*
+D. 观察使用 SELECT * 时的列集结果
+下面的示例从包含列集的表中选择所有列。它返回具有稀疏列的组合值的 XML 列，而不是单独返回每个稀疏列。
+
+ 复制代码 
+ */
+SELECT * FROM DocumentStoreWithColumnSet ;
  
-ALTER DATABASE [MyDataBase]
-ADD FILEGROUP [FG_User_Id_04]
- 
- 
---2.创建文件
-ALTER DATABASE [MyDataBase]
-ADD FILE
-(NAME = N'FG_User_Id_01_data',FILENAME = N'E:\DataBase\FG_User_Id_01_data.ndf',SIZE = 30MB, FILEGROWTH = 10% )
-TO FILEGROUP [FG_User_Id_01];
- 
-ALTER DATABASE [MyDataBase]
-ADD FILE
-(NAME = N'FG_User_Id_02_data',FILENAME = N'E:\DataBase\FG_User_Id_02_data.ndf',SIZE = 30MB, FILEGROWTH = 10% )
-TO FILEGROUP [FG_User_Id_02];
- 
-ALTER DATABASE [MyDataBase]
-ADD FILE
-(NAME = N'FG_User_Id_03_data',FILENAME = N'E:\DataBase\FG_User_Id_03_data.ndf',SIZE = 30MB, FILEGROWTH = 10% )
-TO FILEGROUP [FG_User_Id_03];
- 
-ALTER DATABASE [MyDataBase]
-ADD FILE
-(NAME = N'FG_User_Id_04_data',FILENAME = N'E:\DataBase\FG_User_Id_04_data.ndf',SIZE = 30MB, FILEGROWTH = 10% )
-TO FILEGROUP [FG_User_Id_04];
- 
- 
---3.创建分区函数
-CREATE PARTITION FUNCTION
-Fun_User_Id(INT) AS
-RANGE RIGHT
-FOR VALUES(10000000,20000000,30000000)
- 
- 
---4.创建分区方案
-CREATE PARTITION SCHEME
-Sch_User_Id AS
-PARTITION Fun_User_Id
-TO([FG_User_Id_01],[FG_User_Id_02],[FG_User_Id_03],[FG_User_Id_04])
- 
- 
---5.分区函数的记录数
-SELECT $PARTITION.Fun_User_Id(Id) AS Partition_num,
- MIN(Id) AS Min_value,MAX(Id) AS Max_value,COUNT(1) AS Record_num
-FROM dbo.User
-GROUP BY $PARTITION.Fun_User_Id(Id)
-ORDER BY $PARTITION.Fun_User_Id(Id);
+/*
+下面是结果集： 
+
+DocID Title        SpecialPurposeColumns
+
+1      Tire Spec 1  <ProductionSpecification>AXZZ217</ProductionSpecification><ProductionLocation>27</ProductionLocation>
+
+2      Survey 2142  <MarketingSurveyGroup>Men 25 - 35</MarketingSurveyGroup>
+
+3      Tire Spec 2  <ProductionSpecification>AXW9R411</ProductionSpecification><ProductionLocation>38</ProductionLocation>
+
+E. 观察按名称选择列集的结果
+因为生产部门对市场数据不感兴趣，所以本示例添加 WHERE 子句以限制输出。本示例使用列集的名称。
+
+ 复制代码 
 */
-#T=分区情况查询
-WITH
-TBINFO AS(
-	SELECT
-		SchemaName = S.name,
-		TableName = TB.name,
-		PartitionScheme = PS.name,
-		PartitionFunction = PF.name,
-		PartitionFunctionRangeType = CASE
-				WHEN boundary_value_on_right = 0 THEN 'LEFT'
-				ELSE 'RIGHT' END,
-		PartitionFunctionFanout = PF.fanout,
-		SchemaID = S.schema_id,
-		ObjectID = TB.object_id,
-		PartitionSchemeID = PS.data_space_id,
-		PartitionFunctionID = PS.function_id
-	FROM sys.schemas S
-		INNER JOIN sys.tables TB
-			ON S.schema_id = TB.schema_id
-		INNER JOIN sys.indexes IDX
-			on TB.object_id = IDX.object_id
-				AND IDX.index_id < 2
-		INNER JOIN sys.partition_schemes PS
-			ON PS.data_space_id = IDX.data_space_id
-		INNER JOIN sys.partition_functions PF
-			ON PS.function_id = PF.function_id
-),
-PF1 AS(
-	SELECT 
-		PFP.function_id, PFR.boundary_id, PFR.value,
-		Type = CONVERT(sysname, 
-			CASE T.name
-				WHEN 'numeric' THEN 'decimal'
-				WHEN 'real' THEN 'float'
-				ELSE T.name END
-			+ CASE 
-				WHEN T.name IN('decimal', 'numeric')
-					THEN QUOTENAME(RTRIM(PFP.precision) 
-						+ CASE WHEN PFP.scale > 0 THEN ',' + RTRIM(PFP.scale) ELSE '' END, '()')
-				WHEN T.name IN('float', 'real')
-					THEN QUOTENAME(PFP.precision, '()')
-				WHEN T.name LIKE 'n%char'
-					THEN QUOTENAME(PFP.max_length / 2, '()')
-				WHEN T.name LIKE '%char' OR T.name LIKE '%binary'
-					THEN QUOTENAME(PFP.max_length, '()')
-				ELSE '' END)
-	FROM sys.partition_parameters PFP
-		LEFT JOIN sys.partition_range_values PFR
-			ON PFR.function_id = PFP.function_id
-				AND PFR.parameter_id = PFP.parameter_id
-		INNER JOIN sys.types T
-			ON PFP.system_type_id = T.system_type_id
-),
-PF2 AS(
-	SELECT * FROM PF1
-	UNION ALL
-	SELECT
-		function_id, boundary_id = boundary_id - 1, value, type
-	FROM PF1
-	WHERE boundary_id = 1
-),
-PF AS(
-	SELECT 
-		B.function_id, boundary_id = ISNULL(B.boundary_id + 1, 1),
-		value = STUFF(
-			CASE
-				WHEN A.boundary_id IS NULL THEN ''
-				ELSE ' AND [partition_column_name] ' + PF.LessThan + ' ' + CONVERT(varchar(max), A.value) END
-			+ CASE
-				WHEN A.boundary_id = 1 THEN ''
-				ELSE ' AND [partition_column_name] ' + PF.MoreThan + ' ' + CONVERT(varchar(max), B.value) END,
-			1, 5, ''),
-		B.Type
-	FROM PF1 A		
-		RIGHT JOIN PF2 B
-			ON A.function_id = B.function_id
-				AND (A.boundary_id - 1 = B.boundary_id
-					OR(A.boundary_id IS NULL AND B.boundary_id IS NULL))
-		INNER JOIN(
-			SELECT
-				function_id,
-				LessThan = CASE 
-						WHEN boundary_value_on_right = 0 THEN '<='
-						ELSE '<' END,
-				MoreThan = CASE
-						WHEN boundary_value_on_right = 0 THEN '>'
-						ELSE '>=' END
-			FROM sys.partition_functions 
-		)PF
-			ON B.function_id = PF.function_id
-),
-PS AS(
-	SELECT 
-		DDS.partition_scheme_id, DDS.destination_id,
-		FileGroupName = FG.name, IsReadOnly = FG.is_read_only
-	FROM sys.destination_data_spaces DDS
-		INNER JOIN sys.filegroups FG
-			ON DDS.data_space_id = FG.data_space_id
-),
-PINFO AS(
-	SELECT
-		RowID = ROW_NUMBER() OVER(ORDER BY SchemaID, ObjectID, PS.destination_id),
-		TB.SchemaName, TB.TableName,
-		TB.PartitionScheme, PS.destination_id, PS.FileGroupName, PS.IsReadOnly,
-		TB.PartitionFunction, TB.PartitionFunctionRangeType, TB.PartitionFunctionFanout,
-		PF.boundary_id, PF.Type, PF.value
-	FROM TBINFO TB
-		INNER JOIN PS
-			ON TB.PartitionSchemeID = PS.partition_scheme_id
-		LEFT JOIN PF
-			ON TB.PartitionFunctionID = PF.function_id
-				AND PS.destination_id = PF.boundary_id
-)
-SELECT 
-	RowID,
-	SchemaName = CASE destination_id 
-			WHEN 1 THEN SchemaName
-			ELSE N'' END,
-	TableName = CASE destination_id 
-			WHEN 1 THEN TableName
-			ELSE N'' END,
-	PartitionScheme = CASE destination_id 
-			WHEN 1 THEN PartitionScheme
-			ELSE N'' END,
-	destination_id, FileGroupName, IsReadOnly,
-	PartitionFunction = CASE destination_id 
-			WHEN 1 THEN PartitionFunction
-			ELSE N'' END,
-	PartitionFunctionRangeType = CASE destination_id 
-			WHEN 1 THEN PartitionFunctionRangeType
-			ELSE N'' END,
-	PartitionFunctionFanout = CASE destination_id 
-			WHEN 1 THEN CONVERT(varchar(20), PartitionFunctionFanout)
-			ELSE N'' END,
-	boundary_id = ISNULL(CONVERT(varchar(20), boundary_id), ''),
-	Type = ISNULL(Type, N''),
-	value = CASE PartitionFunctionFanout 
-			WHEN 1 THEN '<ALL Data>'
-			ELSE ISNULL(value, N'<NEXT USED>') END
-FROM PINFO
-ORDER BY RowID
-#T=分区数据情况查询
-SELECT
-	$partition.UPF_Monthly(sendtime) AS [Partition Number]
-	, min(SendTime) AS [Min SendTime]
-	, max(SendTime) AS [Max SendTime]
-	, count(*) AS [Rows In Partition]
-FROM ehomesmscontent with(nolock)
-GROUP BY $partition.UPF_Monthly(SendTime)
-ORDER BY [Partition Number]
-#T=隔离级别 事务
--- SQL Server事务隔离级别实例
-
-CREATE TABLE
-		BankAccount
-(
-	BankAccountId		CHAR(16) NOT NULL,			-- 银行账号
-	UserName			NVARCHAR(32) NOT NULL,		-- 用户
-	Balance				DECIMAL(19, 2) NOT NULL,	-- 余额
-	LastUpdate			SMALLDATETIME NOT NULL
-)
-GO
-
-INSERT INTO
-	BankAccount
-VALUES
-	(
-		'9555500100071120',
-		N'张三',
-		10000.00,
-		GETDATE()
-	) -- 北京分行账号
-INSERT INTO
-	BankAccount
-VALUES
-	(
-		'9555507551227787',
-		N'张三',
-		20000.00,
-		GETDATE()
-	) -- 深圳分行账号
-GO
-
---二、应用场景
---假设张三在招商银行开设了两个账号，一个是招商银行北京分行，一个是招商银行深圳分行，两个账号的余额分别是10,000和20,000。
---1. 张三在网上做了一笔交易，交易额100，买方小王通过银行汇款100到张三的北京分行的账号（见下面左图），柜台操作人员向张三账号存入100（事务一），然后系统些操作日志（假设需要10秒，WAITFOR DELAY '00:00:10'）正在此时张三在ATM查了一下账号上余额（事务二），发现已经是10100，于是回去准备发货，但是事务一在写操作日志时超时，这是事务回滚，存款交易被取消，钱退给了小王，这样张三查到的账号余额事实上是事务一还没有提交的数据，导致张三错误的认为已经收到交易款项。
-
-BEGIN TRAN
-	UPDATE
-		BankAccount
-	SET
-		Balance = Balance + 100
-	WHERE
-		BankAccountId = '9555500100071120'
-
-	SELECT
-		Balance
-	FROM
-		BankAccount
-	WHERE
-		BankAccountId = '9555500100071120'
-
-WAITFOR DELAY '00:00:10'
-
-ROLLBACK
-
-SELECT
-	Balance
-FROM
-	BankAccount
-WHERE
-	BankAccountId = '9555500100071120'
-
----- ATM:
-BEGIN TRAN
-	SET TRAN ISOLATION LEVEL READ UNCOMMITTED
-	SELECT
-		Balance
-	FROM
-		BankAccount
-	WHERE
-		BankAccountId = '9555500100071120'
-COMMIT
-
---一个事务读到另外一个事务还没有提交的数据，我们称之为脏读。
---解决方法：把事务隔离级别调整到READ COMMITTED，即把右上图中的SET TRAN ISOLATION LEVEL READ UNCOMMITTED更改成下图中的SET TRAN ISOLATION LEVEL READ COMMITTED。
---这时我们重复上面的动作会发现事务二会一直等到事务一执行完毕再返回结果，因为此时事务以已经把自己的更改ROLLBACK了，所以事务二可以返回正确的结果。
-
-BEGIN TRAN
-	SET TRAN ISOLATION LEVEL READ COMMITTED
-	SELECT
-		Balance
-	FROM
-		BankAccount
-	WHERE
-		BankAccountId = '9555500100071120'
-COMMIT
-
---2. 张三先后两次查询某一账号的余额，在两次查询期间，小王完成了银行转账，导致两次的查询结果不同。
-
--- zhang 3
-BEGIN TRAN
-
-SELECT
-	Balance
-FROM
-	BankAccount
-WHERE
-	BankAccountId = '9555500100071120'
-
-WAITFOR DELAY '00:00:05'
-
-SELECT ba.Balance FROM BankAccount ba WHERE ba.BankAccountId = '9555500100071120'
-
-COMMIT
-
--- little wang
-BEGIN TRAN
-
-UPDATE
-	BankAccount
-SET
-	Balance = Balance + 100
-WHERE
-	BankAccountId = '9555500100071120'
-
-COMMIT
-
-SELECT
-	Balance
-FROM
-	BankAccount
-WHERE
-	BankAccountId = '9555500100071120'
-
---一个事务先后读取同一条记录，但两次读取的数据不同，我们称之为不可重复读。
---解决方法：把事务隔离级别调整到REPEATABLE READ。在下图中使用SET TRAN ISOLATION LEVEL REPEATABLE READ。这时我们重复上面的动作会发现事务二会一直等到事务一执行完毕再返回结果。
-
-BEGIN TRAN
-
-SET TRAN ISOLATION LEVEL REPEATABLE READ
-
-SELECT
-	Balance
-FROM
-	BankAccount
-WHERE
-	BankAccountId = '9555500100071120'
-
-WAITFOR DELAY '00:00:05'
-
-SELECT
-	Balance
-FROM
-	BankAccount
-WHERE
-	BankAccountId = '9555500100071120'
-
-COMMIT
-
---3. 张三妻子先后两次查询张三招商银行所有账号的总余额，而在此期间张三在广州招商银行分行成功开设了一个账号，并存入5000，导致张三妻子两次查询的总余额不同，在此期间张三原有两个账号的余额均未发生改变。
-
--- zhang 3
-BEGIN TRAN
-
-INSERT INTO BankAccount
-(
-	BankAccountId,
-	UserName,
-	Balance,
-	LastUpdate
-)
-VALUES
-(
-	'9555500200051000',
-	N'张三',
-	5000.00,
-	GETDATE()
-)
-
-SELECT
-	Balance
-FROM
-	BankAccount
-WHERE
-	BankAccountId = '9555500200051000'
-
-COMMIT
-
--- zhang 3's wife
-BEGIN TRAN
-
-SET TRAN ISOLATION LEVEL REPEATABLE READ
-
-SELECT
-	SUM(Balance) AS Balance
-FROM
-	BankAccount
-WHERE
-	UserName = N'张三'
-
-WAITFOR DELAY '00:00:05'
-
-SELECT
-	SUM(Balance) AS Balance
-FROM
-	BankAccount
-WHERE
-	UserName = N'张三'
-
-COMMIT
-
---一个事务先后读取一个范围的记录，但两次读取的纪录数不同，我们称之为幻象读。
---解决方法：把事务隔离级别调整到SERIALIZABLE。在下图中使用SET TRAN ISOLATION LEVEL SERIALIZABLE。这时我们重复上面的动作会发现事务二会一直等到事务一执行完毕再返回结果。
-
-BEGIN TRAN
-
-SET TRAN ISOLATION LEVEL SERIALIZABLE
-
-SELECT
-	Balance
-FROM
-	BankAccount
-WHERE
-	BankAccountId = '9555500100071120'
-
-WAITFOR DELAY '00:00:05'
-
-SELECT
-	Balance
-FROM
-	BankAccount
-WHERE
-	BankAccountId = '9555500100071120'
-
-COMMIT
-
---三、总结
-
---事务隔离级别是通过数据库的锁机制来控制的，在不同的应用场景需要应用不同的事务隔离级别，
---SQL Server默认的事务隔离级别是READ COMMITTED，默认的隔离级别，已经可以满足我们大部分应用的需求。
-#T=汇总行 grouping rollup pivot
-USE [Funds]
-GO
-/****** Object:  StoredProcedure [dbo].[zsp_Calc]    Script Date: 2013/11/14 12:35:33 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-ALTER procedure [dbo].[zsp_Calc]
-as
-begin
-;with T
-as
-(
-	SELECT
-		 [净值日期]
-		 ,[基金]
-		 , min([万份基金单位收益]) as [万份基金单位收益]
-		 --, max([七日年化收益率]) as [七日年化收益率]
-	FROM 
-		[基金收益]
-	group by
-		[基金]
-		,[净值日期]
-)
-, TT
-as
-(
-select
-	TOP
-		100 percent
-	[净值日期]
-	, [工银7天理财A]
-	, [余额宝]
-	, [招商理财7天A级]
-from
-	T
-PIVOT
-(
-	avg([万份基金单位收益])
-	FOR
-		[基金] IN
-	(
-		[工银7天理财A]
-		,[余额宝]
-		,[招商理财7天A级]
-	)
-) AS pvt
-order by
-	1
-)
-, TTT
-as
-(
-select
-	[基金]
-	, max([万份基金单位收益]) as [万份基金单位最大收益]
-	, min([万份基金单位收益]) as [万份基金单位最小收益]
-	, avg([万份基金单位收益]) as [万份基金单位平均收益]
-	, max([七日年化收益率]) as [七日年化最大收益率]
-	, min([七日年化收益率]) as [七日年化最小收益率]
-	, avg([七日年化收益率]) as [七日年化平均收益率]
-from
-	[基金收益]
-group by
-	[基金]
-)
-select
-	*
-from
-	TT
-
-
-;with T
-as
-(
-	select
-		ROW_NUMBER() over
-			(
-				order by
-					[净值日期]
-					,[基金]
-					,[万份基金单位收益]
-					,[七日年化收益率]
-			) as F1
-		,[净值日期]
-		,[基金]
-		,[万份基金单位收益]
-		,[七日年化收益率]
-	from
-		[基金收益]
-)
-select
-	--F1
-	--,
-	case
-		when
-			GROUPING(F1) = 1
-				then
-					getdate()
-		else
-			max([净值日期])
-	end
-	,case
-		when
-			GROUPING(F1) = 1
-				then
-					'合计'
-		else
-			max([基金])
-	end
-	,sum([万份基金单位收益])
-	,sum([七日年化收益率]) 
-from
-	T
-group by
-	rollup
-		(
-			F1
-		)
-
-end
-
-#T=获取拼音
-CREATE FUNCTION dbo.f_GetPY(
-	@str nvarchar(4000)
-)RETURNS nvarchar(4000)
-AS
-BEGIN
-	DECLARE @py TABLE(
-		ch char(1),
-		hz1 nchar(1)
-			COLLATE Chinese_PRC_CS_AS_KS_WS,
-		hz2 nchar(1)
-			COLLATE Chinese_PRC_CS_AS_KS_WS)
-	INSERT @py SELECT 'A', N'吖', N'鏊'
-	UNION  ALL SELECT 'B', N'八', N'簿'
-	UNION  ALL SELECT 'C', N'嚓', N'错'
-	UNION  ALL SELECT 'D', N'哒', N'跺'
-	UNION  ALL SELECT 'E', N'屙', N'贰'
-	UNION  ALL SELECT 'F', N'发', N'馥'
-	UNION  ALL SELECT 'G', N'旮', N'过'
-	UNION  ALL SELECT 'H', N'铪', N'蠖'
-	UNION  ALL SELECT 'J', N'丌', N'竣'
-	UNION  ALL SELECT 'K', N'咔', N'廓'
-	UNION  ALL SELECT 'L', N'垃', N'雒'
-	UNION  ALL SELECT 'M', N'妈', N'穆'
-	UNION  ALL SELECT 'N', N'拿', N'糯'
-	UNION  ALL SELECT 'O', N'噢', N'沤'
-	UNION  ALL SELECT 'P', N'趴', N'曝'
-	UNION  ALL SELECT 'Q', N'七', N'群'
-	UNION  ALL SELECT 'R', N'蚺', N'箬'
-	UNION  ALL SELECT 'S', N'仨', N'锁'
-	UNION  ALL SELECT 'T', N'他', N'箨'
-	UNION  ALL SELECT 'W', N'哇', N'鋈'
-	UNION  ALL SELECT 'X', N'夕', N'蕈'
-	UNION  ALL SELECT 'Y', N'丫', N'蕴'
-	UNION  ALL SELECT 'Z', N'匝', N'做'
-
-	DECLARE
-		@i int
-	-- 取要查询的字符串中的第一个汉字
-	SET @i = PATINDEX('%[吖-做]%' COLLATE Chinese_PRC_CS_AS_KS_WS, @str)
-	WHILE @i > 0
-		SELECT
-			-- 将找到的第一个汉字用对应的拼音首字母替换
-			@str = REPLACE(@str, SUBSTRING(@str, @i, 1), ch),
-			-- 取下一个要处理的汉字的位置
-			@i=PATINDEX('%[吖-做]%' COLLATE Chinese_PRC_CS_AS_KS_WS,@str)
-		FROM @py
-		WHERE SUBSTRING(@str, @i, 1) BETWEEN hz1 AND hz2
-	RETURN(@str)
-END
-GO
-
-#T=扩展存储过程用户角色 sysprotects
-SELECT
-	c.name as UserLogin,b.name as ObjectName
-FROM sysprotects a
-	left join sysobjects b
-		on a.id = b.id
-	left join sysusers c
-		on a.uid = c.uid
-WHERE
---a.action IN (193, 195, 196, 197, 224, 26)
---and 
-b.xtype in ('x','p')
-order by
-	b.name
-
-#T=利息资金计算.OLD.2012-12-19
-USE [FundManagement]
-GO
-/****** Object:  StoredProcedure [dbo].[usp_CalcDailyLedgerResult_debug1]    Script Date: 2012/12/17 12:23:11 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-alter proc [dbo].[usp_CalcDailyLedgerResult_debug2]
-@today date = null
-as
-begin
-	set xact_abort on
-	begin transaction
-		declare @now datetime = getdate()
-		if @today is null
-		begin
-			set @today = @now
-		end
-		
-		delete
-			[DailyLedgerResultProcessing]
-		--where
-			
-		--select @today
-		-- usp_CalcDailyLedgerResult_debug2 '2012-12-15'
-		
-		declare @AmountType varchar(100)
-		declare @DirectionConsistency bit
-		
-
-		--==================================================================
-		--今日新交易
-		set @AmountType = '当日新交易本金'
-		set @DirectionConsistency = 1
-		select
-			@DirectionConsistency = DirectionConsistency
-		from
-			AmountTypes
-		where
-			AmountType = @AmountType
-
-		--交易本金
-		--按发起行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, BankID
-			, CurrencyType
-			, BankParty
-			, sum(amount)				--本金
-			, count(1)
-			, @AmountType
-			, @DirectionConsistency
-			, 1							--是否发起行
-			, '当日新交易按发起行group by'
-		from
-			Transactions
-		where
-			beginDate = @today			--今日新交易
-			and [status] = 10
-		group by
-			BankID
-			, CurrencyType
-			, BankParty		--本行 借出方、贷入方
-
-		--按对手行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, AgainstBankID
-			, CurrencyType
-			, AgainstParty
-			, sum(amount)				--本金
-			, count(1)
-			, @AmountType
-			, @DirectionConsistency
-			,0							--是否发起行			
-			, '当日新交易按对手行group by'
-		from
-			Transactions
-		where
-			beginDate = @today			--今日新交易
-			and [status] = 10
-		group by
-			AgainstBankID
-			, CurrencyType
-			, AgainstParty		--本行 借出方、贷入方
-		--======================================================================		
-
-
-		--未到期日利息
-		set @AmountType = '未到期日利息'
-		set @DirectionConsistency = 1
-		select
-			@DirectionConsistency = DirectionConsistency
-		from
-			AmountTypes
-		where
-			AmountType = @AmountType
-		
-		--按发起行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, BankID
-			, CurrencyType
-			, BankParty
-			, sum(DayInterest)				--日利息
-			, count(1)
-			, @AmountType
-			, @DirectionConsistency
-			,1							--是否发起行			
-			, '每日未到期交易按发起行group by'
-		from
-			Transactions
-		where
-			beginDate <= @today
-			and endDate > @today
-			and [status] = 10
-		group by
-			BankID
-			, CurrencyType
-			, BankParty		--本行 借出方、贷入方
-
-		--按对手行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, AgainstBankID
-			, CurrencyType
-			, AgainstParty
-			, sum(DayInterest)				--日利息
-			, count(1)
-			, @AmountType
-			, @DirectionConsistency
-			,0							--是否发起行			
-			, '每日未到期交易按对手行group by'
-		from
-			Transactions
-		where
-			beginDate <= @today
-			and endDate > @today
-			and [status] = 10
-		group by
-			AgainstBankID
-			, CurrencyType
-			, AgainstParty		--对手行 借出方、贷入方
-		--======================================================================================
-
-
-		--到期日利息
-		set @AmountType = '到期日利息'
-		set @DirectionConsistency = 1
-		select
-			@DirectionConsistency = DirectionConsistency
-		from
-			AmountTypes
-		where
-			AmountType = @AmountType
-		
-		--按发起行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, BankID
-			, CurrencyType
-			, BankParty
-			, sum(DayInterest)				--日利息
-			, count(1)
-			, @AmountType
-			, @DirectionConsistency
-			,1							--是否发起行			
-			, '每日到期交易日利息按发起行group by'
-		from
-			Transactions
-		where
-			endDate = @today
-			and [status] = 10
-			and BankParty = 'Creditor'
-		group by
-			BankID
-			, CurrencyType
-			, BankParty		--本行 借出方、贷入方
-
-		--按对手行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, AgainstBankID
-			, CurrencyType
-			, AgainstParty
-			, sum(DayInterest)				--日利息
-			, count(1)
-			, @AmountType
-			, @DirectionConsistency
-			,0							--是否发起行
-			, '每日到期交易日利息按对手行group by'
-		from
-			Transactions
-		where
-			endDate = @today
-			and AgainstParty = 'Debtor'
-			and [status] = 10
-		group by
-			AgainstBankID
-			, CurrencyType
-			, AgainstParty		--对手行 借出方、贷入方
-		--======================================================================================
-
-
-
-		--到期日结清本金
-		set @AmountType = '到期日结清本金'
-		set @DirectionConsistency = 1
-		select
-			@DirectionConsistency = DirectionConsistency
-		from
-			AmountTypes
-		where
-			AmountType = @AmountType
-
-		--按发起行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, BankID
-			, CurrencyType
-			, BankParty
-			, sum(Amount)				--本金
-			, count(1)
-			, @AmountType
-			, @DirectionConsistency
-			,1							--是否发起行
-			, '到期交易汇总本金按发起行group by'
-		from
-			Transactions
-		where
-			endDate = @today
-			and BankParty = 'creditor'
-			and [status] = 10
-		group by
-			BankID
-			, CurrencyType
-			, BankParty		--本行 借出方、贷入方
-
-		--按对手行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, AgainstBankID
-			, CurrencyType
-			, AgainstParty
-			, sum(Amount)				--本金
-			, count(1)
-			, @AmountType
-			, @DirectionConsistency
-			,0							--是否发起行
-			, '到期交易汇总本金按对手行group by'
-		from
-			Transactions
-		where
-			endDate = @today
-			and AgainstParty = 'debtor'
-			and [status] = 10
-		group by
-			AgainstBankID
-			, CurrencyType
-			, AgainstParty		--对手行 借出方、贷入方
-		--=====================================================================================
-
-		--到期日汇总本金及结清总利息 连本带息
-		set @AmountType = '到期日汇总本金及结清总利息'
-		set @DirectionConsistency = 1
-		select
-			@DirectionConsistency = DirectionConsistency
-		from
-			AmountTypes
-		where
-			AmountType = @AmountType
-
-		--按发起行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, BankID
-			, CurrencyType
-			, BankParty
-			, sum(SumInterest)+ sum(amount)				--连本带利
-			, count(1)			
-			, @AmountType
-			, @DirectionConsistency
-			,1							--是否发起行
-			, '到期交易结清总利息按发起行group by'
-		from
-			Transactions
-		where
-			endDate = @today
-			and BankParty = 'Debtor'
-			and [status] = 10
-		group by
-			BankID
-			, CurrencyType
-			, BankParty		--本行 借出方、贷入方
-
-		--按对手行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, AgainstBankID
-			, CurrencyType
-			, AgainstParty
-			, sum(SumInterest)+ sum(amount)				--连本带利
-			, count(1)
-			, @AmountType
-			, @DirectionConsistency
-			,0							--是否发起行			
-			, '到期交易结清总利息按对手行group by'
-		from
-			Transactions
-		where
-			endDate = @today
-			and AgainstParty ='Creditor'
-			and [status] = 10
-		group by
-			AgainstBankID
-			, CurrencyType
-			, AgainstParty		--对手行 借出方、贷入方
-
-		--===============================================================
-
-		--to do
-		--冲回昨日
-		set @AmountType = '冲回昨日'
-		set @DirectionConsistency = 1
-
-		declare @yesterday date = dateadd(day, -1, @today)
-
-
-		--按发起行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, BankID
-			, CurrencyType
-			, BankParty
-			, sum(DayInterest)				--日利息
-			, count(1)
-			, @AmountType
-			, @DirectionConsistency
-			,1							--是否发起行			
-			, '冲回昨天按发起行group by'
-		from
-			Transactions
-		where
-			beginDate <= @yesterday
-			and EndDate > @yesterday
-			and [status] = 10
-		group by
-			BankID
-			, CurrencyType
-			, BankParty		--本行 借出方、贷入方
-
-		--按对手行group by
-		insert into [DailyLedgerResultProcessing]
-					(
-						[LedgerDate]			--[date] NOT NULL,
-						,[BankID]				--[varchar](50) NOT NULL,
-						,[CurrencyType]			--[varchar](3) NOT NULL,
-						,[Party]				--[varchar](10) NOT NULL,
-						,[Amount]				--[decimal](18, 4) NULL,
-						,[Counts]
-						,[AmountType]
-						,[DirectionConsistency]
-						,[IsSender]
-						,[Remark]
-					)
-		select
-			@today
-			--min(beginDate)
-			, AgainstBankID
-			, CurrencyType
-			, AgainstParty
-			, sum(DayInterest)				--日利息
-			, count(1)			
-			, @AmountType
-			, @DirectionConsistency
-			,0							--是否发起行			
-			, '冲回昨天按对手行group by'
-		from
-			Transactions
-		where
-			beginDate <= @yesterday
-			and EndDate > @yesterday
-			and [status] = 10
-		group by
-			AgainstBankID
-			, CurrencyType
-			, AgainstParty		--对手行 借出方、贷入方
-
-
-		--=====================================================================
-
-
-		--select * from [DailyLedgerResultProcessing]
-
-
-
-		select
-			a.LedgerDate
-			, a.BankID
-			, b.Accounting
-			, sum
-				(
-					case
-						when
-							(
-								a.Party = 'debtor'
-								and a.DirectionConsistency = 1
-							)
-							or
-							(
-								a.Party = 'creditor'
-								and a.DirectionConsistency = 0
-							)
-							then a.Amount
-						else
-							0
-					end
-				)
-				as [DebtorBalance]
-			, sum
-				(
-					case
-						when
-							(
-								a.Party = 'debtor'
-								and a.DirectionConsistency = 0
-							)
-							or
-							(
-								a.Party = 'creditor'
-								and a.DirectionConsistency = 1
-							)
-							then a.Amount
-						else
-							0
-					end
-				)
-				as [CreditorBalance]
-			--,*
-		from
-			[DailyLedgerResultProcessing] a
-				left join [AccountingRules] b
-					on
-						a.Party = b.Party
-						and a.AmountType = b.AmountType
-						and a.IsSender = b.Direction
-		group by
-			a.LedgerDate
-			, a.BankID
-			, b.Accounting									
-		order by
-			a.LedgerDate
-			,a.BankID
-			,b.Accounting
-	commit transaction
-end
-#T=连接 Connectivity informations 
--- Connectivity informations 
-;WITH con AS 
-   (SELECT SES.host_name AS HostName 
-          ,CON.client_net_address AS ClientAddress 
-          ,SES.login_name AS LoginName 
-          ,SES.program_name AS ProgramName 
-          ,EP.name AS ConnectionTyp 
-          ,CON.net_transport AS NetTransport 
-          ,CON.protocol_type AS ProtocolType 
-          ,CONVERT(VARBINARY(9), CON.protocol_version) AS TDSVersionHex 
-          ,SES.client_interface_name AS ClientInterface 
-          ,CON.encrypt_option AS IsEncryted 
-          ,CON.auth_scheme AS Auth 
-    FROM sys.dm_exec_connections AS CON 
-         LEFT JOIN sys.endpoints AS EP 
-             ON CON.endpoint_id = EP.endpoint_id 
-         INNER JOIN sys.dm_exec_sessions as SES 
-             ON CON.session_id = SES.session_id) 
--- Detailed list 
-SELECT * 
-FROM con 
--- Optional filter 
---WHERE con.ClientInterface = 'ODBC' 
-ORDER by con.TDSVersionHex,con.HostName 
-        ,con.LoginName 
-        ,con.ProgramName; 
+SELECT DocID, Title, SpecialPurposeColumns
+FROM DocumentStoreWithColumnSet
+WHERE ProductionSpecification IS NOT NULL ;
  
-/* 
--- Count of different connectivity parameters 
-SELECT COUNT(*) AS [Connections #] 
-      ,COUNT(DISTINCT con.HostName) AS [Hosts #] 
-      ,COUNT(DISTINCT con.LoginName) AS [Logins #] 
-      ,COUNT(DISTINCT con.ProgramName) AS [Programs #] 
-      ,COUNT(DISTINCT con.NetTransport) AS [NetTransport #] 
-      ,COUNT(DISTINCT con.TDSVersionHex) AS [TdsVersions #] 
-      ,COUNT(DISTINCT con.ClientInterface) AS [ClientInterfaces #] 
-FROM con; 
+/*
+下面是结果集： 
+
+DocID Title        SpecialPurposeColumns
+
+1     Tire Spec 1  <ProductionSpecification>AXZZ217</ProductionSpecification><ProductionLocation>27</ProductionLocation>
+
+3     Tire Spec 2  <ProductionSpecification>AXW9R411</ProductionSpecification><ProductionLocation>38</ProductionLocation>
+
+F. 观察按名称选择稀疏列的结果
+当表包含列集时，您仍然可以使用各列名称来查询表，如下例所示。
+
+ 复制代码 
+ */
+SELECT DocID, Title, ProductionSpecification, ProductionLocation 
+FROM DocumentStoreWithColumnSet
+WHERE ProductionSpecification IS NOT NULL ;
+ 
+
+/*
+下面是结果集： 
+
+DocID Title        ProductionSpecification ProductionLocation
+
+1     Tire Spec 1  AXZZ217                 27
+
+3     Tire Spec 2  AXW9R411                38
+
+G. 使用列集来更新表
+下面的示例用第三个记录所在行使用的两个稀疏列的新值来更新该记录。
+
+ 复制代码 
 */
-#T=年日历 简单
-declare @ date = getdate()
-;with
-TMonths
-as
-(
-select 0 as M
-union all select 1 union all select 2 union all select 3
-union all select 4 union all select 5 union all select 6
-union all select 7 union all select 8 union all select 9
-union all select 10 union all select 11
-)
-, TDays
-as
-(
-select 0 as D
-union all select 1 union all select 2 union all select 3 union all select 4 union all select 5
-union all select 6 union all select 7 union all select 8 union all select 9 union all select 10
-union all select 11 union all select 12 union all select 13 union all select 14
-union all select 15 union all select 16 union all select 17 union all select 18
-union all select 19 union all select 20 union all select 21 union all select 22
-union all select 23 union all select 24 union all select 25 union all select 26
-union all select 27 union all select 28 union all select 29 union all select 30
-) 
-, TDates
-as
-(
-	select
-		cast
-			(
-				dateadd(year,datediff(YEAR,0,@),0) 
-				+ ROW_NUMBER() over(order by a.M) as date
-			)
-		 as [theDate]
-	from
-		TMonths a
-		, Tdays b
-	
-)
-, TYearDates
-as
-(
-	select
-		*
-		,(@@Datefirst + datepart(weekday,theDate)) % 7 
-       + case when (@@Datefirst + datepart(weekday,theDate)) % 7 < 2 
-                   then 6 
-              else 
-                   -1 
-         end as WeekDayID
-	from
-		TDates
-	where
-		datediff(YEAR,@,theDate) = 0
-)
-SELECT 
-	*
-FROM
-	TYearDates
+UPDATE DocumentStoreWithColumnSet
+SET SpecialPurposeColumns = '<ProductionSpecification>ZZ285W</ProductionSpecification><ProductionLocation>38</ProductionLocation>'
+WHERE DocID = 3 ;
+GO
 
-#T=排序规则 collation
-select
-	ServerName = CONVERT(sysname, SERVERPROPERTY('ServerName')),
-	DatabaseID = DB_ID(),
-	DatabaseName = DB_NAME(),
-	DATABASEPROPERTYEX(DB_NAME(),'collation') as database_collation_name,
-	ss.name as schema_name,
-	so.name as table_name,
-	sc.name as column_name,
-	st.system_type_id,
-	st.name as type_name,
-	sc.collation_name
-from
-	sys.objects so
-		inner join
-			sys.columns sc
-				on so.object_id = sc.object_id
-		inner join
-			sys.types st
-				on sc.system_type_id = st.system_type_id
-		inner join
-			sys.schemas ss
-				on ss.schema_id = so.schema_id
-where
-	so.type = 'U'
-	and 
-	sc.collation_name is not null
-	--and
-	--st.system_type_id in
-	--					(
-	--						35 /* text */
-	--						, 99 /* ntext */
-	--						, 167 /* varchar */
-	--						, 175 /* char */
-	--						, 231 /* nvarchar, sysname */
-	--						, 239 /* nchar */
-	--					)
-order by
-	table_name,
-	sc.column_id
-
-#T=生日查询
---测试数据
---http://topic.csdn.net/t/20040908/12/3351763.html
-
-declare @BeginDate date = '2013-12-30' --getdate()
-declare @ int = 70
-declare @EndDate date = dateadd(day, @, @BeginDate)
-declare @TodayDate date = getdate()
-
-select
-	@BeginDate
-	,@EndDate
-
-;with persons
-as
-(
-	SELECT 1 as ID,'aa' as [Name],cast('1999-01-01' as date) as Birthday 
-	UNION ALL
-	SELECT 2,'bb','1996-02-29'
-	UNION ALL
-	SELECT 3,'bb','1934-03-01'
-	UNION ALL
-	SELECT 4,'bb','1966-04-01'
-	UNION ALL
-	SELECT 5,'bb','1997-05-01'
-	UNION ALL
-	SELECT 6,'bb','1922-11-21'
-	UNION ALL
-	SELECT 7,'bb','1989-12-11'
-)
-,T
-as
-(
-	select
-		*
-		,
-		datediff(year, birthday, @BeginDate)
-		+
-		case
-			when
-				datediff(year, birthday, @BeginDate)
-				!= datediff(year, birthday, @EndDate)
-					then
-						1
-			else
-				0
-		end as years
-					
-	from
-		persons
-)
-, TT
-as
-(
-	select
-		*
-		, dateadd(year, years, birthday) as RecentBirthday
-	from
-		T
-
-)
-,TTT
-as
-(
-	select
-		*
-		,
-		datediff(year,birthday,RecentBirthday)
-		-
-		case
-			when
-				datediff(day,dateadd(year,datediff(year,birthday,@TodayDate),birthday),@TodayDate) >= 0
-					then
-					0
-			else
-					1
-		end as TodayAge
-	from
-		TT
-
-)
-select
-	*
-from
-	TTT
-where
-	datediff(year, Birthday, @BeginDate)
-	+
-	case
-		when
-			dateadd(year, datediff(year, Birthday, @BeginDate), Birthday) < @BeginDate
-				then
-					1
-		else
-					0
-	end
-	<
-	datediff(year, Birthday, @EndDate)
-	+
-	case
-		when
-			dateadd(year, datediff(year, Birthday, @EndDate), Birthday) <= @EndDate
-				then
-					1
-		else
-					0
-	end
-
-
-
-DECLARE @t TABLE
-(
-	ID int,
-	Name varchar(10),
-	Birthday datetime
-)
-INSERT @t
-SELECT 1,'aa','1999-01-01'
-UNION ALL
-SELECT 2,'bb','1996-02-29'
-UNION ALL
-SELECT 3,'bb','1934-03-01'
-UNION ALL
-SELECT 4,'bb','1966-04-01'
-UNION ALL
-SELECT 5,'bb','1997-05-01'
-UNION ALL
-SELECT 6,'bb','1922-11-21'
-UNION ALL
-SELECT 7,'bb','1989-12-11'
-
---查询 2003-12-05 至 2004-02-28 生日的记录
-DECLARE 
-	@b datetime,
-	@e datetime
-SELECT
-	@b = '2003-11-21',
-	@e = '2004-02-28'--,
-	--@e = '2006-02-28'
-
-select
-	*
-from
-	@T
-where
-	datediff(year, Birthday, @b)
-	+ case when dateadd(year, datediff(year, Birthday, @b), Birthday) < @b
-				then 1
-				else 0
-		end
-	<
-	datediff(year, Birthday, @e)
-	+ case when dateadd(year, datediff(year, Birthday, @e), Birthday) <= @e
-				then 1
-				else 0
-		end
-
-#T=数据库的磁盘使用情况 SQL 2008 R2 报表
-
-declare @dbsize bigint 
-declare @logsize bigint 
-declare @database_size_mb float  
-declare @unallocated_space_mb float  
-declare @reserved_mb float  
-declare @data_mb float  
-declare @log_size_mb float
-declare @index_mb float  
-declare @unused_mb float  
-declare @reservedpages bigint 
-declare @pages bigint 
-declare @usedpages bigint
-
-select @dbsize = sum(convert(bigint,case when status & 64 = 0 then size else 0 end)) 
-        ,@logsize = sum(convert(bigint,case when status & 64 != 0 then size else 0 end)) 
-from dbo.sysfiles 
-
-select @reservedpages = sum(a.total_pages) 
-        ,@usedpages = sum(a.used_pages) 
-        ,@pages = sum(CASE 
-                        WHEN it.internal_type IN (202,204) THEN 0 
-                        WHEN a.type != 1 THEN a.used_pages 
-                        WHEN p.index_id < 2 THEN a.data_pages 
-                        ELSE 0 
-                     END) 
-from sys.partitions p  
-join sys.allocation_units a on p.partition_id = a.container_id 
-left join sys.internal_tables it on p.object_id = it.object_id 
+/*
+重要提示： 
+使用列集的 UPDATE 语句更新表中的所有稀疏列。未引用的稀疏列将更新为 NULL。
  
-select @database_size_mb = (convert(dec (15,2),@dbsize) + convert(dec(15,2),@logsize)) * 8192 / 1048576.0 
-select @unallocated_space_mb =(case 
-                                when @dbsize >= @reservedpages then (convert (dec (15,2),@dbsize) - convert (dec (15,2),@reservedpages)) * 8192 / 1048576.0  
-                                else 0  
-                              end)
-                               
-select  @reserved_mb = @reservedpages * 8192 / 1048576.0 
-select  @data_mb = @pages * 8192 / 1048576.0 
-select  @log_size_mb = convert(dec(15,2),@logsize) * 8192 / 1048576.0
-select  @index_mb = (@usedpages - @pages) * 8192 / 1048576.0 
-select  @unused_mb = (@reservedpages - @usedpages) * 8192 / 1048576.0
-
-select 
-        @database_size_mb as 'database_size_mb'
-,       @reserved_mb as 'reserved_mb'
-,       @unallocated_space_mb as 'unallocated_space_mb'
-,       (@reserved_mb + @unallocated_space_mb) as 'data_size'
-,       @log_size_mb as 'transaction_log_size'
-,       cast(@unallocated_space_mb*100.0/(@reserved_mb + @unallocated_space_mb) as decimal(10,2))as  'unallocated'
-,       cast(@reserved_mb*100/(@reserved_mb + @unallocated_space_mb) as decimal(10,2))as 'reserved'
-,       cast(@data_mb*100/(@reserved_mb + @unallocated_space_mb) as decimal(10,2))as 'data'
-,       cast(@index_mb*100/(@reserved_mb + @unallocated_space_mb) as decimal(10,2)) as 'index_1'
-,       cast(@unused_mb*100/(@reserved_mb + @unallocated_space_mb) as decimal(10,2))as 'unused';
 
 
-#T=双not exists 至少存在
-USE [Test]
-GO
-/****** Object:  Table [dbo].[Table_1]    Script Date: 2015/4/17 15:50:19 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_PADDING ON
-GO
-CREATE TABLE [dbo].[Table_1](
-	[GroupID] [varchar](50) NOT NULL,
-	[RootID] [varchar](50) NOT NULL,
-	[ID] [varchar](500) NOT NULL,
- CONSTRAINT [PK_Table_1] PRIMARY KEY CLUSTERED 
-(
-	[GroupID] ASC,
-	[RootID] ASC,
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+下面的示例更新第三个记录，但仅仅指定两个已填充列的其中一列的值。在 UPDATE 语句中未包括第二列 ProductionLocation，所以该列更新为 NULL。
 
+ 复制代码 
+ */
+UPDATE DocumentStoreWithColumnSet
+SET SpecialPurposeColumns = '<ProductionSpecification>ZZ285W</ProductionSpecification>'
+WHERE DocID = 3 ;
 GO
-SET ANSI_PADDING OFF
-GO
-/****** Object:  Table [dbo].[Table_2]    Script Date: 2015/4/17 15:50:19 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-SET ANSI_PADDING ON
-GO
-CREATE TABLE [dbo].[Table_2](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[TableName] [varchar](50) NOT NULL,
-	[ColumnName] [varchar](50) NOT NULL,
-	[ColumnValue] [nchar](10) NULL,
- CONSTRAINT [PK_Table_2] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-
-GO
-SET ANSI_PADDING OFF
-GO
-INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R001', N'R001-A-A001')
-GO
-INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R001', N'R001-A-A002')
-GO
-INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R002', N'R002-A-A002')
-GO
-INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R002', N'R002-A-A003')
-GO
-INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R002', N'R002-A-A004')
-GO
-INSERT [dbo].[Table_1] ([GroupID], [RootID], [ID]) VALUES (N'G001', N'R003', N'R003-A-A003')
-GO
-SET IDENTITY_INSERT [dbo].[Table_2] ON 
-
-GO
-INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (1, N'Person', N'Name', N'Tom       ')
-GO
-INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (2, N'Person', N'Age', N'11        ')
-GO
-INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (3, N'Person', N'Gender', N'F         ')
-GO
-INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (4, N'Person', N'Name', N'Mike      ')
-GO
-INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (5, N'Person', N'Age', N'12        ')
-GO
-INSERT [dbo].[Table_2] ([ID], [TableName], [ColumnName], [ColumnValue]) VALUES (6, N'Person', N'Gender', N'M         ')
-GO
-SET IDENTITY_INSERT [dbo].[Table_2] OFF
-GO
-/****** Object:  StoredProcedure [dbo].[zDoubleNotExistsTest]    Script Date: 2015/4/17 15:50:19 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE proc [dbo].[zDoubleNotExistsTest]
-as
-begin
---双 not exists , 不存在 不存在 , 至少 
-;with T
-as
-(
-	select
-		'R001' as RootID,'R001-A-A002' as ID
-	union all
-	select
-		'R002' as RootID,'R002-A-A005' as ID
-	union all
-	select
-		'R002' as RootID,'R002-A-A008' as ID
-	union all
-	select
-		'R003' as RootID,'R003-A-A003' as ID
-)
-, TResult
-as
-(
-	select
-		*
-	from
-		Table_1 a with(nolock)
-	where
-		not exists
-			(
-				select
-					1
-				from
-					T aa
-				where
-					not exists
-						(
-							select
-								1
-							from
-								Table_1 aaa with(nolock)
-							where
-								aaa.GroupID = a.GroupID
-								and aaa.RootID = aa.RootID
-								--每个 GroupRoot 至少存在一个
-								and
-									(
-										exists
-											(
-												select
-													1
-												from
-													T aaaa
-												where
-													aaaa.RootID = aaa.RootID
-													--重要条件
-													and
-													aaaa.ID = aaa.ID
-											)
-									)
-						)
-			)
-)
-, TGroupsRoots		--debug
-as
-(
-	select
-		*
-	from
-		Table_1 a with(nolock)
-	where
-		not exists
-			(
-				select
-					1
-				from
-					T aa
-				where
-					not exists
-						(
-							select
-								1
-							from
-								Table_1 aaa with(nolock)
-							where
-								(
-									aaa.GroupID = a.GroupID
-								)
-								and
-								(
-									aaa.RootID = aa.RootID
-								)
-						)
-			)
-)
-, TGroupsRootsIDs		--debug
-as
-(
-	select
-		*
-	from
-		TGroupsRoots a
-	where
-		not exists
-			(
-				select
-					1
-				from
-					T aa
-				where
-					not exists
-						(
-							select
-								1
-							from
-								TGroupsRoots aaa
-							where
-								aaa.GroupID = a.GroupID
-									
-								--重要条件
-								and
-								aaa.RootID = aa.RootID
-
-								--重要条件
-								and
-								(
-									exists
-										(
-											select
-												1
-											from
-												T aaaa
-											where
-												aaaa.RootID = aaa.RootID
-												and
-												aaaa.ID = aaa.ID
-										)
-								)
-						)
-			)
-)
-, T4
-as
-(
-	select
-		distinct
-			a.GroupID
-	from
-		--TGroupsRootsIDs a
-		TResult a
-)
-, T5		--debug
-as
-(
-	select
-		*
-	from
-		TGroupsRootsIDs a
-	where
-		exists
-			(
-				select
-					1
-				from
-					T aa
-				where
-					aa.RootID = a.RootID
-					and
-					aa.ID = aa.ID
-			)
-)
-, T6	--debug
-as
-(
-	select
-		a.GroupID
-		, a.ID
-		, b.ID as ID2
-		, a.RootID
-		, b.RootID as RootID2
-	from
-		T5 a
-			full join
-				T b
-			on
-				a.RootID = b.RootID
-				and
-				a.ID = b.ID
-)
-select
-	*
-from
-	--TGroupsRootsIDs
-	TResult
-	--T5
-	--T4
-			a
-order by
-	a.GroupID
-	--, a.RootID
-
-
-end
-
-
-GO
+ 
 
 #T=索引 Alter index rebuild/reorganize
 /****** Object:  StoredProcedure [dbo].[zsp_IndexesReorganizeRebuildSQL]    Script Date: 07/15/2011 10:35:21 ******/
@@ -14195,366 +14343,417 @@ DEALLOCATE partitions;
 -- Drop the temporary table.
 DROP TABLE #work_to_do;
 GO
-#T=提取数字、字符串
-/****** Object:  UserDefinedFunction [dbo].[F_Get_No]    Script Date: 10/18/2013 22:03:13 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-create function [dbo].[F_Get_No]
-(
-	@No varchar(100)
-)
-RETURNS bigint
+#T=获取拼音
+CREATE FUNCTION dbo.f_GetPY(
+	@str nvarchar(4000)
+)RETURNS nvarchar(4000)
 AS
 BEGIN
-	WHILE PATINDEX('%[^0-9]%',@No)>0
-	BEGIN
-		SET @No=STUFF(@No,PATINDEX('%[^0-9]%',@No),1,'') --删掉一个非数字的字符，循环结束，剩余的为数字部分
-	END
-	RETURN CONVERT(bigint,@No)
+	DECLARE @py TABLE(
+		ch char(1),
+		hz1 nchar(1)
+			COLLATE Chinese_PRC_CS_AS_KS_WS,
+		hz2 nchar(1)
+			COLLATE Chinese_PRC_CS_AS_KS_WS)
+	INSERT @py SELECT 'A', N'吖', N'鏊'
+	UNION  ALL SELECT 'B', N'八', N'簿'
+	UNION  ALL SELECT 'C', N'嚓', N'错'
+	UNION  ALL SELECT 'D', N'哒', N'跺'
+	UNION  ALL SELECT 'E', N'屙', N'贰'
+	UNION  ALL SELECT 'F', N'发', N'馥'
+	UNION  ALL SELECT 'G', N'旮', N'过'
+	UNION  ALL SELECT 'H', N'铪', N'蠖'
+	UNION  ALL SELECT 'J', N'丌', N'竣'
+	UNION  ALL SELECT 'K', N'咔', N'廓'
+	UNION  ALL SELECT 'L', N'垃', N'雒'
+	UNION  ALL SELECT 'M', N'妈', N'穆'
+	UNION  ALL SELECT 'N', N'拿', N'糯'
+	UNION  ALL SELECT 'O', N'噢', N'沤'
+	UNION  ALL SELECT 'P', N'趴', N'曝'
+	UNION  ALL SELECT 'Q', N'七', N'群'
+	UNION  ALL SELECT 'R', N'蚺', N'箬'
+	UNION  ALL SELECT 'S', N'仨', N'锁'
+	UNION  ALL SELECT 'T', N'他', N'箨'
+	UNION  ALL SELECT 'W', N'哇', N'鋈'
+	UNION  ALL SELECT 'X', N'夕', N'蕈'
+	UNION  ALL SELECT 'Y', N'丫', N'蕴'
+	UNION  ALL SELECT 'Z', N'匝', N'做'
+
+	DECLARE
+		@i int
+	-- 取要查询的字符串中的第一个汉字
+	SET @i = PATINDEX('%[吖-做]%' COLLATE Chinese_PRC_CS_AS_KS_WS, @str)
+	WHILE @i > 0
+		SELECT
+			-- 将找到的第一个汉字用对应的拼音首字母替换
+			@str = REPLACE(@str, SUBSTRING(@str, @i, 1), ch),
+			-- 取下一个要处理的汉字的位置
+			@i=PATINDEX('%[吖-做]%' COLLATE Chinese_PRC_CS_AS_KS_WS,@str)
+		FROM @py
+		WHERE SUBSTRING(@str, @i, 1) BETWEEN hz1 AND hz2
+	RETURN(@str)
 END
-
 GO
 
-create function [dbo].[F_GetChar]
-(
-	@No varchar(100)
-)
-RETURNS varchar(100)
-AS
-BEGIN
-	WHILE PATINDEX('%[^A-Za-z]%',@No)>0
-	BEGIN
-		SET @No=STUFF(@No,PATINDEX('%[^A-Za-z]%',@No),1,'') --删掉一个非数字的字符，循环结束，剩余的为数字部分
-	END
-	RETURN CONVERT(varchar(100),@No)
-END
---select dbo.F_GetChar('wwww23')
-#T=稀疏列 sparse column
-/*
-在下面的示例中，文档表包含列 DocID 和 Title 的通用集。生产组希望所有生产文档都有一个 ProductionSpecification 列和一个 ProductionLocation 列。市场组希望所有市场文档都有一个 MarketingSurveyGroup 列。
-
-A. 创建具有列集的表
-下面的示例创建使用稀疏列并包括列集 SpecialPurposeColumns 的表。该示例在表中插入两行，然后从表中选择数据。
-
-注意： 
-该表只有五列，以便易于显示和读取。
- 
-
- 复制代码 
- */
-USE AdventureWorks2008R2;
-GO
-
-CREATE TABLE DocumentStoreWithColumnSet
-(DocID int PRIMARY KEY,
-Title varchar(200) NOT NULL,
-ProductionSpecification varchar(20) SPARSE NULL,
-ProductionLocation smallint SPARSE NULL,
-MarketingSurveyGroup varchar(20) SPARSE NULL,
-MarketingProgramID int SPARSE NULL,
-SpecialPurposeColumns XML COLUMN_SET FOR ALL_SPARSE_COLUMNS);
-GO
- 
-/*
-B. 使用稀疏列的名称向表中插入数据
-下面的示例向示例 A 中创建的表插入两行。这些示例使用稀疏列的名称，而不引用列集。
-
- 复制代码 
- */
-
-INSERT DocumentStoreWithColumnSet (DocID, Title, ProductionSpecification, ProductionLocation)
-VALUES (1, 'Tire Spec 1', 'AXZZ217', 27)
-GO
-
-INSERT DocumentStoreWithColumnSet (DocID, Title, MarketingSurveyGroup)
-VALUES (2, 'Survey 2142', 'Men 25 - 35')
-GO
- 
-/*
-C. 使用列集的名称向表中插入数据
-下面的示例向示例 A 中创建的表插入第三行。这一次不使用稀疏列的名称，而是使用列集的名称，插入操作以 XML 格式为四个稀疏列中的两列提供值。
-
- 复制代码 
- */
-INSERT DocumentStoreWithColumnSet (DocID, Title, SpecialPurposeColumns)
-VALUES (3, 'Tire Spec 2', '<ProductionSpecification>AXW9R411</ProductionSpecification><ProductionLocation>38</ProductionLocation>')
-GO
- 
-/*
-D. 观察使用 SELECT * 时的列集结果
-下面的示例从包含列集的表中选择所有列。它返回具有稀疏列的组合值的 XML 列，而不是单独返回每个稀疏列。
-
- 复制代码 
- */
-SELECT * FROM DocumentStoreWithColumnSet ;
- 
-/*
-下面是结果集： 
-
-DocID Title        SpecialPurposeColumns
-
-1      Tire Spec 1  <ProductionSpecification>AXZZ217</ProductionSpecification><ProductionLocation>27</ProductionLocation>
-
-2      Survey 2142  <MarketingSurveyGroup>Men 25 - 35</MarketingSurveyGroup>
-
-3      Tire Spec 2  <ProductionSpecification>AXW9R411</ProductionSpecification><ProductionLocation>38</ProductionLocation>
-
-E. 观察按名称选择列集的结果
-因为生产部门对市场数据不感兴趣，所以本示例添加 WHERE 子句以限制输出。本示例使用列集的名称。
-
- 复制代码 
-*/
-SELECT DocID, Title, SpecialPurposeColumns
-FROM DocumentStoreWithColumnSet
-WHERE ProductionSpecification IS NOT NULL ;
- 
-/*
-下面是结果集： 
-
-DocID Title        SpecialPurposeColumns
-
-1     Tire Spec 1  <ProductionSpecification>AXZZ217</ProductionSpecification><ProductionLocation>27</ProductionLocation>
-
-3     Tire Spec 2  <ProductionSpecification>AXW9R411</ProductionSpecification><ProductionLocation>38</ProductionLocation>
-
-F. 观察按名称选择稀疏列的结果
-当表包含列集时，您仍然可以使用各列名称来查询表，如下例所示。
-
- 复制代码 
- */
-SELECT DocID, Title, ProductionSpecification, ProductionLocation 
-FROM DocumentStoreWithColumnSet
-WHERE ProductionSpecification IS NOT NULL ;
- 
-
-/*
-下面是结果集： 
-
-DocID Title        ProductionSpecification ProductionLocation
-
-1     Tire Spec 1  AXZZ217                 27
-
-3     Tire Spec 2  AXW9R411                38
-
-G. 使用列集来更新表
-下面的示例用第三个记录所在行使用的两个稀疏列的新值来更新该记录。
-
- 复制代码 
-*/
-UPDATE DocumentStoreWithColumnSet
-SET SpecialPurposeColumns = '<ProductionSpecification>ZZ285W</ProductionSpecification><ProductionLocation>38</ProductionLocation>'
-WHERE DocID = 3 ;
-GO
-
-/*
-重要提示： 
-使用列集的 UPDATE 语句更新表中的所有稀疏列。未引用的稀疏列将更新为 NULL。
- 
-
-
-下面的示例更新第三个记录，但仅仅指定两个已填充列的其中一列的值。在 UPDATE 语句中未包括第二列 ProductionLocation，所以该列更新为 NULL。
-
- 复制代码 
- */
-UPDATE DocumentStoreWithColumnSet
-SET SpecialPurposeColumns = '<ProductionSpecification>ZZ285W</ProductionSpecification>'
-WHERE DocID = 3 ;
-GO
- 
-
-#T=一道褒贬不一的SQL考试题
-二维关系表 T(F1,F2,F3,F4,F5,F6,F7) 表示如下关系:
-┌─────┬─────┬─────┬─────┬─────┬─────┬─────┐
-│  学生ID  │ 学生姓名 │  课程ID  │ 课程名称 │   成绩   │  教师ID  │ 教师姓名 │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│    S3    │   王五   │    K4    │   政治   │    53    │    T4    │  赵老师  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│    S1    │   张三   │    K1    │   数学   │    61    │    T1    │  张老师  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│    S2    │   李四   │    K3    │   英语   │    88    │    T3    │  李老师  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│    S1    │   张三   │    K4    │   政治   │    77    │    T4    │  赵老师  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│    S2    │   李四   │    K4    │   政治   │    67    │    T5    │  周老师  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│    S3    │   王五   │    K2    │   语文   │    90    │    T2    │  王老师  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│    S3    │   王五   │    K1    │   数学   │    55    │    T1    │  张老师  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│    S1    │   张三   │    K2    │   语文   │    81    │    T2    │  王老师  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│    S4    │   赵六   │    K2    │   语文   │    59    │    T1    │  王老师  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│    S1    │   张三   │    K3    │   英语   │    37    │    T3    │  李老师  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│    S2    │   李四   │    K1    │   数学   │    81    │    T1    │  张老师  │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│   ....   │          │          │          │          │          │          │
-├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
-│   ....   │          │          │          │          │          │          │
-└─────┴─────┴─────┴─────┴─────┴─────┴─────┘
-
-
-请以一句 T-SQL (Ms SQL Server) 或 Jet SQL (Ms Access) 作答! 
-1.如果 T 表还有一字段 F0 数据类型为自动增量整型(唯一,不会重复), 
- 而且 T 表中含有除 F0 字段外,请删除其它字段完全相同的重复多余的脏记录数据(要保留其中的一条): 
-
-
-2.查询列印各科成绩最高和最低的记录: (就是各门课程的最高、最低分的学生和老师) 
- 课程ID,课程名称,最高分,学生ID,学生姓名,教师ID,教师姓名,最低分,学生ID,学生姓名,教师ID,教师姓名 
-
-
-3.按成绩从高到低顺序,查询列印所有学生四门(数学,语文,英语,政治)课程成绩: (就是每个学生的四门课程的成绩单) 
- 学生ID,学生姓名,数学,语文,英语,政治,有效课程数,有效平均分 
- (注: 有效课程即在 T 表中有该学生的成绩记录,如不明白可不列印"有效课程数"和"有效平均分") 
-
-
-4.查询列印数学成绩第 10 名到第 15 名的学生成绩单 
- 或列印平均成绩第 10 名到第 15 名的学生成绩单 
- [学生ID],[学生姓名],数学,语文,英语,政治,平均成绩 
-
-
-5.按各科不及格率的百分数从低到高和平均成绩从高到低顺序,查询统计列印各科平均成绩和不及格率的百分数(用"N行"表示): (就是分析哪门课程难) 
- 课程ID,课程名称,平均成绩,及格百分数 
-
-
-6.查询列印四门课程平均成绩和及格率的百分数(用"1行4列"表示): (就是分析哪门课程难) 
- 数学平均分,数学及格百分数,语文平均分,语文及格百分数,英语平均分,英语及格百分数,政治平均分,政治及格百分数 
-
-
-7.按不同老师所教不同课程平均分从高到低,查询列印: (就是分析哪个老师的哪个课程水平高) 
- 教师ID,教师姓名,课程ID,课程名称,平均分 (平均分按去掉一个最高分和一个最低分后取) 
-
-
-8.查询统计列印各科成绩,各分数段人数: 
- 课程ID,课程名称,[100-85],[85-70],[70-60],[<60] 
-
-
-9.查询列印学生平均成绩及其名次 
-
-
-11.查询列印参加了所有考试的学生
-
-
-12.查询列印"至少"与学生"S3 (王五)"参加了相同考试的学生
-
-
-13.规范化
-#T=执行中的SQL
+#T=表的磁盘使用情况 SQL 2008 R2 报表
+--dbcc showfilestats
+--DBCC SQLPERF(LOGSPACE)
 SELECT
-	[Spid] = session_Id
-	,ecid
-	,[Database] = DB_NAME(sp.dbid)
-	,nt_username
-	,er.status
-	,wait_type
-	,[Individual Query] =
-							SUBSTRING
-								(
-									qt.text
-									, er.statement_start_offset / 2
-									,
-										(
-											CASE
-												WHEN
-													er.statement_end_offset = -1
-													THEN
-														LEN(CONVERT(NVARCHAR(MAX), qt.text))
-														* 2
-												ELSE
-														er.statement_end_offset
-											END
-											- er.statement_start_offset
-										)
-										/ 2
-								)
-	,[Parent Query] = qt.text
-	,Program = program_name
-	,Hostname
-	,nt_domain
-	,start_time
+	--(row_number() over(order by a3.name, a2.name))%2 as l1,
+	a3.name AS [schemaname],
+	a2.name AS [tablename],
+	a1.rows as row_count,
+	((a1.reserved + ISNULL(a4.reserved,0))* 8)
+	/1024.0--/1024.0
+	AS [reserved(MB)], 
+	a1.data * 8
+	/1024.0--/1024.0
+	AS [data(MB)],
+	(
+		CASE
+			WHEN (a1.used + ISNULL(a4.used,0)) > a1.data 
+				THEN (a1.used + ISNULL(a4.used,0)) - a1.data 
+			ELSE
+				0 END
+	) * 8
+	/1024.0--/1024.0
+	 AS [index_size(MB)],
+	(
+		CASE
+			WHEN (a1.reserved + ISNULL(a4.reserved,0)) > a1.used
+				THEN (a1.reserved + ISNULL(a4.reserved,0)) - a1.used
+			ELSE
+				0
+			END
+	) * 8
+	/1024.0--/1024.0
+	AS [unused(MB)]
 FROM
-	sys.dm_exec_requests er
+	(
+		SELECT 
+			ps.object_id,
+			SUM (
+					CASE
+						WHEN
+							(ps.index_id < 2)
+								THEN row_count
+						ELSE 0
+					END
+				) AS [rows],
+			SUM (ps.reserved_page_count) AS reserved,
+			SUM (
+					CASE
+						WHEN
+							(ps.index_id < 2)
+								THEN (ps.in_row_data_page_count + ps.lob_used_page_count + ps.row_overflow_used_page_count)
+						ELSE
+							(ps.lob_used_page_count + ps.row_overflow_used_page_count)
+					END
+				) AS data,
+			SUM (ps.used_page_count) AS used
+		FROM
+			sys.dm_db_partition_stats ps
+		GROUP BY
+			ps.object_id
+	) AS a1
+		LEFT OUTER JOIN 
+			(
+				SELECT 
+					it.parent_id,
+					SUM(ps.reserved_page_count) AS reserved,
+					SUM(ps.used_page_count) AS used
+				FROM
+					sys.dm_db_partition_stats ps
+						INNER JOIN sys.internal_tables it 
+							ON (it.object_id = ps.object_id)
+				WHERE
+					it.internal_type IN (202,204)
+				GROUP BY
+					it.parent_id
+			) AS a4 
+				ON (a4.parent_id = a1.object_id)
 		INNER JOIN
-			sys.sysprocesses sp
-				ON
-					er.session_id = sp.spid
-		CROSS APPLY
-			sys.dm_exec_sql_text(er.sql_handle) AS qt
+			sys.all_objects a2
+				ON ( a1.object_id = a2.object_id ) 
+		INNER JOIN
+			sys.schemas a3
+				ON (a2.schema_id = a3.schema_id)
+	WHERE
+		a2.type <> N'S'
+		and a2.type <> N'IT'
+	ORDER BY
+		3 desc
+		, a3.name
+		, a2.name
+
+#T=连接 Connectivity informations 
+-- Connectivity informations 
+;WITH con AS 
+   (SELECT SES.host_name AS HostName 
+          ,CON.client_net_address AS ClientAddress 
+          ,SES.login_name AS LoginName 
+          ,SES.program_name AS ProgramName 
+          ,EP.name AS ConnectionTyp 
+          ,CON.net_transport AS NetTransport 
+          ,CON.protocol_type AS ProtocolType 
+          ,CONVERT(VARBINARY(9), CON.protocol_version) AS TDSVersionHex 
+          ,SES.client_interface_name AS ClientInterface 
+          ,CON.encrypt_option AS IsEncryted 
+          ,CON.auth_scheme AS Auth 
+    FROM sys.dm_exec_connections AS CON 
+         LEFT JOIN sys.endpoints AS EP 
+             ON CON.endpoint_id = EP.endpoint_id 
+         INNER JOIN sys.dm_exec_sessions as SES 
+             ON CON.session_id = SES.session_id) 
+-- Detailed list 
+SELECT * 
+FROM con 
+-- Optional filter 
+--WHERE con.ClientInterface = 'ODBC' 
+ORDER by con.TDSVersionHex,con.HostName 
+        ,con.LoginName 
+        ,con.ProgramName; 
+ 
+/* 
+-- Count of different connectivity parameters 
+SELECT COUNT(*) AS [Connections #] 
+      ,COUNT(DISTINCT con.HostName) AS [Hosts #] 
+      ,COUNT(DISTINCT con.LoginName) AS [Logins #] 
+      ,COUNT(DISTINCT con.ProgramName) AS [Programs #] 
+      ,COUNT(DISTINCT con.NetTransport) AS [NetTransport #] 
+      ,COUNT(DISTINCT con.TDSVersionHex) AS [TdsVersions #] 
+      ,COUNT(DISTINCT con.ClientInterface) AS [ClientInterfaces #] 
+FROM con; 
+*/
+#T=隔离级别 事务
+-- SQL Server事务隔离级别实例
+
+CREATE TABLE
+		BankAccount
+(
+	BankAccountId		CHAR(16) NOT NULL,			-- 银行账号
+	UserName			NVARCHAR(32) NOT NULL,		-- 用户
+	Balance				DECIMAL(19, 2) NOT NULL,	-- 余额
+	LastUpdate			SMALLDATETIME NOT NULL
+)
+GO
+
+INSERT INTO
+	BankAccount
+VALUES
+	(
+		'9555500100071120',
+		N'张三',
+		10000.00,
+		GETDATE()
+	) -- 北京分行账号
+INSERT INTO
+	BankAccount
+VALUES
+	(
+		'9555507551227787',
+		N'张三',
+		20000.00,
+		GETDATE()
+	) -- 深圳分行账号
+GO
+
+--二、应用场景
+--假设张三在招商银行开设了两个账号，一个是招商银行北京分行，一个是招商银行深圳分行，两个账号的余额分别是10,000和20,000。
+--1. 张三在网上做了一笔交易，交易额100，买方小王通过银行汇款100到张三的北京分行的账号（见下面左图），柜台操作人员向张三账号存入100（事务一），然后系统些操作日志（假设需要10秒，WAITFOR DELAY '00:00:10'）正在此时张三在ATM查了一下账号上余额（事务二），发现已经是10100，于是回去准备发货，但是事务一在写操作日志时超时，这是事务回滚，存款交易被取消，钱退给了小王，这样张三查到的账号余额事实上是事务一还没有提交的数据，导致张三错误的认为已经收到交易款项。
+
+BEGIN TRAN
+	UPDATE
+		BankAccount
+	SET
+		Balance = Balance + 100
+	WHERE
+		BankAccountId = '9555500100071120'
+
+	SELECT
+		Balance
+	FROM
+		BankAccount
+	WHERE
+		BankAccountId = '9555500100071120'
+
+WAITFOR DELAY '00:00:10'
+
+ROLLBACK
+
+SELECT
+	Balance
+FROM
+	BankAccount
 WHERE
-	session_Id >= 51
+	BankAccountId = '9555500100071120'
+
+---- ATM:
+BEGIN TRAN
+	SET TRAN ISOLATION LEVEL READ UNCOMMITTED
+	SELECT
+		Balance
+	FROM
+		BankAccount
+	WHERE
+		BankAccountId = '9555500100071120'
+COMMIT
+
+--一个事务读到另外一个事务还没有提交的数据，我们称之为脏读。
+--解决方法：把事务隔离级别调整到READ COMMITTED，即把右上图中的SET TRAN ISOLATION LEVEL READ UNCOMMITTED更改成下图中的SET TRAN ISOLATION LEVEL READ COMMITTED。
+--这时我们重复上面的动作会发现事务二会一直等到事务一执行完毕再返回结果，因为此时事务以已经把自己的更改ROLLBACK了，所以事务二可以返回正确的结果。
+
+BEGIN TRAN
+	SET TRAN ISOLATION LEVEL READ COMMITTED
+	SELECT
+		Balance
+	FROM
+		BankAccount
+	WHERE
+		BankAccountId = '9555500100071120'
+COMMIT
+
+--2. 张三先后两次查询某一账号的余额，在两次查询期间，小王完成了银行转账，导致两次的查询结果不同。
+
+-- zhang 3
+BEGIN TRAN
 
 SELECT
-	m.session_id
-	,m.start_time
-	,m.command
-	,m.wait_type
-	,m.cpu_time
-	,CAST(s.text AS VARCHAR(max)) AS sqlText
+	Balance
 FROM
-	master.sys.dm_exec_requests m WITH ( NOLOCK )
-		CROSS APPLY
-			fn_get_sql(m.sql_handle) s
+	BankAccount
+WHERE
+	BankAccountId = '9555500100071120'
+
+WAITFOR DELAY '00:00:05'
+
+SELECT ba.Balance FROM BankAccount ba WHERE ba.BankAccountId = '9555500100071120'
+
+COMMIT
+
+-- little wang
+BEGIN TRAN
+
+UPDATE
+	BankAccount
+SET
+	Balance = Balance + 100
+WHERE
+	BankAccountId = '9555500100071120'
+
+COMMIT
 
 SELECT
-	r.session_id
-	,r.start_time
-	,r.command
-	,r.wait_type
-	,r.cpu_time
-	,s.text
+	Balance
 FROM
-	sys.dm_exec_requests r
-		CROSS APPLY
-			sys.dm_exec_sql_text(r.sql_handle) s
-#T=SqlCmd run scripts.sql
-@echo off
-SET /p pathScripts="PATH Scripts: "
-IF NOT EXIST "%pathScripts%" (
-	echo Path not found, create the folder and come back
-	Exit /b
+	BankAccount
+WHERE
+	BankAccountId = '9555500100071120'
+
+--一个事务先后读取同一条记录，但两次读取的数据不同，我们称之为不可重复读。
+--解决方法：把事务隔离级别调整到REPEATABLE READ。在下图中使用SET TRAN ISOLATION LEVEL REPEATABLE READ。这时我们重复上面的动作会发现事务二会一直等到事务一执行完毕再返回结果。
+
+BEGIN TRAN
+
+SET TRAN ISOLATION LEVEL REPEATABLE READ
+
+SELECT
+	Balance
+FROM
+	BankAccount
+WHERE
+	BankAccountId = '9555500100071120'
+
+WAITFOR DELAY '00:00:05'
+
+SELECT
+	Balance
+FROM
+	BankAccount
+WHERE
+	BankAccountId = '9555500100071120'
+
+COMMIT
+
+--3. 张三妻子先后两次查询张三招商银行所有账号的总余额，而在此期间张三在广州招商银行分行成功开设了一个账号，并存入5000，导致张三妻子两次查询的总余额不同，在此期间张三原有两个账号的余额均未发生改变。
+
+-- zhang 3
+BEGIN TRAN
+
+INSERT INTO BankAccount
+(
+	BankAccountId,
+	UserName,
+	Balance,
+	LastUpdate
 )
-SET /p pathlogs="PATH Logs: "
-IF NOT EXIST "%pathlogs%" (
-	echo Path not found, create the folder and come back
-	Exit /b
+VALUES
+(
+	'9555500200051000',
+	N'张三',
+	5000.00,
+	GETDATE()
 )
-cd %pathScripts%
-IF NOT EXIST *.sql (
-	echo No.sql file(s) in this folder, check that and come back
-	Exit /b
-)
-FOR %%i IN (*.sql) do call :RunScript %%i 
-GOTO :END 
 
-:RunScript 
-SET name=%1
-SET name=%name:~0,-4%
-SET name=\%name%.log
-Echo Executing Script: %1 
-call :StartTimer
-echo Begin: %StartTime%
-SQLCMD -S MACHINE_NAME\INSTANCE_NAME -i %1 -o "%pathlogs%%name%"
-call :StopTimer
-Echo Script Done: %1
-Echo Log in: %pathlogs%%name%  
-echo End: %StopTime%
-echo Duration: %duration%  >> "%pathlogs%%name%"
-echo Duration: %duration%
-echo ------------------------------------------
-:END
+SELECT
+	Balance
+FROM
+	BankAccount
+WHERE
+	BankAccountId = '9555500200051000'
 
-:StartTimer
-set StartTIME=%TIME:~0,-3%
-goto :EOF
+COMMIT
 
-:StopTimer
-set StopTIME=%TIME:~0,-3%
-set /A "ss=(((1%StopTIME::=-100)*60+1%-100)-(((1%StartTIME::=-100)*60+1%-100)"
-set /A "hh=ss/3600+100,ss%%=3600,mm=ss/60+100,ss=ss%%60+100"
-set Duration=%hh:~1%:%mm:~1%:%ss:~1%
+-- zhang 3's wife
+BEGIN TRAN
 
-goto :EOF
+SET TRAN ISOLATION LEVEL REPEATABLE READ
+
+SELECT
+	SUM(Balance) AS Balance
+FROM
+	BankAccount
+WHERE
+	UserName = N'张三'
+
+WAITFOR DELAY '00:00:05'
+
+SELECT
+	SUM(Balance) AS Balance
+FROM
+	BankAccount
+WHERE
+	UserName = N'张三'
+
+COMMIT
+
+--一个事务先后读取一个范围的记录，但两次读取的纪录数不同，我们称之为幻象读。
+--解决方法：把事务隔离级别调整到SERIALIZABLE。在下图中使用SET TRAN ISOLATION LEVEL SERIALIZABLE。这时我们重复上面的动作会发现事务二会一直等到事务一执行完毕再返回结果。
+
+BEGIN TRAN
+
+SET TRAN ISOLATION LEVEL SERIALIZABLE
+
+SELECT
+	Balance
+FROM
+	BankAccount
+WHERE
+	BankAccountId = '9555500100071120'
+
+WAITFOR DELAY '00:00:05'
+
+SELECT
+	Balance
+FROM
+	BankAccount
+WHERE
+	BankAccountId = '9555500100071120'
+
+COMMIT
+
+--三、总结
+
+--事务隔离级别是通过数据库的锁机制来控制的，在不同的应用场景需要应用不同的事务隔离级别，
+--SQL Server默认的事务隔离级别是READ COMMITTED，默认的隔离级别，已经可以满足我们大部分应用的需求。
 #
